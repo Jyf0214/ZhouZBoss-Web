@@ -1,0 +1,44 @@
+name: Deploy Secure Site to EdgeOne
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 缓存 NPM（保留）
+      - name: Cache NPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-global-edgeone
+          restore-keys: |
+            ${{ runner.os }}-npm-global-
+
+      # 安装 EdgeOne CLI（简化为前台安装，无需后台并行）
+      - name: Install EdgeOne CLI
+        run: |
+          npm install -g edgeone
+          edgeone --version
+
+      # 部署（将保持默认同步模式，见下方说明）
+      - name: Deploy to EdgeOne
+        run: |
+          edgeone pages deploy ./ \
+            --name "${{ secrets.EDGEONE_PROJECT_NAME }}" \
+            --token "${{ secrets.EDGEONE_PAGES_TOKEN }}" \
+            --force
