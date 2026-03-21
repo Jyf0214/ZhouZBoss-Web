@@ -3,18 +3,17 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Form, notification, message } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Flexbox, Text, Icon } from '@lobehub/ui';
 import { User, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
 import AuthCard from '@/components/AuthCard';
+import AuthLayout from '@/components/AuthLayout';
 
 /**
  * Register Page Component
  * 
- * Inspired by LobeChat's sign-up design with clean form layout.
- * Features consistent styling with the login page.
+ * Complete registration flow inspired by LobeChat's sign-up design.
+ * Features clean form layout with consistent styling.
  * 
  * @see https://github.com/lobehub/lobe-chat - UI design reference
  * @copyright LobeChat UI Design
@@ -78,132 +77,90 @@ export default function RegisterPage() {
   );
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen flex items-center justify-center p-8"
-      style={{ background: 'var(--ant-color-bg-layout)' }}
-    >
-      <Flexbox gap={16}>
-        <div>
-          <Link href="/">
-            <Button icon={<ArrowLeftOutlined />} type="text">
-              返回首页
-            </Button>
-          </Link>
-        </div>
-
-        <AuthCard
-          footer={footer}
-          subtitle="加入 Originium Kernel"
-          title="创建账号"
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            autoComplete="off"
+    <AuthLayout>
+      <AuthCard
+        footer={footer}
+        subtitle="加入 Originium Kernel"
+        title="创建账号"
+      >
+        <Form form={form} layout="vertical" onFinish={onFinish}>
+          <Form.Item
+            name="email"
+            rules={[
+              { required: true, message: '请输入电子邮箱' },
+              { type: 'email', message: '请输入有效的电子邮箱地址' }
+            ]}
           >
-            <Form.Item
-              name="email"
-              rules={[
-                { required: true, message: '请输入电子邮箱' },
-                { type: 'email', message: '请输入有效的电子邮箱地址' }
-              ]}
-              style={{ marginBottom: 16 }}
-            >
-              <Input
-                placeholder="your@email.com"
-                size="large"
-                prefix={
-                  <Icon
-                    icon={Mail}
-                    style={{ marginInline: 6 }}
-                  />
-                }
-              />
-            </Form.Item>
+            <Input
+              placeholder="your@email.com"
+              size="large"
+              prefix={
+                <Icon icon={Mail} style={{ marginInline: 6 }} />
+              }
+            />
+          </Form.Item>
+          
+          <Form.Item
+            name="name"
+            rules={[
+              { required: true, message: '请输入昵称' },
+              { min: 2, message: '昵称至少 2 个字符' }
+            ]}
+          >
+            <Input
+              placeholder="您的昵称"
+              size="large"
+              prefix={
+                <Icon icon={User} style={{ marginInline: 6 }} />
+              }
+            />
+          </Form.Item>
+          
+          <Form.Item
+            name="password"
+            rules={[
+              { required: true, message: '请输入密码' },
+              { min: 6, message: '密码至少 6 个字符' }
+            ]}
+          >
+            <Input.Password
+              placeholder="至少 6 个字符"
+              size="large"
+              prefix={
+                <Icon icon={Lock} style={{ marginInline: 6 }} />
+              }
+            />
+          </Form.Item>
+          
+          <Form.Item
+            name="confirm"
+            dependencies={['password']}
+            rules={[
+              { required: true, message: '请确认您的密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('password') === value) return Promise.resolve();
+                  return Promise.reject(new Error('两次输入的密码不一致'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password
+              placeholder="再次输入密码"
+              size="large"
+              prefix={
+                <Icon icon={Lock} style={{ marginInline: 6 }} />
+              }
+            />
+          </Form.Item>
 
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: '请输入昵称' },
-                { min: 2, message: '昵称至少 2 个字符' }
-              ]}
-              style={{ marginBottom: 16 }}
-            >
-              <Input
-                placeholder="您的昵称"
-                size="large"
-                prefix={
-                  <Icon
-                    icon={User}
-                    style={{ marginInline: 6 }}
-                  />
-                }
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              rules={[
-                { required: true, message: '请输入密码' },
-                { min: 6, message: '密码至少 6 个字符' }
-              ]}
-              style={{ marginBottom: 16 }}
-            >
-              <Input.Password
-                placeholder="至少 6 个字符"
-                size="large"
-                prefix={
-                  <Icon
-                    icon={Lock}
-                    style={{ marginInline: 6 }}
-                  />
-                }
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="confirm"
-              dependencies={['password']}
-              rules={[
-                { required: true, message: '请确认您的密码' },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue('password') === value) return Promise.resolve();
-                    return Promise.reject(new Error('两次输入的密码不一致'));
-                  },
-                }),
-              ]}
-              style={{ marginBottom: 0 }}
-            >
-              <Input.Password
-                placeholder="再次输入密码"
-                size="large"
-                prefix={
-                  <Icon
-                    icon={Lock}
-                    style={{ marginInline: 6 }}
-                  />
-                }
-              />
-            </Form.Item>
-
-            <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-              <Button block htmlType="submit" loading={loading} size="large" type="primary">
-                立即注册
-              </Button>
-            </Form.Item>
-          </Form>
-        </AuthCard>
-
-        <Flexbox>
-          <Text align="center" type="secondary">
-            Originium Kernel © {new Date().getFullYear()}
-          </Text>
-        </Flexbox>
-      </Flexbox>
-    </motion.div>
+          <Form.Item>
+            <Button block htmlType="submit" loading={loading} size="large" type="primary">
+              立即注册
+            </Button>
+          </Form.Item>
+        </Form>
+      </AuthCard>
+    </AuthLayout>
   );
 }
