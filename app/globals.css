@@ -3,22 +3,12 @@
 /* AntD CSS Variables */
 @import "antd/dist/reset.css";
 
-/* LobeUI Theme */
-:root {
-  --lobeui-primary: #1677ff;
-  --lobeui-success: #52c41a;
-  --lobeui-warning: #faad14;
-  --lobeui-error: #ff4d4f;
-  --lobeui-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
 body {
-  font-family: var(--lobeui-font-family);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar - LobeChat style */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -35,13 +25,4 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.2);
-}
-
-/* Utility classes */
-.lobe-button {
-  @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-200;
-}
-
-.lobe-card {
-  @apply bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden;
 }
