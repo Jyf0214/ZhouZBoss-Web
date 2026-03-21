@@ -23,7 +23,25 @@ interface IDatabase {
 class RedisDriver implements IDatabase {
   private client: Redis;
   constructor(url: string) {
-    this.client = new Redis(url);
+    console.log('[DB] Initializing Redis connection...');
+    this.client = new Redis(url, {
+      maxRetriesPerRequest: 3, // 减少重试次数
+      retryStrategy: (times) => {
+        if (times > 3) {
+          console.error('[DB] Redis connection failed after max retries');
+          return null; // 停止重试
+        }
+        return Math.min(times * 200, 2000);
+      },
+    });
+    
+    this.client.on('error', (err) => {
+      console.error('[DB] Redis connection error:', err.message);
+    });
+    
+    this.client.on('connect', () => {
+      console.log('[DB] Redis connected successfully');
+    });
   }
   async get(key: string) { return this.client.get(key); }
   async set(key: string, value: string, ttl?: number) {
