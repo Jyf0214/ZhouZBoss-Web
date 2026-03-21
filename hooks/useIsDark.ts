@@ -14,18 +14,18 @@
 
 import { useEffect, useState } from 'react';
 
+const getInitialDarkMode = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+};
+
 export const useIsDark = (): boolean => {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(getInitialDarkMode);
 
   useEffect(() => {
-    // Check if running in browser
     if (typeof window === 'undefined') return;
 
-    // Check initial preference
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDark(mediaQuery.matches);
-
-    // Listen for changes
     const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
     mediaQuery.addEventListener('change', handler);
 
