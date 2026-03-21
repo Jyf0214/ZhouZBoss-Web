@@ -8,16 +8,10 @@ import { Edit, Trash2, Plus, Eye } from 'lucide-react';
 export default function ArticlesPage() {
   const { user } = useAuth();
   const [articles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
+    if (!user) return;
     // TODO: 实现获取文章列表的 API 调用
-    setLoading(false);
   }, [user]);
 
   const handleDelete = async (id: string) => {
@@ -26,7 +20,9 @@ export default function ArticlesPage() {
     // TODO: 实现删除文章逻辑
   };
 
-  if (loading) return <div className="p-8 text-center text-zinc-500">Loading articles...</div>;
+  if (!user) {
+    return <div className="p-8 text-center text-red-500 font-bold">Please log in to view articles.</div>;
+  }
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">

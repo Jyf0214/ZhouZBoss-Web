@@ -49,4 +49,6 @@ export const AuthCard = memo<AuthCardProps>(({ children, title, subtitle, footer
   );
 });
 
+AuthCard.displayName = 'AuthCard';
+
 export default AuthCard;

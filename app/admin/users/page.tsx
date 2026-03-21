@@ -7,19 +7,15 @@ import { Trash2, Edit2, Check, X, User } from 'lucide-react';
 export default function UsersPage() {
   const { userRole } = useAuth();
   const [users] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState('');
 
-  useEffect(() => {
-    if (userRole !== 'sudo' && userRole !== 'admin') {
-      setLoading(false);
-      return;
-    }
+  const hasAccess = userRole === 'sudo' || userRole === 'admin';
 
+  useEffect(() => {
+    if (!hasAccess) return;
     // TODO: 实现获取用户列表的 API 调用
-    setLoading(false);
-  }, [userRole]);
+  }, [hasAccess]);
 
   const handleUpdateRole = async (id: string) => {
     console.log('Update user role:', id, editRole);
@@ -33,9 +29,7 @@ export default function UsersPage() {
     // TODO: 实现删除用户逻辑
   };
 
-  if (loading) return <div className="p-8 text-center text-zinc-500">Loading users...</div>;
-
-  if (userRole !== 'sudo' && userRole !== 'admin') {
+  if (!hasAccess) {
     return <div className="p-8 text-center text-red-500 font-bold">Access Denied. Only Sudo/Admin can access this page.</div>;
   }
 

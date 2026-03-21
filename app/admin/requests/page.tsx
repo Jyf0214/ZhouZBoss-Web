@@ -7,17 +7,13 @@ import { Check, X, Clock } from 'lucide-react';
 export default function RequestsPage() {
   const { userRole } = useAuth();
   const [requests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const hasAccess = userRole === 'sudo' || userRole === 'admin';
 
   useEffect(() => {
-    if (userRole !== 'sudo' && userRole !== 'admin') {
-      setLoading(false);
-      return;
-    }
-
+    if (!hasAccess) return;
     // TODO: 实现获取申请列表的 API 调用
-    setLoading(false);
-  }, [userRole]);
+  }, [hasAccess]);
 
   const handleApprove = async (request: any) => {
     console.log('Approve request:', request.id);
@@ -29,9 +25,7 @@ export default function RequestsPage() {
     // TODO: 实现审批拒绝逻辑
   };
 
-  if (loading) return <div className="p-8 text-center text-zinc-500">Loading requests...</div>;
-
-  if (userRole !== 'sudo' && userRole !== 'admin') {
+  if (!hasAccess) {
     return <div className="p-8 text-center text-red-500 font-bold">Access Denied. Only Sudo/Admin can access this page.</div>;
   }
 

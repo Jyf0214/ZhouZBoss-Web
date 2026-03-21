@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "type-check": "tsc --noEmit",
     "lint": "eslint .",
+    "check": "npm run type-check && npm run lint",
+    "build": "npm run check && next build",
+    "start": "next start",
     "clean": "next clean"
   },
   "dependencies": {
