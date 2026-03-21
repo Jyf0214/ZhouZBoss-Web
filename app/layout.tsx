@@ -3,6 +3,9 @@ import './globals.css'; // Global styles
 import { AuthProvider } from '@/hooks/use-auth';
 import { ConfigProvider } from '@/components/ConfigProvider';
 import { validateEnv } from '@/lib/env';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
+import { defaultLocale } from '@/i18n/config';
 
 // Validate environment variables on startup
 if (process.env.NODE_ENV === 'production') {
@@ -22,15 +25,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default async function RootLayout({children}: {children: React.ReactNode}) {
+  let locale;
+  let messages;
+  
+  try {
+    locale = await getLocale();
+    messages = await getMessages();
+  } catch {
+    locale = defaultLocale;
+    messages = (await import('@/i18n/zh-CN.json')).default;
+  }
+
   return (
-    <html lang="zh-CN">
+    <html lang={locale}>
       <body suppressHydrationWarning>
-        <ConfigProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </ConfigProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ConfigProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ConfigProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

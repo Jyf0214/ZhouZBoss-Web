@@ -1,0 +1,90 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password",
+    "resetPassword": "Reset Password",
+    "rememberMe": "Remember Me",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginNow": "Login Now",
+    "registerNow": "Register Now",
+    "welcomeBack": "Welcome Back",
+    "createAccount": "Create Account",
+    "loginSubtitle": "Sign in to manage your Originium Kernel",
+    "registerSubtitle": "Register and start using Originium Kernel"
+  },
+  "validation": {
+    "required": "This field is required",
+    "emailInvalid": "Please enter a valid email address",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "usernameRequired": "Please enter a username",
+    "usernameTaken": "This username is already taken",
+    "emailTaken": "This email is already registered"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Overview",
+    "articles": "Articles",
+    "users": "Users",
+    "settings": "Settings",
+    "requests": "Requests"
+  },
+  "article": {
+    "title": "Article",
+    "create": "Create Article",
+    "edit": "Edit Article",
+    "delete": "Delete Article",
+    "publish": "Publish",
+    "draft": "Draft",
+    "published": "Published",
+    "view": "View",
+    "search": "Search articles..."
+  },
+  "user": {
+    "title": "User",
+    "profile": "Profile",
+    "settings": "Account Settings",
+    "role": "Role",
+    "group": "User Group",
+    "sudo": "Super Admin",
+    "admin": "Admin",
+    "user": "User"
+  },
+  "error": {
+    "notFound": "Page Not Found",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "serverError": "Server Error",
+    "networkError": "Network Error"
+  },
+  "footer": {
+    "copyright": "Originium Kernel © {year}",
+    "poweredBy": "Powered by"
+  }
+}
