@@ -1,28 +1,33 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import { message } from 'antd';
 
-// 用户身份定义
-export type UserRole = 'wid' | 'sudo';
+/**
+ * Originium Kernel Authentication Hook (Frontend)
+ * Calls Backend APIs at /api/auth/*
+ */
+
+export type UserRole = 'user' | 'admin' | 'sudo';
 
 export interface User {
   uid: string;
   email: string;
-  displayName: string;
+  name: string;
+  displayName: string; // Map name to displayName
   role: UserRole;
   userGroup?: string;
-  wid?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   userRole: UserRole | null;
-  userProfile: User | null;
-  userWid: string | null;
   isSudo: boolean;
   login: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,51 +36,109 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 初始化检查登录状态 (占位实现)
-  useEffect(() => {
-    const checkAuth = async () => {
-      setLoading(true);
-      // TODO: 实现基于 Cookie 的实际验证
-      // 模拟已登录用户进行测试 (如果需要)
-      // setUser({
-      //   uid: 'test-uid',
-      //   email: 'admin@example.com',
-      //   displayName: 'Admin',
-      //   role: 'sudo',
-      //   wid: 'WID-ADMIN'
-      // });
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated) {
+          setUser({
+            ...data.user,
+            displayName: data.user.name
+          });
+        } else {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    } catch (err) {
+      setUser(null);
+    } finally {
       setLoading(false);
-    };
-    checkAuth();
+    }
   }, []);
 
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
   const login = async (email: string, pass: string) => {
-    // TODO: 实现注册/登录 API 调用
-    console.log('Login attempt:', email);
-    // 模拟登录成功
-    setUser({
-      uid: 'mock-uid',
-      email: email,
-      displayName: email.split('@')[0],
-      role: 'sudo', // 默认赋予 sudo 权限以便测试
-      wid: 'WID-MOCK'
-    });
+    try {
+      setLoading(true);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUser({
+          ...data.user,
+          displayName: data.user.name
+        });
+        message.success('登录成功');
+      } else {
+        message.error(data.error || '登录失败');
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (email: string, pass: string, name: string) => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass, name }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUser({
+          ...data.user,
+          displayName: data.user.name
+        });
+        message.success('注册成功');
+      } else {
+        message.error(data.error || '注册失败');
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      console.error('Register error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = async () => {
-    setUser(null);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      message.info('已登出');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
+    <AuthContext.Provider value={{
+      user,
+      loading,
       userRole: user?.role || null,
-      userProfile: user,
-      userWid: user?.wid || null,
-      isSudo: user?.role === 'sudo',
+      isSudo: user?.role === 'sudo' || false,
       login,
-      logout
+      register,
+      logout,
+      refresh
     }}>
       {children}
     </AuthContext.Provider>
@@ -89,3 +152,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Compatibility export
+export const useFirebase = useAuth;

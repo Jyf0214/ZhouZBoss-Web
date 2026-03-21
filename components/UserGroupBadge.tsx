@@ -42,20 +42,20 @@ export function UserGroupBadge({ userGroupId }: UserGroupBadgeProps) {
  * Shows "当前 {user} 属于 {usergroup}" on login
  */
 export function UserGroupNotification() {
-  const { userProfile, userWid, isSudo } = useAuth();
+  const { user, isSudo } = useAuth();
 
-  if (!userProfile || !userProfile.userGroup) return null;
+  if (!user || !user.userGroup) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg border border-zinc-200 p-4 max-w-sm animate-in slide-in-from-top-2">
       <div className="flex items-start gap-3">
         <div className="flex-1">
           <p className="text-sm text-zinc-600">
-            欢迎，<span className="font-medium text-zinc-900">{userProfile.displayName}</span>
+            欢迎，<span className="font-medium text-zinc-900">{user.displayName}</span>
           </p>
           <p className="text-sm text-zinc-500 mt-1">
-            当前 <span className="font-mono text-xs bg-zinc-100 px-1.5 py-0.5 rounded">{userWid}</span> 属于{' '}
-            <span className="font-medium text-blue-600">{userProfile.userGroup}</span>
+            当前 <span className="font-mono text-xs bg-zinc-100 px-1.5 py-0.5 rounded">{user.uid}</span> 属于{' '}
+            <span className="font-medium text-blue-600">{user.userGroup}</span>
           </p>
         </div>
         {isSudo && (

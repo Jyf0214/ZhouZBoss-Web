@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { syncToGithub } from '@/lib/github';
+import { syncArticleToGithub } from '@/lib/github';
 import { Save, Send, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -70,11 +70,7 @@ function EditorContent() {
           const githubToken = '';
           
           if (githubRepo && githubToken) {
-            await syncToGithub({
-              repo: githubRepo,
-              token: githubToken,
-              article: { id: articleId || 'new', ...articleData, createdAt: new Date().toISOString() } as any
-            });
+            await syncArticleToGithub(githubRepo, githubToken, { id: articleId || 'new', ...articleData, createdAt: new Date().toISOString() } as any);
           }
         } catch (syncError) {
           console.error('GitHub sync failed:', syncError);

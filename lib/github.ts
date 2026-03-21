@@ -1,68 +1,92 @@
 import { Octokit } from 'octokit';
-import matter from 'gray-matter';
+import yaml from 'js-yaml';
 
-interface SyncOptions {
+/**
+ * GitHub Integration for Originium Kernel
+ */
+
+interface GithubSyncParams {
   repo: string;
   token: string;
-  article: {
-    id: string;
-    title: string;
-    content: string;
-    authorName: string;
-    tags?: string[];
-    createdAt: string;
-    updatedAt: string;
-  };
+  path: string;
+  content: string;
+  message: string;
 }
 
-export async function syncToGithub({ repo, token, article }: SyncOptions) {
+export async function getFileFromGithub(repo: string, token: string, path: string) {
+  const [owner, repoName] = repo.split('/');
+  const octokit = new Octokit({ auth: token });
+
   try {
-    const octokit = new Octokit({ auth: token });
-    const [owner, repoName] = repo.split('/');
-    
-    if (!owner || !repoName) {
-      throw new Error('Invalid repository format. Use owner/repo');
-    }
-
-    const path = `source/_posts/${article.id}.md`;
-    
-    // Create frontmatter
-    const fileContent = matter.stringify(article.content, {
-      title: article.title,
-      date: article.createdAt,
-      updated: article.updatedAt,
-      tags: article.tags || [],
-      author: article.authorName,
-    });
-
-    // Check if file exists to get SHA for update
-    let sha: string | undefined;
-    try {
-      const { data } = await octokit.rest.repos.getContent({
-        owner,
-        repo: repoName,
-        path,
-      });
-      if (!Array.isArray(data) && data.type === 'file') {
-        sha = data.sha;
-      }
-    } catch (error: any) {
-      if (error.status !== 404) throw error;
-    }
-
-    // Create or update file
-    await octokit.rest.repos.createOrUpdateFileContents({
+    const { data } = await octokit.rest.repos.getContent({
       owner,
       repo: repoName,
       path,
-      message: `Sync article: ${article.title}`,
-      content: Buffer.from(fileContent).toString('base64'),
-      sha,
     });
 
-    return { success: true };
-  } catch (error) {
-    console.error('GitHub Sync Error:', error);
+    if ('content' in data) {
+      const content = Buffer.from(data.content, 'base64').toString('utf-8');
+      return { content, sha: data.sha };
+    }
+    return null;
+  } catch (error: any) {
+    if (error.status === 404) return null;
     throw error;
   }
+}
+
+export async function updateFileInGithub({ repo, token, path, content, message }: GithubSyncParams) {
+  const [owner, repoName] = repo.split('/');
+  const octokit = new Octokit({ auth: token });
+
+  const existingFile = await getFileFromGithub(repo, token, path);
+  
+  return await octokit.rest.repos.createOrUpdateFileContents({
+    owner,
+    repo: repoName,
+    path,
+    message,
+    content: Buffer.from(content).toString('base64'),
+    sha: existingFile?.sha,
+  });
+}
+
+/**
+ * Sync config.yaml to GitHub
+ */
+export async function syncConfigToGithub(repo: string, token: string, config: any) {
+  const yamlContent = yaml.dump(config);
+  return await updateFileInGithub({
+    repo,
+    token,
+    path: 'config.yaml',
+    content: yamlContent,
+    message: 'chore: update system configuration via Web UI',
+  });
+}
+
+/**
+ * Sync article to GitHub
+ */
+export async function syncArticleToGithub(repo: string, token: string, article: any) {
+  const { id, title, content, authorName, tags, coverImage, createdAt } = article;
+  
+  const frontMatter = {
+    title,
+    author: authorName,
+    tags: tags || [],
+    cover: coverImage || '',
+    date: createdAt,
+  };
+
+  const fileContent = `---\n${yaml.dump(frontMatter)}---\n\n${content}`;
+  const fileName = `articles/${id}.md`;
+
+  return await updateFileInGithub({
+    repo,
+    token,
+    path: fileName,
+    content: fileContent,
+    message: `feat: publish article "${title}"`,
+  });
 }
