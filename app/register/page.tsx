@@ -3,13 +3,22 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Form, notification, message } from 'antd';
-import { ArrowLeftOutlined, MailOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Flexbox, Text, Icon } from '@lobehub/ui';
-import { User, Lock } from 'lucide-react';
+import { User, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import AuthCard from '@/components/AuthCard';
 
+/**
+ * Register Page Component
+ * 
+ * Inspired by LobeChat's sign-up design with clean form layout.
+ * Features consistent styling with the login page.
+ * 
+ * @see https://github.com/lobehub/lobe-chat - UI design reference
+ * @copyright LobeChat UI Design
+ */
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -60,22 +69,23 @@ export default function RegisterPage() {
   };
 
   const footer = (
-    <Flexbox gap={8}>
-      <Text type="secondary">已有账号？</Text>
-      <Link href="/login">
-        <Button type="link" style={{ padding: '0 4px' }}>立即登录</Button>
+    <Text>
+      已有账号？{' '}
+      <Link href="/login" style={{ fontWeight: 500 }}>
+        立即登录
       </Link>
-    </Flexbox>
+    </Text>
   );
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-[#f5f7fa] flex items-center justify-center p-6"
+      className="min-h-screen flex items-center justify-center p-8"
+      style={{ background: 'var(--ant-color-bg-layout)' }}
     >
       <Flexbox gap={16}>
-        <div style={{ marginBottom: 24 }}>
+        <div>
           <Link href="/">
             <Button icon={<ArrowLeftOutlined />} type="text">
               返回首页
@@ -96,7 +106,6 @@ export default function RegisterPage() {
           >
             <Form.Item
               name="email"
-              label="电子邮箱"
               rules={[
                 { required: true, message: '请输入电子邮箱' },
                 { type: 'email', message: '请输入有效的电子邮箱地址' }
@@ -107,14 +116,16 @@ export default function RegisterPage() {
                 placeholder="your@email.com"
                 size="large"
                 prefix={
-                  <MailOutlined style={{ marginInline: 6 }} />
+                  <Icon
+                    icon={Mail}
+                    style={{ marginInline: 6 }}
+                  />
                 }
               />
             </Form.Item>
 
             <Form.Item
               name="name"
-              label="昵称"
               rules={[
                 { required: true, message: '请输入昵称' },
                 { min: 2, message: '昵称至少 2 个字符' }
@@ -135,7 +146,6 @@ export default function RegisterPage() {
 
             <Form.Item
               name="password"
-              label="密码"
               rules={[
                 { required: true, message: '请输入密码' },
                 { min: 6, message: '密码至少 6 个字符' }
@@ -156,7 +166,6 @@ export default function RegisterPage() {
 
             <Form.Item
               name="confirm"
-              label="确认密码"
               dependencies={['password']}
               rules={[
                 { required: true, message: '请确认您的密码' },
@@ -189,7 +198,7 @@ export default function RegisterPage() {
           </Form>
         </AuthCard>
 
-        <Flexbox padding={24}>
+        <Flexbox>
           <Text align="center" type="secondary">
             Originium Kernel © {new Date().getFullYear()}
           </Text>
