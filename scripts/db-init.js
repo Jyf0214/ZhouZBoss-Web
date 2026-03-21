@@ -32,7 +32,7 @@ async function main() {
     // MySQL/PostgreSQL 自动建表
     console.log('[数据库初始化] 检测到 SQL 数据库，开始自动建表...');
     
-    const { initializeDatabase } = require('../lib/db-init');
+    const { initializeDatabase } = require('./db-init-impl');
     await initializeDatabase();
     
     console.log('[数据库初始化] ✓ 数据库初始化完成');
