@@ -2,6 +2,8 @@
  * URL Constants
  * 
  * URL 常量配置 - 参考 LobeChat const
+ * 
+ * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
  * @author LobeChat Team
  * @copyright LobeHub. All rights reserved.
  */

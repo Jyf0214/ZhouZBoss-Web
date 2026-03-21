@@ -1,3 +1,12 @@
+/**
+ * AuthContainer Component
+ * 
+ * 认证页面容器 - 复制自 LobeChat
+ * 
+ * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
+ * @author LobeChat Team
+ * @copyright LobeHub. All rights reserved.
+ */
 'use client';
 
 import { Center, Flexbox, Text } from '@lobehub/ui';
@@ -7,14 +16,6 @@ import { type FC, type PropsWithChildren } from 'react';
 import { styles } from './style';
 import { useIsDark } from '@/hooks/useIsDark';
 
-/**
- * AuthContainer Component
- * 
- * 认证页面容器 - 复制自 LobeChat
- * @see https://github.com/lobehub/lobe-chat
- * @author LobeChat Team
- * @copyright LobeHub. All rights reserved.
- */
 const AuthContainer: FC<PropsWithChildren> = ({ children }) => {
   const isDarkMode = useIsDark();
   return (

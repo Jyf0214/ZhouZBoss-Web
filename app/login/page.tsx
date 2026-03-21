@@ -1,3 +1,12 @@
+/**
+ * Sign In Page
+ * 
+ * 登录页面 - 复制自 LobeChat
+ * 
+ * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
+ * @author LobeChat Team
+ * @copyright LobeHub. All rights reserved.
+ */
 'use client';
 
 import { BRANDING_NAME } from '@/const/branding';

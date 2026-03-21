@@ -2,7 +2,8 @@
  * Platform Utilities
  * 
  * 平台检测工具函数 - 参考 LobeChat utils
- * @see https://github.com/lobehub/lobe-chat/blob/main/packages/utils/src/platform.ts
+ * 
+ * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
  * @author LobeChat Team
  * @copyright LobeHub. All rights reserved.
  */

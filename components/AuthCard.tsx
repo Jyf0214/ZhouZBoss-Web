@@ -1,3 +1,12 @@
+/**
+ * AuthCard Component
+ * 
+ * 认证卡片组件 - 复制自 LobeChat
+ * 
+ * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
+ * @author LobeChat Team
+ * @copyright LobeHub. All rights reserved.
+ */
 'use client';
 
 import { type FlexboxProps } from '@lobehub/ui';
@@ -11,14 +20,6 @@ export interface AuthCardProps extends Omit<FlexboxProps, 'title'> {
   title?: ReactNode;
 }
 
-/**
- * AuthCard Component
- * 
- * 认证卡片组件 - 复制自 LobeChat
- * @see https://github.com/lobehub/lobe-chat
- * @author LobeChat Team
- * @copyright LobeHub. All rights reserved.
- */
 export const AuthCard = memo<AuthCardProps>(({ children, title, subtitle, footer, ...rest }) => {
   return (
     <Flexbox width={'min(100%,440px)'} {...rest}>

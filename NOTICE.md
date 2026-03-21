@@ -7,6 +7,9 @@ This project includes UI components and design patterns copied from the LobeChat
 ### Source Project
 - **Name**: LobeChat
 - **Repository**: https://github.com/lobehub/lobe-chat
+- **Branch**: canary
+- **Commit**: 81bd6dc7321d269288755668a6820589fcb54bb6
+- **Last Commit**: 📝 docs: add changelog entries for Jan–Mar 2026 (#13163)
 - **Author**: LobeChat Team <i@lobehub.com>
 - **License**: MIT
 - **Copyright**: © LobeHub. All rights reserved.
@@ -70,7 +73,7 @@ SOFTWARE.
 ### Attribution Requirements
 
 All copied and adapted files include JSDoc comments with:
-- `@see https://github.com/lobehub/lobe-chat` - Source reference
+- Source reference with branch and commit
 - `@author LobeChat Team` - Original author
 - `@copyright LobeHub. All rights reserved.` - Copyright notice
 
@@ -89,22 +92,18 @@ The following modifications were made to adapt the components:
 
 ### @lobehub/ui
 - UI component library used throughout the project
-- Repository: https://github.com/lobehub/lobehub
 - License: MIT
 
 ### Ant Design (antd)
 - UI component framework
-- Repository: https://github.com/ant-design/ant-design
 - License: MIT
 
 ### Next.js
 - React framework
-- Repository: https://github.com/vercel/next.js
 - License: MIT
 
 ### Lucide React
 - Icon library
-- Repository: https://github.com/lucide-icons/lucide
 - License: ISC
 
 ---

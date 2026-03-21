@@ -2,6 +2,8 @@
  * Branding Constants
  * 
  * 品牌常量配置 - 参考 LobeChat business-const
+ * 
+ * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
  * @author LobeChat Team
  * @copyright LobeHub. All rights reserved.
  */

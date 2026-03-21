@@ -1,3 +1,12 @@
+/**
+ * Auth Layout Styles
+ * 
+ * 认证页面样式 - 复制自 LobeChat
+ * 
+ * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
+ * @author LobeChat Team
+ * @copyright LobeHub. All rights reserved.
+ */
 import { createStaticStyles } from 'antd-style';
 
 export const styles = createStaticStyles(({ css, cssVar }) => ({
