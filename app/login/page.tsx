@@ -55,7 +55,7 @@ const SignInEmailStep = ({
     <AuthCard
       footer={footer}
       subtitle={`登录以管理您的 ${BRANDING_NAME}`}
-      title="Agent teammates that grow with you"
+      title="欢迎回来"
     >
       <Form form={form} layout="vertical" onFinish={onCheckUser}>
         <Form.Item
@@ -136,7 +136,7 @@ const SignInPasswordStep = ({
   return (
     <AuthCard
       subtitle="输入密码完成登录"
-      title="Agent teammates that grow with you"
+      title="欢迎回来"
       footer={
         <>
           <Button
