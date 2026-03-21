@@ -6,15 +6,24 @@ import { type FC, type PropsWithChildren } from 'react';
 /**
  * AuthLayout Component
  * 
- * Full auth page layout inspired by LobeChat's design.
- * Includes container with border, logo header, and footer.
- * 
- * @see https://github.com/lobehub/lobe-chat - UI design reference
- * @copyright LobeChat UI Design
+ * 认证页面布局组件，采用 LobeChat 设计语言
+ * 特点：
+ * - 全屏居中布局
+ * - 带边框的容器设计
+ * - Logo 头部和版权页脚
+ *
+ * @see https://github.com/lobehub/lobe-chat - UI 设计参考
+ * @author LobeChat Team
+ * @copyright LobeHub. All rights reserved.
  */
 const AuthLayout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <Flexbox height={'100%'} padding={8} width={'100%'} style={{ minHeight: '100vh' }}>
+    <Flexbox
+      height={'100%'}
+      padding={8}
+      width={'100%'}
+      style={{ minHeight: '100vh' }}
+    >
       <Flexbox
         height={'100%'}
         width={'100%'}

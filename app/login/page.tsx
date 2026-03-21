@@ -10,6 +10,20 @@ import Link from 'next/link';
 import AuthCard from '@/components/AuthCard';
 import AuthLayout from '@/components/AuthLayout';
 
+/**
+ * Login Page Component
+ * 
+ * 登录页面，采用 LobeChat 设计语言
+ * 特点：
+ * - 分步登录流程（先邮箱后密码）
+ * - 简洁的表单布局
+ * - 统一的图标风格
+ * - 充足的间距和呼吸感
+ *
+ * @see https://github.com/lobehub/lobe-chat - UI 设计参考
+ * @author LobeChat Team
+ * @copyright LobeHub. All rights reserved.
+ */
 function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'email' | 'password'>('email');
@@ -56,24 +70,18 @@ function LoginForm() {
     setEmail('');
   };
 
-  const inputStyle = { 
+  const inputStyle = {
     padding: 6,
     borderRadius: 12,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    height: 48,
   };
 
   const renderEmailStep = () => (
     <AuthCard
       footer={
         <Text fontSize={13} type={'secondary'}>
-          登录即表示您同意我们的{' '}
-          <Link href="/terms" style={{ color: 'inherit', textDecoration: 'underline' }}>
-            服务条款
-          </Link>
-          {' '}和{' '}
-          <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>
-            隐私政策
-          </Link>
+          登录即表示您同意我们的服务条款和隐私政策
         </Text>
       }
       subtitle="登录以管理您的 Originium Kernel"
@@ -109,10 +117,10 @@ function LoginForm() {
         </Form.Item>
       </Form>
 
-      <Flexbox 
-        horizontal 
-        justify="center" 
-        gap={8} 
+      <Flexbox
+        horizontal
+        justify="center"
+        gap={8}
         paddingBlock={20}
         style={{ borderTop: '1px solid var(--ant-color-border-secondary)' }}
       >
@@ -129,7 +137,7 @@ function LoginForm() {
       footer={
         <>
           <Text fontSize={13} type={'secondary'}>
-            <Link 
+            <Link
               href="/forgot-password"
               style={{ color: 'inherit', textDecoration: 'underline' }}
             >

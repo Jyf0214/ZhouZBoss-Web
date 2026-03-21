@@ -14,28 +14,44 @@ export interface AuthCardProps {
 /**
  * AuthCard Component
  * 
- * 参考LobeChat设计语言的认证卡片组件
- * 优化标题视觉权重、输入框样式和整体间距
- * 
- * @see https://github.com/lobehub/lobe-chat - UI设计参考
- * @copyright LobeChat UI Design
+ * 认证卡片组件，采用 LobeChat 设计语言
+ * 特点：
+ * - 大标题视觉权重（32px，bold，-0.5px letter-spacing）
+ * - 充足的元素间距和呼吸感
+ * - 简约现代的视觉风格
+ *
+ * @see https://github.com/lobehub/lobe-chat - UI 设计参考
+ * @author LobeChat Team
+ * @copyright LobeHub. All rights reserved.
  */
 export const AuthCard = memo<AuthCardProps>(({ children, title, subtitle, footer }) => {
   return (
     <Flexbox width={'min(100%, 440px)'}>
       <Flexbox gap={16}>
         {title && (
-          <Text fontSize={32} style={{ lineHeight: 1.2, letterSpacing: '-0.5px' }} weight={'bold'}>
+          <Text
+            fontSize={32}
+            style={{
+              lineHeight: 1.2,
+              letterSpacing: '-0.5px',
+              fontWeight: 700,
+            }}
+          >
             {title}
           </Text>
         )}
         {subtitle && (
-          <Text fontSize={18} style={{ lineHeight: 1.4 }} type={'secondary'} weight={500}>
+          <Text
+            fontSize={16}
+            style={{ lineHeight: 1.4 }}
+            type={'secondary'}
+            weight={400}
+          >
             {subtitle}
           </Text>
         )}
       </Flexbox>
-      <Flexbox gap={8} paddingBlock={32}>
+      <Flexbox gap={12} paddingBlock={32}>
         {children}
       </Flexbox>
       {footer}

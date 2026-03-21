@@ -12,11 +12,16 @@ import AuthLayout from '@/components/AuthLayout';
 /**
  * Register Page Component
  * 
- * 参考LobeChat设计语言的注册页面
- * 优化标题视觉权重、输入框样式、阴影和间距
- * 
- * @see https://github.com/lobehub/lobe-chat - UI设计参考
- * @copyright LobeChat UI Design
+ * 注册页面，采用 LobeChat 设计语言
+ * 特点：
+ * - 简洁的表单布局
+ * - 统一的图标风格
+ * - 充足的间距和呼吸感
+ * - 完善的表单验证
+ *
+ * @see https://github.com/lobehub/lobe-chat - UI 设计参考
+ * @author LobeChat Team
+ * @copyright LobeHub. All rights reserved.
  */
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
@@ -30,7 +35,7 @@ export default function RegisterPage() {
       name: values.name,
       password: '***REDACTED***'
     });
-    
+
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -45,10 +50,10 @@ export default function RegisterPage() {
       console.log('[注册页面] 服务器响应:', data);
 
       if (res.ok && data.success) {
-        const roleMsg = data.user?.role === 'sudo' 
-          ? '您是首个注册用户，已获得管理员权限！' 
+        const roleMsg = data.user?.role === 'sudo'
+          ? '您是首个注册用户，已获得管理员权限！'
           : '账号已创建，请前往登录';
-          
+
         notification.success({
           message: '注册成功',
           description: roleMsg,
@@ -68,12 +73,24 @@ export default function RegisterPage() {
   };
 
   const footer = (
-    <Text>
-      已有账号？{' '}
-      <Link href="/login" style={{ fontWeight: 500, textDecoration: 'underline' }}>
-        立即登录
-      </Link>
-    </Text>
+    <Flexbox gap={8} align={'center'}>
+      <Text fontSize={13} type={'secondary'}>
+        注册即表示您同意我们的
+      </Text>
+      <Text fontSize={13}>
+        <Link href="/terms" style={{ color: 'inherit', textDecoration: 'underline' }}>
+          服务条款
+        </Link>
+      </Text>
+      <Text fontSize={13} type={'secondary'}>
+        和
+      </Text>
+      <Text fontSize={13}>
+        <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>
+          隐私政策
+        </Link>
+      </Text>
+    </Flexbox>
   );
 
   return (
@@ -86,6 +103,7 @@ export default function RegisterPage() {
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
             name="email"
+            style={{ marginBottom: 12 }}
             rules={[
               { required: true, message: '请输入电子邮箱' },
               { type: 'email', message: '请输入有效的电子邮箱地址' }
@@ -97,16 +115,18 @@ export default function RegisterPage() {
               prefix={
                 <Icon icon={Mail} style={{ marginInline: 6 }} />
               }
-              style={{ 
+              style={{
                 padding: 6,
                 borderRadius: 12,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                height: 48,
               }}
             />
           </Form.Item>
-          
+
           <Form.Item
             name="name"
+            style={{ marginBottom: 12 }}
             rules={[
               { required: true, message: '请输入昵称' },
               { min: 2, message: '昵称至少 2 个字符' }
@@ -118,16 +138,18 @@ export default function RegisterPage() {
               prefix={
                 <Icon icon={User} style={{ marginInline: 6 }} />
               }
-              style={{ 
+              style={{
                 padding: 6,
                 borderRadius: 12,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                height: 48,
               }}
             />
           </Form.Item>
-          
+
           <Form.Item
             name="password"
+            style={{ marginBottom: 12 }}
             rules={[
               { required: true, message: '请输入密码' },
               { min: 6, message: '密码至少 6 个字符' }
@@ -139,16 +161,18 @@ export default function RegisterPage() {
               prefix={
                 <Icon icon={Lock} style={{ marginInline: 6 }} />
               }
-              style={{ 
+              style={{
                 padding: 6,
                 borderRadius: 12,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                height: 48,
               }}
             />
           </Form.Item>
-          
+
           <Form.Item
             name="confirm"
+            style={{ marginBottom: 12 }}
             dependencies={['password']}
             rules={[
               { required: true, message: '请确认您的密码' },
@@ -166,38 +190,47 @@ export default function RegisterPage() {
               prefix={
                 <Icon icon={Lock} style={{ marginInline: 6 }} />
               }
-              style={{ 
+              style={{
                 padding: 6,
                 borderRadius: 12,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                height: 48,
               }}
             />
           </Form.Item>
 
-          <Form.Item style={{ marginTop: 24 }}>
-            <Button 
-              block 
-              htmlType="submit" 
-              loading={loading} 
-              size="large" 
+          <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
+            <Button
+              block
+              htmlType="submit"
+              loading={loading}
+              size="large"
               type="primary"
-              style={{ borderRadius: 12, height: 48 }}
+              style={{
+                borderRadius: 12,
+                height: 48,
+                fontWeight: 500,
+              }}
             >
               立即注册
             </Button>
           </Form.Item>
         </Form>
-        
-        <Text fontSize={13} type={'secondary'} style={{ textAlign: 'center', marginTop: 16 }}>
-          注册即表示您同意我们的{' '}
-          <Link href="/terms" style={{ color: 'inherit', textDecoration: 'underline' }}>
-            服务条款
+
+        <Flexbox
+          horizontal
+          justify="center"
+          gap={8}
+          paddingBlock={20}
+          style={{ borderTop: '1px solid var(--ant-color-border-secondary)', marginTop: 16 }}
+        >
+          <Text type="secondary" style={{ fontSize: 14 }}>已有账号？</Text>
+          <Link href="/login">
+            <Text style={{ fontSize: 14, fontWeight: 500, textDecoration: 'underline' }}>
+              立即登录
+            </Text>
           </Link>
-          {' '}和{' '}
-          <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>
-            隐私政策
-          </Link>
-        </Text>
+        </Flexbox>
       </AuthCard>
     </AuthLayout>
   );
