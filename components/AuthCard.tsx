@@ -23,19 +23,19 @@ export interface AuthCardProps extends Omit<FlexboxProps, 'title'> {
 export const AuthCard = memo<AuthCardProps>(({ children, title, subtitle, footer, ...rest }) => {
   return (
     <Flexbox width={'min(100%,480px)'} {...rest}>
-      <Flexbox gap={20}>
+      <Flexbox gap={24}>
         {title && (
-          <Text fontSize={32} style={{ lineHeight: 1.3 }} weight={'bold'}>
+          <Text fontSize={32} style={{ lineHeight: 1.6, marginBottom: 0 }} weight={'bold'}>
             {title}
           </Text>
         )}
         {subtitle && (
-          <Text fontSize={20} style={{ lineHeight: 1.4 }} type={'secondary'} weight={400}>
+          <Text fontSize={18} style={{ lineHeight: 1.6 }} type={'secondary'} weight={400}>
             {subtitle}
           </Text>
         )}
       </Flexbox>
-      <Flexbox gap={8} paddingBlock={40}>
+      <Flexbox gap={16} paddingBlock={48}>
         {children}
       </Flexbox>
       {footer}

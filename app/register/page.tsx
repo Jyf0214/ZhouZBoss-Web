@@ -84,12 +84,15 @@ const SignUpPage = () => {
                 <Icon
                   icon={Mail}
                   style={{
-                    marginInline: 6,
+                    marginInline: 8,
                   }}
                 />
               }
               style={{
-                padding: 6,
+                padding: 12,
+                height: 52,
+                fontSize: 16,
+                lineHeight: 1.5,
               }}
             />
           </Form.Item>
@@ -109,12 +112,15 @@ const SignUpPage = () => {
                 <Icon
                   icon={Lock}
                   style={{
-                    marginInline: 6,
+                    marginInline: 8,
                   }}
                 />
               }
               style={{
-                padding: 6,
+                padding: 12,
+                height: 52,
+                fontSize: 16,
+                lineHeight: 1.5,
               }}
             />
           </Form.Item>
@@ -141,12 +147,15 @@ const SignUpPage = () => {
                 <Icon
                   icon={Lock}
                   style={{
-                    marginInline: 6,
+                    marginInline: 8,
                   }}
                 />
               }
               style={{
-                padding: 6,
+                padding: 12,
+                height: 52,
+                fontSize: 16,
+                lineHeight: 1.5,
               }}
             />
           </Form.Item>
