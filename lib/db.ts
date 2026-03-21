@@ -23,12 +23,12 @@ interface IDatabase {
 class RedisDriver implements IDatabase {
   private client: Redis;
   constructor(url: string) {
-    console.log('[DB] Initializing Redis connection...');
+    console.log('[数据库] 正在初始化 Redis 连接...');
     this.client = new Redis(url, {
       maxRetriesPerRequest: 3, // 减少重试次数
       retryStrategy: (times) => {
         if (times > 3) {
-          console.error('[DB] Redis connection failed after max retries');
+          console.error('[数据库] Redis 连接失败，已达到最大重试次数');
           return null; // 停止重试
         }
         return Math.min(times * 200, 2000);
@@ -36,11 +36,11 @@ class RedisDriver implements IDatabase {
     });
     
     this.client.on('error', (err) => {
-      console.error('[DB] Redis connection error:', err.message);
+      console.error('[数据库] Redis 连接错误:', err.message);
     });
     
     this.client.on('connect', () => {
-      console.log('[DB] Redis connected successfully');
+      console.log('[数据库] Redis 连接成功');
     });
   }
   async get(key: string) { return this.client.get(key); }

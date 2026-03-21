@@ -135,10 +135,10 @@ export class DatabaseInitializer {
    * TODO: 实现自动建表逻辑
    */
   async initialize(): Promise<void> {
-    console.log('[DB Init] Starting database initialization...');
+    console.log('[数据库初始化] 开始数据库初始化...');
     
     if (!this.isSql) {
-      console.log('[DB Init] Using Redis, skipping table creation');
+      console.log('[数据库初始化] 使用 Redis，跳过建表操作');
       return;
     }
 
@@ -147,9 +147,9 @@ export class DatabaseInitializer {
       // await this.createTables();
       // await this.runMigrations();
       
-      console.log('[DB Init] Database initialization completed');
+      console.log('[数据库初始化] 数据库初始化完成');
     } catch (error) {
-      console.error('[DB Init] Error:', error);
+      console.error('[数据库初始化] 错误:', error);
       throw error;
     }
   }
@@ -170,7 +170,7 @@ export class DatabaseInitializer {
    */
   private async createTable(schema: TableSchema): Promise<void> {
     // TODO: 根据 schema 生成 CREATE TABLE 语句
-    console.log(`[DB Init] Would create table: ${schema.name}`);
+    console.log(`[数据库初始化] 准备创建表：${schema.name}`);
   }
 
   /**
@@ -179,7 +179,7 @@ export class DatabaseInitializer {
    */
   private async runMigrations(): Promise<void> {
     // TODO: 扫描 migrations 目录并执行迁移
-    console.log('[DB Init] Would run migrations');
+    console.log('[数据库初始化] 准备执行数据迁移');
   }
 
   /**
