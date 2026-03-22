@@ -158,7 +158,13 @@ let dbInstance: IDatabase | null = null;
 export function getDb(): IDatabase {
   if (dbInstance) return dbInstance;
 
-  const url = process.env.DATABASE_URL || 'redis://localhost:6379';
+  // 优先使用 Supabase 环境变量（Vercel 自动生成）
+  const url = 
+    process.env.DATABASE_URL || 
+    process.env.POSTGRES_URL || 
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    'redis://localhost:6379';
   
   if (url.startsWith('redis:')) {
     dbInstance = new RedisDriver(url);
