@@ -40,8 +40,8 @@
 - [x] 永久删除功能
 
 ### 5. GitHub 集成完善
-- [ ] config.yaml 和 config.json 同时生成
-- [ ] 文章同步到 GitHub
+- [x] config.yaml 和 config.json 同时生成
+- [x] 文章同步到 GitHub
 
 ### 6. 工单系统完善
 - [ ] 工单创建功能
