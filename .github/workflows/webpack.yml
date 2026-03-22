@@ -5,10 +5,11 @@ on:
     branches:
       - main
 
-# 【新增】并发控制：如果已有相同工作流在运行，则取消旧的
+# ==================== 新增：取消正在运行的前一次 workflow ====================
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+# =====================================================================
 
 jobs:
   deploy:
@@ -38,15 +39,15 @@ jobs:
           npm install -g edgeone
           edgeone --version
 
-      # 【关键修改】智能部署：检测到上传成功后立即结束，否则等待完成
-      - name: Deploy to EdgeOne (Smart Exit)
+      # 【关键修改】智能部署 + 强制刷日志 + 确保日志一定显示
+      - name: Deploy to EdgeOne (Smart Exit + Always Show Log)
         run: |
           LOG_FILE=$(mktemp)
           
           echo "🚀 Starting EdgeOne deployment..."
           
-          # 后台运行部署命令，输出到日志文件
-          edgeone pages deploy ./ \
+          # 使用 stdbuf 强制实时输出（解决日志不刷盘问题）
+          stdbuf -oL -eL edgeone pages deploy ./ \
             --name "${{ secrets.EDGEONE_PROJECT_NAME }}" \
             --token "${{ secrets.EDGEONE_PAGES_TOKEN }}" \
             --force > "$LOG_FILE" 2>&1 &
@@ -54,35 +55,32 @@ jobs:
           DEPLOY_PID=$!
           echo "📌 Deploy process started (PID: $DEPLOY_PID)"
           
-          # 轮询检测：每秒检查一次日志
+          # 轮询检测（每秒检查一次）
           UPLOAD_DETECTED=false
           while kill -0 $DEPLOY_PID 2>/dev/null; do
             if grep -q "File uploaded successfully" "$LOG_FILE" 2>/dev/null; then
               UPLOAD_DETECTED=true
-              echo "🎯 Detected 'File uploaded successfully', terminating process..."
-              kill $DEPLOY_PID
+              echo "🎯 Detected 'File uploaded successfully', terminating process early..."
+              kill $DEPLOY_PID 2>/dev/null || true
               break
             fi
             sleep 1
           done
           
-          # 等待进程真正结束（获取退出码）
+          # 等待进程真正结束并获取退出码
           wait $DEPLOY_PID
           EXIT_CODE=$?
           
-          # 输出完整日志（便于调试）
           echo ""
-          echo "📋 Deploy log:"
+          echo "📋 === FULL DEPLOY LOG (always shown) ==="
           cat "$LOG_FILE"
+          echo "📋 === END OF LOG ==="
           rm -f "$LOG_FILE"
           
-          # 判断结果：
-          # - 如果检测到关键词（UPLOAD_DETECTED=true）且进程被杀死（143/137），算成功
-          # - 如果进程自然结束（EXIT_CODE=0），算成功
-          # - 否则算失败
+          # 判断结果（保持你原来的逻辑）
           if [ "$UPLOAD_DETECTED" = true ]; then
-            if [ $EXIT_CODE -eq 143 ] || [ $EXIT_CODE -eq 137 ]; then
-              echo "✅ Upload successful, process terminated early as requested"
+            if [ $EXIT_CODE -eq 143 ] || [ $EXIT_CODE -eq 137 ] || [ $EXIT_CODE -eq 0 ]; then
+              echo "✅ Upload successful, process terminated early"
               exit 0
             fi
           fi
