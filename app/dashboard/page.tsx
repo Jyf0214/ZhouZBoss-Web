@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { FileText, Users, Clock, CheckCircle, Plus, Settings, BookOpen, TrendingUp, Activity, ArrowRight } from 'lucide-react';
+import {
+  FileText, Users, Clock, CheckCircle, Plus, Settings, BookOpen,
+  ArrowRight, Shield, UserCog, Trash2, Activity, Palette
+} from 'lucide-react';
 import { Button, Flexbox, Text, Icon } from '@lobehub/ui';
 import Link from 'next/link';
 
@@ -12,6 +15,7 @@ interface Stats {
   publishedArticles: number;
   draftArticles: number;
   totalUsers: number;
+  pendingDeletion: number;
 }
 
 interface RecentArticle {
@@ -29,6 +33,7 @@ export default function DashboardPage() {
     publishedArticles: 0,
     draftArticles: 0,
     totalUsers: 0,
+    pendingDeletion: 0,
   });
   const [recentArticles, setRecentArticles] = useState<RecentArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,12 +48,14 @@ export default function DashboardPage() {
           const articles = await articlesRes.json();
           const published = articles.filter((a: any) => a.status === 'published').length;
           const drafts = articles.filter((a: any) => a.status === 'draft').length;
+          const pending = articles.filter((a: any) => a.status === 'pending_deletion').length;
           
           setStats(prev => ({
             ...prev,
             totalArticles: articles.length,
             publishedArticles: published,
             draftArticles: drafts,
+            pendingDeletion: pending,
           }));
           
           // 最近文章
@@ -100,20 +107,40 @@ export default function DashboardPage() {
       color: 'var(--ant-color-warning)',
       bgColor: 'var(--ant-color-warning-bg)',
     },
-    ...(isSudo ? [{
-      title: '用户总数',
-      value: stats.totalUsers,
-      icon: Users,
-      color: 'var(--ant-color-info)',
-      bgColor: 'var(--ant-color-info-bg)',
-    }] : []),
+    ...(isSudo ? [
+      {
+        title: '用户总数',
+        value: stats.totalUsers,
+        icon: Users,
+        color: 'var(--ant-color-info)',
+        bgColor: 'var(--ant-color-info-bg)',
+      },
+      {
+        title: '待删除',
+        value: stats.pendingDeletion,
+        icon: Trash2,
+        color: 'var(--ant-color-error)',
+        bgColor: 'var(--ant-color-error-bg)',
+      },
+    ] : []),
   ];
 
-  const quickActions = [
+  // 用户快捷操作
+  const userActions = [
     { label: '写文章', icon: Plus, href: '/editor', color: 'var(--ant-color-primary)' },
     { label: '文章管理', icon: BookOpen, href: '/dashboard/articles', color: 'var(--ant-color-success)' },
-    { label: '系统设置', icon: Settings, href: '/admin/config', color: 'var(--ant-color-warning)' },
+    { label: '回收站', icon: Trash2, href: '/dashboard/articles?status=pending_deletion', color: 'var(--ant-color-warning)' },
   ];
+
+  // 管理员额外操作
+  const adminActions = [
+    { label: '用户管理', icon: UserCog, href: '/admin/users', color: 'var(--ant-color-info)' },
+    { label: '用户组', icon: Shield, href: '/admin/groups', color: 'var(--ant-color-purple)' },
+    { label: '系统配置', icon: Settings, href: '/admin/config', color: 'var(--ant-color-warning)' },
+    { label: '回收站管理', icon: Trash2, href: '/admin/requests', color: 'var(--ant-color-error)' },
+  ];
+
+  const quickActions = isSudo ? [...userActions, ...adminActions] : userActions;
 
   if (loading) {
     return (
@@ -127,18 +154,31 @@ export default function DashboardPage() {
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
       {/* 欢迎区域 */}
       <Flexbox gap={8} style={{ marginBottom: 32 }}>
-        <Text fontSize={28} weight={'bold'}>
-          欢迎回来，{user?.name || '用户'}
-        </Text>
+        <Flexbox horizontal gap={12} align="center">
+          <Text fontSize={28} weight={'bold'}>
+            欢迎回来，{user?.name || '用户'}
+          </Text>
+          {isSudo && (
+            <span style={{
+              padding: '4px 12px',
+              borderRadius: 16,
+              fontSize: 12,
+              background: 'var(--ant-color-primary-bg)',
+              color: 'var(--ant-color-primary)',
+            }}>
+              {userRole === 'sudo' ? '超级管理员' : '管理员'}
+            </span>
+          )}
+        </Flexbox>
         <Text fontSize={16} type={'secondary'}>
-          这是您的内容管理控制台
+          这是您的{isSudo ? '管理' : '内容'}控制台
         </Text>
       </Flexbox>
 
       {/* 统计卡片 */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: 16,
         marginBottom: 32
       }}>
@@ -180,7 +220,7 @@ export default function DashboardPage() {
         </Text>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
           gap: 12
         }}>
           {quickActions.map((action, index) => (
@@ -257,12 +297,16 @@ export default function DashboardPage() {
                     fontSize: 12,
                     background: article.status === 'published' 
                       ? 'var(--ant-color-success-bg)' 
-                      : 'var(--ant-color-warning-bg)',
+                      : article.status === 'pending_deletion'
+                        ? 'var(--ant-color-error-bg)'
+                        : 'var(--ant-color-warning-bg)',
                     color: article.status === 'published'
                       ? 'var(--ant-color-success)'
-                      : 'var(--ant-color-warning)',
+                      : article.status === 'pending_deletion'
+                        ? 'var(--ant-color-error)'
+                        : 'var(--ant-color-warning)',
                   }}>
-                    {article.status === 'published' ? '已发布' : '草稿'}
+                    {article.status === 'published' ? '已发布' : article.status === 'pending_deletion' ? '待删除' : '草稿'}
                   </span>
                 </Flexbox>
               </div>
