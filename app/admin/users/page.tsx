@@ -45,12 +45,19 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除此用户吗？')) return;
+    // 检查是否是首个管理员用户
+    const targetUser = users.find(u => u.uid === id);
+    if (targetUser?.role === 'sudo') {
+      alert(locale === 'zh-CN' ? '不能删除首个管理员用户' : 'Cannot delete the first admin user');
+      return;
+    }
+    
+    if (!confirm(locale === 'zh-CN' ? '确定要删除此用户吗？' : 'Are you sure you want to delete this user?')) return;
     try {
       // TODO: 实现删除用户逻辑
-      console.log('删除用户:', id);
+      console.log(locale === 'zh-CN' ? '删除用户' : 'Delete user:', id);
     } catch (error) {
-      console.error('删除用户失败:', error);
+      console.error(locale === 'zh-CN' ? '删除用户失败' : 'Delete user failed:', error);
     }
   };
 
