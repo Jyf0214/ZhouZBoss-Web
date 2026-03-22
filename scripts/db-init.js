@@ -179,6 +179,89 @@ async function main() {
       console.log(`[数据库初始化] ✓ 已更新 ${adminUpdated} 个管理员的用户组`)
     }
     
+    // 5. 同步配置到 GitHub
+    console.log('[数据库初始化] 检查 GitHub 配置同步...')
+    
+    const githubRepo = process.env.GITHUB_REPO
+    const githubToken = process.env.GITHUB_TOKEN
+    
+    // 如果环境变量没有配置，从数据库读取
+    let finalGithubRepo = githubRepo
+    let finalGithubToken = githubToken
+    
+    if (!finalGithubRepo || !finalGithubToken) {
+      console.log('[数据库初始化] 环境变量未配置 GitHub，尝试从数据库读取...')
+      
+      const prisma3 = new PrismaClient()
+      const configRecord = await prisma3.originiumKV.findUnique({
+        where: { key: 'config:main' }
+      })
+      
+      if (configRecord?.value) {
+        const dbConfig = JSON.parse(configRecord.value)
+        finalGithubRepo = finalGithubRepo || dbConfig.githubRepo
+        finalGithubToken = finalGithubToken || dbConfig.githubToken
+        
+        if (finalGithubRepo && finalGithubToken) {
+          console.log('[数据库初始化] ✓ 从数据库获取到 GitHub 配置')
+          
+          // 设置到环境变量供后续使用
+          process.env.GITHUB_REPO = finalGithubRepo
+          process.env.GITHUB_TOKEN = finalGithubToken
+        }
+      }
+      
+      await prisma3.$disconnect()
+    }
+    
+    // 如果有 GitHub 配置，同步配置文件
+    if (finalGithubRepo && finalGithubToken) {
+      try {
+        const { Octokit } = require('octokit')
+        const octokit = new Octokit({ auth: finalGithubToken })
+        const [owner, repoName] = finalGithubRepo.split('/')
+        
+        // 同步工单模板
+        const prisma4 = new PrismaClient()
+        const templatesRecord = await prisma4.originiumKV.findUnique({
+          where: { key: 'config:ticket-templates' }
+        })
+        
+        const templates = templatesRecord?.value ? JSON.parse(templatesRecord.value) : []
+        
+        // 获取文件 SHA（如果存在）
+        let sha = null
+        try {
+          const { data } = await octokit.rest.repos.getContent({
+            owner,
+            repo: repoName,
+            path: 'config/ticket-templates.json'
+          })
+          if ('sha' in data) sha = data.sha
+        } catch (e) {
+          // 文件不存在
+        }
+        
+        // 创建/更新文件
+        await octokit.rest.repos.createOrUpdateFileContents({
+          owner,
+          repo: repoName,
+          path: 'config/ticket-templates.json',
+          message: 'chore: sync ticket templates from database',
+          content: Buffer.from(JSON.stringify(templates, null, 2)).toString('base64'),
+          sha: sha || undefined
+        })
+        
+        console.log('[数据库初始化] ✓ 工单模板已同步到 GitHub')
+        
+        await prisma4.$disconnect()
+      } catch (error) {
+        console.log('[数据库初始化] ⚠️ GitHub 同步跳过:', error.message)
+      }
+    } else {
+      console.log('[数据库初始化] ⚠️ 未配置 GitHub，跳过同步')
+    }
+    
     console.log('[数据库初始化] ✓ 全部完成')
   } catch (error) {
     console.error('[数据库初始化] ❌ 失败:', error.message)
