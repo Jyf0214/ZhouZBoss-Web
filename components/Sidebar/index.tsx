@@ -46,7 +46,8 @@ function SidebarContent({ items, isActive, onItemClick, user, onLogout }: Sideba
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      background: 'var(--ant-color-bg-container)',
+      background: '#ffffff',
+      backgroundColor: '#ffffff',
     }}>
       {/* Logo */}
       <div style={{
@@ -186,9 +187,10 @@ function Sidebar() {
           position: 'fixed',
           left: 0,
           top: 0,
-          borderRight: '1px solid var(--ant-color-border-secondary)',
+          borderRight: '1px solid #e5e5e5',
           zIndex: 100,
-          background: 'var(--ant-color-bg-container)',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
         }}
       >
         <SidebarContent 
@@ -228,7 +230,8 @@ function Sidebar() {
           zIndex: 999,
           transition: 'left 0.3s ease',
           boxShadow: isOpen ? '4px 0 12px rgba(0,0,0,0.1)' : 'none',
-          background: 'var(--ant-color-bg-container)',
+          background: '#ffffff',
+          backgroundColor: '#ffffff',
         }}
       >
         <SidebarContent 
