@@ -5,8 +5,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Home, FileText, Plus, Settings, Users, Shield, Trash2,
-  Activity, Menu, X, LogOut, BookOpen, UserCog
+  Home, FileText, Plus, Settings, Shield, Trash2,
+  Activity, Menu, LogOut, BookOpen, UserCog
 } from 'lucide-react';
 import { Icon, Text } from '@lobehub/ui';
 
@@ -32,25 +32,16 @@ const adminItems: MenuItem[] = [
   { label: '工单管理', icon: FileText, href: '/admin/tickets', adminOnly: true },
 ];
 
-function Sidebar() {
-  const { user, isSudo, logout } = useAuth();
-  const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
+interface SidebarContentProps {
+  items: MenuItem[];
+  isActive: (href: string) => boolean;
+  onItemClick: () => void;
+  user: any;
+  onLogout: () => void;
+}
 
-  const allItems = isSudo ? [...menuItems, ...adminItems] : menuItems;
-
-  const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard';
-    return pathname.startsWith(href.split('?')[0]);
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    window.location.href = '/login';
-  };
-
-  // 侧边栏内容
-  const SidebarContent = () => (
+function SidebarContent({ items, isActive, onItemClick, user, onLogout }: SidebarContentProps) {
+  return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
@@ -67,11 +58,11 @@ function Sidebar() {
 
       {/* 菜单 */}
       <div style={{ flex: 1, padding: '12px 8px', overflowY: 'auto' }}>
-        {allItems.map((item) => (
+        {items.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            onClick={() => setIsOpen(false)}
+            onClick={onItemClick}
             style={{ textDecoration: 'none' }}
           >
             <div
@@ -127,7 +118,7 @@ function Sidebar() {
             </Text>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={onLogout}
             style={{
               background: 'none',
               border: 'none',
@@ -144,6 +135,24 @@ function Sidebar() {
       </div>
     </div>
   );
+}
+
+function Sidebar() {
+  const { user, isSudo, logout } = useAuth();
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const allItems = isSudo ? [...menuItems, ...adminItems] : menuItems;
+
+  const isActive = (href: string) => {
+    if (href === '/dashboard') return pathname === '/dashboard';
+    return pathname.startsWith(href.split('?')[0]);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/login';
+  };
 
   return (
     <>
@@ -181,7 +190,13 @@ function Sidebar() {
           zIndex: 100,
         }}
       >
-        <SidebarContent />
+        <SidebarContent 
+          items={allItems}
+          isActive={isActive}
+          onItemClick={() => setIsOpen(false)}
+          user={user}
+          onLogout={handleLogout}
+        />
       </div>
 
       {/* 移动端遮罩 */}
@@ -214,7 +229,13 @@ function Sidebar() {
           boxShadow: isOpen ? '4px 0 12px rgba(0,0,0,0.1)' : 'none',
         }}
       >
-        <SidebarContent />
+        <SidebarContent 
+          items={allItems}
+          isActive={isActive}
+          onItemClick={() => setIsOpen(false)}
+          user={user}
+          onLogout={handleLogout}
+        />
       </div>
 
       <style jsx>{`
