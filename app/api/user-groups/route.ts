@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
+// 默认用户组
+const defaultGroups = [
+  { id: 'sudo', name: '超级管理员组', description: '拥有所有权限的管理员组', isDefault: true },
+  { id: 'admin', name: '管理员组', description: '普通管理员组', isDefault: true },
+  { id: 'default', name: '默认用户组', description: '普通用户默认组', isDefault: true },
+];
+
 // 获取用户组列表
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
@@ -13,14 +20,16 @@ export async function GET(req: NextRequest) {
     const db = getDb();
     const groupsStr = await db.get('user-groups:list');
     
-    if (!groupsStr) {
-      // 返回默认用户组
-      return NextResponse.json([
-        { id: 'default', name: '默认组', description: '默认用户组' },
-      ]);
+    let groups = groupsStr ? JSON.parse(groupsStr) : [];
+    
+    // 确保默认用户组存在
+    const existingIds = groups.map((g: any) => g.id);
+    for (const defaultGroup of defaultGroups) {
+      if (!existingIds.includes(defaultGroup.id)) {
+        groups.push(defaultGroup);
+      }
     }
     
-    const groups = JSON.parse(groupsStr);
     return NextResponse.json(groups);
   } catch (error: any) {
     return NextResponse.json({ error: '获取用户组失败' }, { status: 500 });
@@ -35,29 +44,39 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, description } = await req.json();
+    const { id, name, description } = await req.json();
     
     if (!name) {
       return NextResponse.json({ error: '用户组名称不能为空' }, { status: 400 });
     }
     
-    if (name === 'admin') {
-      return NextResponse.json({ error: '无法创建管理员用户组' }, { status: 403 });
+    // 不允许创建系统默认组
+    if (['sudo', 'admin', 'default'].includes(id)) {
+      return NextResponse.json({ error: '不能创建系统默认用户组' }, { status: 403 });
     }
 
     const db = getDb();
     const groupsStr = await db.get('user-groups:list');
-    const groups = groupsStr ? JSON.parse(groupsStr) : [];
+    let groups = groupsStr ? JSON.parse(groupsStr) : [];
+    
+    // 确保默认用户组存在
+    const existingIds = groups.map((g: any) => g.id);
+    for (const defaultGroup of defaultGroups) {
+      if (!existingIds.includes(defaultGroup.id)) {
+        groups.push(defaultGroup);
+      }
+    }
     
     // 检查是否已存在
-    if (groups.some((g: any) => g.name === name)) {
-      return NextResponse.json({ error: '用户组已存在' }, { status: 409 });
+    if (groups.some((g: any) => g.id === id || g.name === name)) {
+      return NextResponse.json({ error: '用户组ID或名称已存在' }, { status: 409 });
     }
     
     const newGroup = {
-      id: `group-${Date.now()}`,
+      id: id || `group-${Date.now().toString(36)}`,
       name,
       description: description || '',
+      isDefault: false,
       createdAt: new Date().toISOString(),
     };
     
@@ -80,6 +99,11 @@ export async function DELETE(req: NextRequest) {
   try {
     const { id } = await req.json();
     
+    // 不允许删除系统默认组
+    if (['sudo', 'admin', 'default'].includes(id)) {
+      return NextResponse.json({ error: '不能删除系统默认用户组' }, { status: 403 });
+    }
+
     const db = getDb();
     const groupsStr = await db.get('user-groups:list');
     const groups = groupsStr ? JSON.parse(groupsStr) : [];

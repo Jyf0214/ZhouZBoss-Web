@@ -130,7 +130,7 @@ export default function UsersPage() {
                     >
                       <option value="user">普通用户</option>
                       <option value="admin">管理员</option>
-                      <option value="sudo">超级管理员</option>
+                      {u.role !== 'sudo' && <option value="sudo">超级管理员</option>}
                     </select>
                   ) : (
                     <span style={{
