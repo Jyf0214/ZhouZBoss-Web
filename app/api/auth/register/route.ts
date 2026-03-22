@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       message: isFirstUser ? '注册成功！您是首个用户，已获得管理员权限。' : '注册成功！'
     });
   } catch (error: any) {
-    console.error('注册失败:', error.message);
+    console.error(JSON.stringify({ type: 'register_error', message: error.message, stack: error.stack }));
     return NextResponse.json({ error: error.message || '注册失败' }, { status: 500 });
   }
 }

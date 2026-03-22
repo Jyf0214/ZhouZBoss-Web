@@ -15,8 +15,15 @@ async function main() {
     return;
   }
   
+  // 自动添加 sslmode=require（如果没有）
+  let finalUrl = databaseUrl
+  if (databaseUrl.startsWith('postgres') && !databaseUrl.includes('sslmode')) {
+    const separator = databaseUrl.includes('?') ? '&' : '?'
+    finalUrl = `${databaseUrl}${separator}sslmode=require&ssl=true`
+  }
+  
   // 设置 DATABASE_URL 供 Prisma 使用
-  process.env.DATABASE_URL = databaseUrl
+  process.env.DATABASE_URL = finalUrl
   
   console.log('[数据库初始化] 开始初始化...')
   
