@@ -2,14 +2,23 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { Save, Github, Settings } from 'lucide-react';
+import { useI18n } from '@/hooks/use-i18n';
+import { Settings, Github, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
 import { Icon, Text } from '@lobehub/ui';
+
+interface EnvStatus {
+  siteTitle: string;
+  siteDescription: string;
+  githubRepo: string;
+  githubToken: string;
+}
 
 export default function ConfigPage() {
   const { userRole } = useAuth();
-  const [config, setConfig] = useState({
-    siteTitle: 'Originium Kernel',
-    siteDescription: '现代内容发布平台',
+  const { t, locale } = useI18n();
+  const [config, setConfig] = useState<EnvStatus>({
+    siteTitle: '',
+    siteDescription: '',
     githubRepo: '',
     githubToken: '',
   });
@@ -28,7 +37,12 @@ export default function ConfigPage() {
         const res = await fetch('/api/config');
         if (res.ok) {
           const data = await res.json();
-          setConfig(data);
+          setConfig({
+            siteTitle: data.siteTitle || 'Originium Kernel',
+            siteDescription: data.siteDescription || '',
+            githubRepo: data.githubRepo || '',
+            githubToken: data.githubToken ? '********' : '',
+          });
         }
       } catch (error) {
         console.error('获取配置失败:', error);
@@ -46,17 +60,20 @@ export default function ConfigPage() {
       const res = await fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
+        body: JSON.stringify({
+          siteTitle: config.siteTitle,
+          siteDescription: config.siteDescription,
+        }),
       });
       
       if (res.ok) {
-        alert('配置保存成功！');
+        alert(locale === 'zh-CN' ? '配置保存成功！' : 'Configuration saved!');
       } else {
-        alert('保存失败，请重试');
+        alert(locale === 'zh-CN' ? '保存失败，请重试' : 'Save failed, please retry');
       }
     } catch (error) {
       console.error('保存配置失败:', error);
-      alert('保存失败，请重试');
+      alert(locale === 'zh-CN' ? '保存失败，请重试' : 'Save failed, please retry');
     } finally {
       setSaving(false);
     }
@@ -65,7 +82,7 @@ export default function ConfigPage() {
   if (loading) {
     return (
       <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text type="secondary">加载中...</Text>
+        <Text type="secondary">{locale === 'zh-CN' ? '加载中...' : 'Loading...'}</Text>
       </div>
     );
   }
@@ -73,10 +90,14 @@ export default function ConfigPage() {
   if (userRole !== 'sudo' && userRole !== 'admin') {
     return (
       <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text style={{ color: 'var(--ant-color-error)' }}>无权限访问，仅管理员可访问此页面</Text>
+        <Text style={{ color: 'var(--ant-color-error)' }}>
+          {locale === 'zh-CN' ? '无权限访问' : 'Access denied'}
+        </Text>
       </div>
     );
   }
+
+  const isGithubConfigured = config.githubRepo && config.githubToken;
 
   return (
     <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
@@ -95,8 +116,12 @@ export default function ConfigPage() {
           <Icon icon={Settings} />
         </div>
         <div>
-          <Text fontSize={24} weight={'bold'}>系统配置</Text>
-          <Text fontSize={14} type="secondary">管理站点设置和 GitHub 集成</Text>
+          <Text fontSize={24} weight={'bold'}>
+            {locale === 'zh-CN' ? '系统配置' : 'System Config'}
+          </Text>
+          <Text fontSize={14} type="secondary">
+            {locale === 'zh-CN' ? '管理站点设置' : 'Manage site settings'}
+          </Text>
         </div>
       </div>
 
@@ -117,12 +142,12 @@ export default function ConfigPage() {
             background: '#52c41a',
             marginRight: 8 
           }}></span>
-          基础设置
+          {locale === 'zh-CN' ? '基础设置' : 'General Settings'}
         </Text>
         
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            站点标题
+            {locale === 'zh-CN' ? '站点标题' : 'Site Title'}
           </label>
           <input 
             type="text" 
@@ -143,7 +168,7 @@ export default function ConfigPage() {
         
         <div>
           <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            站点描述
+            {locale === 'zh-CN' ? '站点描述' : 'Site Description'}
           </label>
           <textarea 
             value={config.siteDescription}
@@ -163,7 +188,7 @@ export default function ConfigPage() {
         </div>
       </div>
 
-      {/* GitHub 集成 */}
+      {/* GitHub 集成状态 */}
       <div style={{
         background: '#ffffff',
         borderRadius: 12,
@@ -173,58 +198,94 @@ export default function ConfigPage() {
       }}>
         <Text fontSize={16} weight={'bold'} style={{ marginBottom: 16, display: 'block' }}>
           <Icon icon={Github} style={{ marginRight: 8 }} />
-          GitHub 集成
+          {locale === 'zh-CN' ? 'GitHub 集成' : 'GitHub Integration'}
         </Text>
         
-        <Text fontSize={13} type="secondary" style={{ marginBottom: 16, display: 'block' }}>
-          配置 GitHub 以自动同步已发布文章到您的仓库
-        </Text>
-        
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            仓库地址（用户名/仓库名）
-          </label>
-          <input 
-            type="text" 
-            placeholder="例如：username/my-blog"
-            value={config.githubRepo}
-            onChange={e => setConfig({...config, githubRepo: e.target.value})}
-            style={{
-              width: '100%',
-              height: 40,
-              padding: '0 12px',
-              border: '1px solid #d9d9d9',
-              borderRadius: 8,
-              fontSize: 14,
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+        {/* 状态指示 */}
+        <div style={{
+          padding: 16,
+          background: isGithubConfigured ? '#f6ffed' : '#fff7e6',
+          borderRadius: 8,
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+        }}>
+          <Icon 
+            icon={isGithubConfigured ? CheckCircle : XCircle} 
+            style={{ 
+              fontSize: 20, 
+              color: isGithubConfigured ? '#52c41a' : '#faad14' 
+            }} 
           />
+          <div>
+            <Text weight={500}>
+              {isGithubConfigured 
+                ? (locale === 'zh-CN' ? 'GitHub 已配置' : 'GitHub configured')
+                : (locale === 'zh-CN' ? 'GitHub 未配置' : 'GitHub not configured')
+              }
+            </Text>
+            <Text fontSize={13} type="secondary" style={{ display: 'block', marginTop: 4 }}>
+              {isGithubConfigured
+                ? (locale === 'zh-CN' ? `仓库: ${config.githubRepo}` : `Repo: ${config.githubRepo}`)
+                : (locale === 'zh-CN' ? '请在环境变量中配置 GitHub 仓库和令牌' : 'Please configure GitHub repo and token in environment variables')
+              }
+            </Text>
+          </div>
         </div>
-        
-        <div>
-          <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            个人访问令牌（Personal Access Token）
-          </label>
-          <input 
-            type="password" 
-            placeholder="ghp_xxxxxxxxxxxx"
-            value={config.githubToken}
-            onChange={e => setConfig({...config, githubToken: e.target.value})}
-            style={{
-              width: '100%',
-              height: 40,
-              padding: '0 12px',
-              border: '1px solid #d9d9d9',
-              borderRadius: 8,
-              fontSize: 14,
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
-          <Text fontSize={12} type="secondary" style={{ marginTop: 8, display: 'block' }}>
-            需要 `repo` 权限以创建/更新文件
+
+        {/* 环境变量说明 */}
+        <div style={{
+          padding: 16,
+          background: '#f5f5f5',
+          borderRadius: 8,
+        }}>
+          <Text fontSize={14} weight={500} style={{ marginBottom: 12, display: 'block' }}>
+            {locale === 'zh-CN' ? '需要配置的环境变量：' : 'Required environment variables:'}
           </Text>
+          <div style={{ marginBottom: 8 }}>
+            <code style={{ 
+              background: '#e6e6e6', 
+              padding: '2px 8px', 
+              borderRadius: 4,
+              fontSize: 13,
+            }}>
+              GITHUB_REPO
+            </code>
+            <Text fontSize={13} type="secondary" style={{ marginLeft: 8 }}>
+              {locale === 'zh-CN' ? '格式：用户名/仓库名' : 'Format: username/repo-name'}
+            </Text>
+          </div>
+          <div>
+            <code style={{ 
+              background: '#e6e6e6', 
+              padding: '2px 8px', 
+              borderRadius: 4,
+              fontSize: 13,
+            }}>
+              GITHUB_TOKEN
+            </code>
+            <Text fontSize={13} type="secondary" style={{ marginLeft: 8 }}>
+              {locale === 'zh-CN' ? '需要 repo 权限的 Personal Access Token' : 'Personal Access Token with repo scope'}
+            </Text>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <a 
+              href="https://vercel.com/dashboard" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                color: '#1890ff',
+                fontSize: 13,
+              }}
+            >
+              {locale === 'zh-CN' ? '前往 Vercel 设置环境变量' : 'Go to Vercel environment variables'}
+              <Icon icon={ExternalLink} style={{ fontSize: 12 }} />
+            </a>
+          </div>
         </div>
       </div>
 
@@ -248,8 +309,11 @@ export default function ConfigPage() {
             opacity: saving ? 0.7 : 1,
           }}
         >
-          <Icon icon={Save} />
-          <span>{saving ? '保存中...' : '保存配置'}</span>
+          <Icon icon={Settings} />
+          <span>{saving 
+            ? (locale === 'zh-CN' ? '保存中...' : 'Saving...') 
+            : (locale === 'zh-CN' ? '保存配置' : 'Save Config')
+          }</span>
         </button>
       </div>
     </div>
