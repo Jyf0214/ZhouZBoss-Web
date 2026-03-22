@@ -19,11 +19,15 @@ const nextConfig: NextConfig = {
   },
   output: 'standalone',
   transpilePackages: ['motion'],
-  // 排除不需要打包进云函数的依赖
+  // 排除前端 UI 依赖，保留数据库依赖
   serverExternalPackages: [
-    'prisma',
-    '@prisma/client',
-    'sharp',
+    '@lobehub/ui',
+    'antd',
+    '@ant-design/icons',
+    'antd-style',
+    'lucide-react',
+    'react-markdown',
+    'react-syntax-highlighter',
   ],
   turbopack: {},
   webpack: (config, {dev}) => {

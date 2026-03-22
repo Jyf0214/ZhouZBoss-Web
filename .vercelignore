@@ -1,0 +1,14 @@
+# 排除不需要的文件
+*.md
+!README.md
+.git
+.github
+.vscode
+node_modules/.cache
+node_modules/.prisma
+node_modules/prisma
+node_modules/@prisma/engines
+node_modules/@swc
+node_modules/typescript
+node_modules/playwright
+node_modules/puppeteer-core
