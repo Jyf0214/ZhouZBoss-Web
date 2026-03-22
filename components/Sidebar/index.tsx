@@ -188,6 +188,7 @@ function Sidebar() {
           top: 0,
           borderRight: '1px solid var(--ant-color-border-secondary)',
           zIndex: 100,
+          background: 'var(--ant-color-bg-container)',
         }}
       >
         <SidebarContent 
@@ -227,6 +228,7 @@ function Sidebar() {
           zIndex: 999,
           transition: 'left 0.3s ease',
           boxShadow: isOpen ? '4px 0 12px rgba(0,0,0,0.1)' : 'none',
+          background: 'var(--ant-color-bg-container)',
         }}
       >
         <SidebarContent 
