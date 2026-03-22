@@ -1,0 +1,15 @@
+{
+  "cloudFunctions": {
+    "nodejs": {
+      "externalNodeModules": [
+        "@lobehub/ui",
+        "antd",
+        "@ant-design/icons",
+        "antd-style",
+        "lucide-react",
+        "react-markdown",
+        "react-syntax-highlighter"
+      ]
+    }
+  }
+}
