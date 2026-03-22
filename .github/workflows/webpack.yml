@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+# 添加并发控制：同一分支的新工作流会取消正在运行的旧工作流
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -39,4 +44,3 @@ jobs:
             --name "${{ secrets.EDGEONE_PROJECT_NAME }}" \
             --token "${{ secrets.EDGEONE_PAGES_TOKEN }}" \
             --force 
-          
