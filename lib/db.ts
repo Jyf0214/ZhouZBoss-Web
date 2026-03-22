@@ -71,7 +71,7 @@ class SqlDriver implements IDatabase {
       let finalUrl = url;
       if (!url.includes('sslmode')) {
         const separator = url.includes('?') ? '&' : '?';
-        finalUrl = `${url}${separator}sslmode=require`;
+        finalUrl = `${url}${separator}sslmode=verify-full`;
       }
       
       this.pool = new PgClient({ 
