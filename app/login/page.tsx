@@ -68,15 +68,22 @@ function LoginForm() {
   const renderEmailStep = () => (
     <AuthCard
       footer={
-        <Flexbox horizontal justify="center" gap={8} paddingBlock={24}>
-          <Text type="secondary" style={{ fontSize: 14, lineHeight: '22px' }}>
-            {t('auth.noAccount')}
-          </Text>
-          <Link href="/register">
-            <Text style={{ fontSize: 14, fontWeight: 500, lineHeight: '22px' }}>
-              {t('auth.registerNow')}
+        <Flexbox gap={16} align="center" style={{ marginTop: 16 }}>
+          <Link href="/forgot-password">
+            <Text style={{ fontSize: 14, color: 'var(--ant-color-text-secondary)', cursor: 'pointer' }}>
+              {t('auth.forgotPassword')}
             </Text>
           </Link>
+          <Flexbox horizontal justify="center" gap={8}>
+            <Text type="secondary" style={{ fontSize: 14, lineHeight: '22px' }}>
+              {t('auth.noAccount')}
+            </Text>
+            <Link href="/register">
+              <Text style={{ fontSize: 14, fontWeight: 500, lineHeight: '22px' }}>
+                {t('auth.registerNow')}
+              </Text>
+            </Link>
+          </Flexbox>
         </Flexbox>
       }
       subtitle={t('auth.loginSubtitle')}
