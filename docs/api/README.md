@@ -42,6 +42,43 @@ POST /api/auth/signout
 GET /api/auth/session
 ```
 
+### 发送密码重置邮件
+
+```
+POST /api/auth/reset-password
+```
+
+**请求体：**
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**响应：**
+
+成功返回 201 状态码。
+
+### 重置密码
+
+```
+PUT /api/auth/reset-password
+```
+
+**请求体：**
+
+```json
+{
+  "token": "reset-token",
+  "password": "new-password"
+}
+```
+
+**响应：**
+
+成功返回 201 状态码。
+
 ## 文章接口
 
 ### 获取文章列表
@@ -140,6 +177,10 @@ GET /api/config
   "social": {
     "github": "https://github.com/username",
     "twitter": "https://twitter.com/username"
+  },
+  "background": {
+    "url": "背景图片URL",
+    "opacity": 0.5
   }
 }
 ```

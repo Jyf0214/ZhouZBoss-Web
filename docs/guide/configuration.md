@@ -48,11 +48,12 @@ GITHUB_BRANCH="main"
 配置 SMTP 服务以支持邮箱订阅通知功能。
 
 ```env
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT="587"
-SMTP_USER="your-email@gmail.com"
-SMTP_PASSWORD="your-app-password"
-SMTP_FROM="Your Name <noreply@yourdomain.com>"
+SMTP_HOST="smtp.gmail.com"    # SMTP服务器地址
+SMTP_PORT="587"               # SMTP端口（默认587）
+SMTP_USER="your-email@gmail.com"  # SMTP用户名
+SMTP_PASS="your-app-password"     # SMTP密码
+SMTP_FROM="Your Name <noreply@yourdomain.com>"  # 发件人地址
+SMTP_SECURE="false"           # 是否使用SSL（true/false）
 ```
 
 ### 常用邮箱配置
@@ -64,6 +65,16 @@ SMTP_FROM="Your Name <noreply@yourdomain.com>"
 | QQ 邮箱 | smtp.qq.com | 465 |
 | 163 邮箱 | smtp.163.com | 465 |
 
+## 管理员密码重置
+
+构建时可通过环境变量强制更新 admin/sudo 用户密码。
+
+```env
+ADMIN_PASSWORD="your-new-password"
+```
+
+设置此环境变量后，在构建过程中会自动更新管理员账户的密码。
+
 ## 背景主题配置
 
 系统支持自定义背景主题，在管理后台的配置页面进行设置。
@@ -73,6 +84,11 @@ SMTP_FROM="Your Name <noreply@yourdomain.com>"
 - **渐变背景**：自定义渐变色
 - **图片背景**：上传或使用外部图片链接
 - **纯色背景**：单一颜色背景
+
+### 配置说明
+
+- **自定义背景图片URL**：在管理后台配置页面设置背景图片地址
+- **蒙板透明度**：设置背景蒙板的透明度（0-100%），0为完全透明，100为完全不透明
 
 ### 配置示例
 

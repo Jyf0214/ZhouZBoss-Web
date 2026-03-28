@@ -30,4 +30,13 @@ features:
   - icon: 🌙
     title: 深色模式
     details: 支持亮色/暗色主题切换
+  - icon: 🔐
+    title: 密码重置
+    details: 支持 SMTP 邮件发送重置链接
+  - icon: 🎨
+    title: 自定义背景
+    details: 支持自定义背景图片和透明度蒙板
+  - icon: 🔑
+    title: 管理员密码重置
+    details: 支持通过环境变量在构建时重置管理员密码
 ---
