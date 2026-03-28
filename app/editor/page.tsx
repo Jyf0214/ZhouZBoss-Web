@@ -10,7 +10,7 @@ import Link from 'next/link';
 function EditorContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const articleId = searchParams.get('id');
+  const articleId = searchParams?.get('id');
   const { user } = useAuth();
   const { t, locale } = useI18n();
   

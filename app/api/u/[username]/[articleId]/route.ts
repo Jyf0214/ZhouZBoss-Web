@@ -35,27 +35,25 @@ export async function GET(
 
     const article = JSON.parse(articleStr);
 
-    // Check if article is published or user has access
-    if (article.status !== 'published' && article.authorId !== user.uid) {
+    // Check if article belongs to this user
+    if (article.authorId !== user.uid) {
+      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    }
+
+    // Check if article is published
+    if (article.status !== 'published') {
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
     return NextResponse.json({
-      user: {
-        uid: user.uid,
-        username,
-        name: user.name,
-      },
-      article: {
-        id: article.id,
-        title: article.title,
-        content: article.content,
-        authorName: article.authorName,
-        tags: article.tags,
-        coverImage: article.coverImage,
-        createdAt: article.createdAt,
-        updatedAt: article.updatedAt,
-      },
+      id: article.id,
+      title: article.title,
+      authorName: article.authorName,
+      content: article.content,
+      tags: article.tags || [],
+      coverImage: article.coverImage || '',
+      createdAt: article.createdAt,
+      status: article.status,
     });
   } catch (error) {
     console.error('User article API error:', error);

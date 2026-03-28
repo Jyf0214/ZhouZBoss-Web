@@ -41,7 +41,7 @@ export function Sidebar() {
         <nav className="space-y-1 mt-4">
           {filteredLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+            const isActive = pathname === link.href || (pathname ?? '').startsWith(`${link.href}/`);
 
             return (
               <Link

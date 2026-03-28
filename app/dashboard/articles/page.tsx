@@ -12,7 +12,7 @@ export default function ArticlesPage() {
   const { user } = useAuth();
   const { t, locale } = useI18n();
   const searchParams = useSearchParams();
-  const status = searchParams.get('status');
+  const status = searchParams?.get('status');
   const isRecycleBin = status === 'pending_deletion';
   
   const [articles, setArticles] = useState<any[]>([]);

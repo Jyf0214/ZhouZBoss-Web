@@ -16,7 +16,7 @@ function ResetPasswordForm() {
   const [form] = Form.useForm();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = searchParams?.get('token');
   const inputRef = useRef<any>(null);
   const { t } = useI18n();
 

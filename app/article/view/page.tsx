@@ -10,8 +10,8 @@ import Image from 'next/image';
 
 function ArticleViewContent() {
   const searchParams = useSearchParams();
-  const userParam = searchParams.get('user');
-  const articleParam = searchParams.get('article');
+  const userParam = searchParams?.get('user');
+  const articleParam = searchParams?.get('article');
   
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);

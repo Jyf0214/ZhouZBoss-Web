@@ -22,7 +22,7 @@ function LoginForm() {
   const inputRef = useRef<any>(null);
   const { t, locale } = useI18n();
 
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
 
   useEffect(() => {
     inputRef.current?.focus();

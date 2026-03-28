@@ -10,7 +10,7 @@ import Image from 'next/image';
 
 export default function ArticlePage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params?.id as string;
   const [article] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

@@ -180,7 +180,7 @@ function Sidebar() {
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
-    return pathname.startsWith(href.split('?')[0]);
+    return (pathname ?? '').startsWith(href.split('?')[0]);
   };
 
   const handleLogout = async () => {
