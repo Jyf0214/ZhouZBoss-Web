@@ -171,9 +171,14 @@ function ResetPasswordForm() {
   );
 }
 
+function ResetPasswordLoading() {
+  const { t } = useI18n();
+  return <div>{t('common.loading')}</div>;
+}
+
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div>加载中...</div>}>
+    <Suspense fallback={<ResetPasswordLoading />}>
       <ResetPasswordForm />
     </Suspense>
   );

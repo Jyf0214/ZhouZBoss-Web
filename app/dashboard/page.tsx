@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useI18n } from '@/hooks/use-i18n';
 import { useRouter } from 'next/navigation';
 import {
   FileText, Users, Clock, CheckCircle, Plus, Settings, BookOpen,
@@ -27,6 +28,7 @@ interface RecentArticle {
 
 export default function DashboardPage() {
   const { user, userRole, isSudo } = useAuth();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const [stats, setStats] = useState<Stats>({
     totalArticles: 0,
@@ -87,21 +89,21 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      title: '全部文章',
+      title: t('dashboard.allArticles'),
       value: stats.totalArticles,
       icon: FileText,
       color: 'var(--ant-color-primary)',
       bgColor: 'var(--ant-color-primary-bg)',
     },
     {
-      title: '已发布',
+      title: t('dashboard.published'),
       value: stats.publishedArticles,
       icon: CheckCircle,
       color: 'var(--ant-color-success)',
       bgColor: 'var(--ant-color-success-bg)',
     },
     {
-      title: '草稿箱',
+      title: t('dashboard.drafts'),
       value: stats.draftArticles,
       icon: Clock,
       color: 'var(--ant-color-warning)',
@@ -109,14 +111,14 @@ export default function DashboardPage() {
     },
     ...(isSudo ? [
       {
-        title: '用户总数',
+        title: t('dashboard.totalUsers'),
         value: stats.totalUsers,
         icon: Users,
         color: 'var(--ant-color-info)',
         bgColor: 'var(--ant-color-info-bg)',
       },
       {
-        title: '待删除',
+        title: t('dashboard.pendingDeletion'),
         value: stats.pendingDeletion,
         icon: Trash2,
         color: 'var(--ant-color-error)',
@@ -127,18 +129,18 @@ export default function DashboardPage() {
 
   // 用户快捷操作
   const userActions = [
-    { label: '写文章', icon: Plus, href: '/editor', color: 'var(--ant-color-primary)' },
-    { label: '文章管理', icon: BookOpen, href: '/dashboard/articles', color: 'var(--ant-color-success)' },
-    { label: '回收站', icon: Trash2, href: '/dashboard/articles?status=pending_deletion', color: 'var(--ant-color-warning)' },
+    { label: t('sidebar.writeArticle'), icon: Plus, href: '/editor', color: 'var(--ant-color-primary)' },
+    { label: t('sidebar.articleManagement'), icon: BookOpen, href: '/dashboard/articles', color: 'var(--ant-color-success)' },
+    { label: t('sidebar.recycleBin'), icon: Trash2, href: '/dashboard/articles?status=pending_deletion', color: 'var(--ant-color-warning)' },
   ];
 
   // 管理员额外操作
   const adminActions = [
-    { label: '用户管理', icon: UserCog, href: '/admin/users', color: 'var(--ant-color-info)' },
-    { label: '用户组', icon: Shield, href: '/admin/groups', color: 'var(--ant-color-purple)' },
-    { label: '系统配置', icon: Settings, href: '/admin/config', color: 'var(--ant-color-warning)' },
-    { label: '环境变量', icon: Activity, href: '/admin/env', color: 'var(--ant-color-success)' },
-    { label: '回收站管理', icon: Trash2, href: '/admin/requests', color: 'var(--ant-color-error)' },
+    { label: t('sidebar.userManagement'), icon: UserCog, href: '/admin/users', color: 'var(--ant-color-info)' },
+    { label: t('sidebar.userGroups'), icon: Shield, href: '/admin/groups', color: 'var(--ant-color-purple)' },
+    { label: t('sidebar.systemConfig'), icon: Settings, href: '/admin/config', color: 'var(--ant-color-warning)' },
+    { label: t('sidebar.envVariables'), icon: Activity, href: '/admin/env', color: 'var(--ant-color-success)' },
+    { label: t('sidebar.recycleBin'), icon: Trash2, href: '/admin/requests', color: 'var(--ant-color-error)' },
   ];
 
   const quickActions = isSudo ? [...userActions, ...adminActions] : userActions;
@@ -146,7 +148,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <Flexbox align="center" justify="center" style={{ height: '100%', minHeight: 400 }}>
-        <Text type="secondary">加载中...</Text>
+        <Text type="secondary">{t('common.loading')}</Text>
       </Flexbox>
     );
   }
@@ -157,7 +159,7 @@ export default function DashboardPage() {
       <Flexbox gap={8} style={{ marginBottom: 32 }}>
         <Flexbox horizontal gap={12} align="center">
           <Text fontSize={28} weight={'bold'}>
-            欢迎回来，{user?.name || '用户'}
+            {t('dashboard.welcomeBack')}，{user?.name || '用户'}
           </Text>
           {isSudo && (
             <span style={{
@@ -167,12 +169,12 @@ export default function DashboardPage() {
               background: 'var(--ant-color-primary-bg)',
               color: 'var(--ant-color-primary)',
             }}>
-              {userRole === 'sudo' ? '超级管理员' : '管理员'}
+              {userRole === 'sudo' ? t('dashboard.superAdmin') : t('dashboard.admin')}
             </span>
           )}
         </Flexbox>
         <Text fontSize={16} type={'secondary'}>
-          这是您的{isSudo ? '管理' : '内容'}控制台
+          {isSudo ? t('dashboard.adminConsole') : t('dashboard.contentConsole')}
         </Text>
       </Flexbox>
 
@@ -228,7 +230,7 @@ export default function DashboardPage() {
       {/* 快捷操作 */}
       <div style={{ marginBottom: 32 }}>
         <Text fontSize={18} weight={'bold'} style={{ marginBottom: 16, display: 'block' }}>
-          快捷操作
+          {t('dashboard.quickActions')}
         </Text>
         <div style={{
           display: 'grid',
@@ -271,10 +273,10 @@ export default function DashboardPage() {
       {/* 最近文章 */}
       <div>
         <Flexbox horizontal justify="space-between" align="center" style={{ marginBottom: 16 }}>
-          <Text fontSize={18} weight={'bold'}>最近文章</Text>
+          <Text fontSize={18} weight={'bold'}>{t('dashboard.recentArticles')}</Text>
           <Link href="/dashboard/articles">
             <Button size="small" icon={<Icon icon={ArrowRight} />}>
-              查看全部
+              {t('dashboard.viewAll')}
             </Button>
           </Link>
         </Flexbox>
@@ -300,7 +302,7 @@ export default function DashboardPage() {
                   <div>
                     <Text weight={500}>{article.title}</Text>
                     <Text fontSize={12} type="secondary" style={{ display: 'block', marginTop: 4 }}>
-                      {new Date(article.updatedAt).toLocaleDateString('zh-CN')}
+                      {new Date(article.updatedAt).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US')}
                     </Text>
                   </div>
                   <span style={{
@@ -318,18 +320,18 @@ export default function DashboardPage() {
                         ? 'var(--ant-color-error)'
                         : 'var(--ant-color-warning)',
                   }}>
-                    {article.status === 'published' ? '已发布' : article.status === 'pending_deletion' ? '待删除' : '草稿'}
+                      {article.status === 'published' ? t('article.published') : article.status === 'pending_deletion' ? t('article.pendingDeletion') : t('article.draft')}
                   </span>
                 </Flexbox>
               </div>
             ))
           ) : (
             <div style={{ padding: 40, textAlign: 'center' }}>
-              <Text type="secondary">暂无文章</Text>
+              <Text type="secondary">{t('dashboard.noArticles')}</Text>
               <div style={{ marginTop: 16 }}>
                 <Link href="/editor">
                   <Button type="primary" icon={<Icon icon={Plus} />}>
-                    写第一篇文章
+                    {t('dashboard.writeFirstArticle')}
                   </Button>
                 </Link>
               </div>

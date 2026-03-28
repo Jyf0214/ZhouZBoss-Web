@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { useI18n } from '@/hooks/use-i18n';
 import {
   createUserGroup,
   getAllUserGroups,
@@ -19,6 +20,7 @@ const { TextArea } = Input;
 export default function UserGroupsPage() {
   const router = useRouter();
   const { userRole, user } = useAuth();
+  const { t } = useI18n();
   const isSudo = userRole === 'sudo' || userRole === 'admin';
   
   const [loading, setLoading] = useState(false);
@@ -47,7 +49,7 @@ export default function UserGroupsPage() {
 
   useEffect(() => {
     if (!isSudo) {
-      message.error('仅限管理员访问');
+      message.error(t('groups.adminOnly'));
       router.push('/');
       return;
     }
@@ -57,29 +59,29 @@ export default function UserGroupsPage() {
   const handleCreateGroup = async (values: any) => {
     try {
       await createUserGroup(values.name, values.description || '', user?.uid || '');
-      message.success('用户组创建成功');
+      message.success(t('groups.createSuccess'));
       setIsModalOpen(false);
       form.resetFields();
       loadData();
     } catch (error) {
-      message.error('创建失败');
+      message.error(t('groups.createFailed'));
     }
   };
 
   const columns: ColumnsType<UserGroup> = [
     {
-      title: '组名',
+      title: t('groups.name'),
       dataIndex: 'name',
       key: 'name',
       render: (text) => <span className="font-bold">{text}</span>
     },
     {
-      title: '描述',
+      title: t('groups.description'),
       dataIndex: 'description',
       key: 'description'
     },
     {
-      title: '创建时间',
+      title: t('groups.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date) => date ? new Date(date).toLocaleDateString() : '-'
@@ -93,7 +95,7 @@ export default function UserGroupsPage() {
           <div className="w-10 h-10 bg-zinc-900 text-white rounded-xl flex items-center justify-center">
             <UsergroupAddOutlined style={{ fontSize: '20px' }} />
           </div>
-          <h1 className="text-3xl font-display font-bold text-zinc-900">用户组管理</h1>
+          <h1 className="text-3xl font-display font-bold text-zinc-900">{t('groups.title')}</h1>
         </div>
         <Button 
           type="primary" 
@@ -101,7 +103,7 @@ export default function UserGroupsPage() {
           onClick={() => setIsModalOpen(true)}
           className="rounded-lg h-10 px-6 bg-zinc-900"
         >
-          创建新组
+          {t('groups.create')}
         </Button>
       </div>
 
@@ -116,23 +118,23 @@ export default function UserGroupsPage() {
       </Card>
 
       <Modal
-        title="创建新用户组"
+        title={t('groups.createNew')}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         className="rounded-2xl"
       >
         <Form form={form} layout="vertical" onFinish={handleCreateGroup} className="mt-4">
-          <Form.Item name="name" label="组名" rules={[{ required: true, message: '请输入组名' }]}>
-            <Input placeholder="例如: 核心开发组" className="rounded-lg h-10" />
+          <Form.Item name="name" label={t('groups.name')} rules={[{ required: true, message: t('groups.namePlaceholder') }]}>
+            <Input placeholder={t('groups.nameHint')} className="rounded-lg h-10" />
           </Form.Item>
-          <Form.Item name="description" label="描述">
-            <TextArea rows={4} placeholder="描述该用户组的权限或用途" className="rounded-lg" />
+          <Form.Item name="description" label={t('groups.description')}>
+            <TextArea rows={4} placeholder={t('groups.descriptionPlaceholder')} className="rounded-lg" />
           </Form.Item>
           <Form.Item className="mb-0 flex justify-end gap-2">
             <Space>
-              <Button onClick={() => setIsModalOpen(false)} className="rounded-lg h-10">取消</Button>
-              <Button type="primary" htmlType="submit" className="rounded-lg h-10 bg-zinc-900">提交</Button>
+              <Button onClick={() => setIsModalOpen(false)} className="rounded-lg h-10">{t('common.cancel')}</Button>
+              <Button type="primary" htmlType="submit" className="rounded-lg h-10 bg-zinc-900">{t('common.submit')}</Button>
             </Space>
           </Form.Item>
         </Form>

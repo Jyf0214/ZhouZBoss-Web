@@ -42,6 +42,7 @@
     "loginSubtitle": "登录以管理您的 Originium Kernel",
     "registerSubtitle": "注册并开始使用 Originium Kernel",
     "inputEmail": "请输入邮箱或用户名",
+    "inputEmailOrUsername": "请输入邮箱或用户名",
     "inputPassword": "请输入密码",
     "inputConfirmPassword": "再次输入密码",
     "inputEmailPlaceholder": "your@email.com",
@@ -102,7 +103,12 @@
     "articles": "文章管理",
     "users": "用户管理",
     "settings": "设置",
-    "requests": "申请管理"
+    "requests": "申请管理",
+    "welcome": "欢迎回来，{name}",
+    "superAdmin": "超级管理员",
+    "admin": "管理员",
+    "adminConsoleDesc": "这是您的管理控制台",
+    "contentConsole": "这是您的内容控制台"
   },
   "sidebar": {
     "dashboard": "控制台",
@@ -163,7 +169,17 @@
     "createUserGroup": "创建用户组",
     "groupName": "组名",
     "groupDescription": "描述",
-    "createdAt": "创建时间"
+    "createdAt": "创建时间",
+    "users": "用户管理",
+    "email": "邮箱",
+    "noRole": "未设置",
+    "cannotDemoteFirstAdmin": "不能降级首个管理员用户",
+    "updateRole": "更新用户角色",
+    "updateRoleFailed": "更新角色失败",
+    "cannotDeleteFirstAdmin": "不能删除首个管理员用户",
+    "deleteConfirm": "确定要删除此用户吗？",
+    "deleteUserFailed": "删除用户失败",
+    "noUsers": "暂无用户"
   },
   "env": {
     "title": "环境变量状态",
@@ -177,7 +193,9 @@
     "database": "数据库",
     "auth": "认证",
     "github": "GitHub 同步",
-    "tip": "提示：在 Vercel 项目的 Settings → Environment Variables 中配置环境变量。修改后需要重新部署才能生效。"
+    "tip": "提示：在 Vercel 项目的 Settings → Environment Variables 中配置环境变量。修改后需要重新部署才能生效。",
+    "summary": "已设置 {set}/{total} 个变量，必需 {requiredSet}/{required} 个",
+    "missingList": "缺少: {missing}"
   },
   "ticket": {
     "title": "工单管理",
@@ -199,6 +217,59 @@
     "networkError": "网络错误",
     "404": "页面不存在",
     "500": "服务器错误"
+  },
+  "config": {
+    "title": "系统配置",
+    "subtitle": "管理站点设置",
+    "general": "基础设置",
+    "siteTitle": "站点标题",
+    "siteDescription": "站点描述",
+    "background": "背景设置",
+    "backgroundUrl": "背景图片URL",
+    "backgroundUrlPlaceholder": "输入图片直链地址",
+    "backgroundUrlHint": "留空则不使用自定义背景",
+    "overlayOpacity": "蒙板透明度",
+    "overlayOpacityHint": "0% 为完全透明，100% 为完全不透明",
+    "github": "GitHub 集成",
+    "githubConfigured": "GitHub 已配置",
+    "githubNotConfigured": "GitHub 未配置",
+    "githubHint": "请在环境变量中配置 GitHub 仓库和令牌",
+    "envVars": "需要配置的环境变量：",
+    "githubRepoFormat": "格式：用户名/仓库名",
+    "githubTokenHint": "需要 repo 权限的 Personal Access Token",
+    "goToVercel": "前往 Vercel 设置环境变量",
+    "saving": "保存中...",
+    "save": "保存配置",
+    "saveSuccess": "配置保存成功！",
+    "saveFailed": "保存失败，请重试"
+  },
+  "editor": {
+    "loading": "加载编辑器中...",
+    "back": "返回文章列表",
+    "saveDraft": "保存草稿",
+    "publish": "发布",
+    "titlePlaceholder": "文章标题...",
+    "coverUrl": "封面图片URL（可选）",
+    "tags": "标签（逗号分隔）",
+    "contentPlaceholder": "在此使用 Markdown 编写文章内容...",
+    "fetchFailed": "获取文章失败",
+    "pleaseLogin": "请先登录",
+    "titleContentRequired": "标题和内容不能为空",
+    "saveFailed": "保存失败"
+  },
+  "groups": {
+    "title": "用户组管理",
+    "create": "创建新组",
+    "createNew": "创建新用户组",
+    "name": "组名",
+    "namePlaceholder": "请输入组名",
+    "nameHint": "例如: 核心开发组",
+    "description": "描述",
+    "descriptionPlaceholder": "描述该用户组的权限或用途",
+    "createdAt": "创建时间",
+    "createSuccess": "用户组创建成功",
+    "createFailed": "创建失败",
+    "adminOnly": "仅限管理员访问"
   },
   "footer": {
     "copyright": "Originium Kernel © {year}",

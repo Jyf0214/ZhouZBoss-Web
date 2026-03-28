@@ -8,7 +8,7 @@ import { Icon, Text } from '@lobehub/ui';
 
 export default function UsersPage() {
   const { userRole } = useAuth();
-  const { locale } = useI18n();
+  const { t } = useI18n();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -38,43 +38,39 @@ export default function UsersPage() {
 
   const handleUpdateRole = async (id: string) => {
     try {
-      // 检查是否是首个管理员用户
       const targetUser = users.find(u => u.uid === id);
       if (targetUser?.role === 'sudo' && editRole !== 'sudo') {
-        alert(locale === 'zh-CN' ? '不能降级首个管理员用户' : 'Cannot downgrade the first admin user');
+        alert(t('admin.cannotDemoteFirstAdmin'));
         setEditingId(null);
         return;
       }
       
-      // TODO: 实现更新用户角色逻辑
-      console.log(locale === 'zh-CN' ? '更新用户角色' : 'Update user role:', id, editRole);
+      console.log(t('admin.updateRole'), id, editRole);
       setEditingId(null);
     } catch (error) {
-      console.error(locale === 'zh-CN' ? '更新角色失败' : 'Update role failed:', error);
+      console.error(t('admin.updateRoleFailed'), error);
     }
   };
 
   const handleDelete = async (id: string) => {
-    // 检查是否是首个管理员用户
     const targetUser = users.find(u => u.uid === id);
     if (targetUser?.role === 'sudo') {
-      alert(locale === 'zh-CN' ? '不能删除首个管理员用户' : 'Cannot delete the first admin user');
+      alert(t('admin.cannotDeleteFirstAdmin'));
       return;
     }
     
-    if (!confirm(locale === 'zh-CN' ? '确定要删除此用户吗？' : 'Are you sure you want to delete this user?')) return;
+    if (!confirm(t('admin.deleteConfirm'))) return;
     try {
-      // TODO: 实现删除用户逻辑
-      console.log(locale === 'zh-CN' ? '删除用户' : 'Delete user:', id);
+      console.log(t('admin.deleteUser'), id);
     } catch (error) {
-      console.error(locale === 'zh-CN' ? '删除用户失败' : 'Delete user failed:', error);
+      console.error(t('admin.deleteUserFailed'), error);
     }
   };
 
   if (!hasAccess) {
     return (
       <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text style={{ color: 'var(--ant-color-error)' }}>无权限访问，仅管理员可访问此页面</Text>
+        <Text style={{ color: 'var(--ant-color-error)' }}>{t('groups.adminOnly')}</Text>
       </div>
     );
   }
@@ -82,7 +78,7 @@ export default function UsersPage() {
   if (loading) {
     return (
       <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text type="secondary">加载中...</Text>
+        <Text type="secondary">{t('common.loading')}</Text>
       </div>
     );
   }
@@ -90,7 +86,7 @@ export default function UsersPage() {
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
       <Text fontSize={24} weight={'bold'} style={{ marginBottom: 24, display: 'block' }}>
-        用户管理
+        {t('admin.users')}
       </Text>
       
       <div style={{
@@ -105,10 +101,10 @@ export default function UsersPage() {
               background: '#fafafa',
               borderBottom: '1px solid #e5e5e5',
             }}>
-              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>用户</th>
-              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>邮箱</th>
-              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>角色</th>
-              <th style={{ padding: 16, textAlign: 'right', fontSize: 13, fontWeight: 600 }}>操作</th>
+              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{t('common.user')}</th>
+              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{t('admin.email')}</th>
+              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{t('admin.role')}</th>
+              <th style={{ padding: 16, textAlign: 'right', fontSize: 13, fontWeight: 600 }}>{t('admin.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -127,7 +123,7 @@ export default function UsersPage() {
                     }}>
                       <Icon icon={User} style={{ fontSize: 16, color: '#999' }} />
                     </div>
-                    <Text weight={500}>{u.name || u.username || '未设置'}</Text>
+                    <Text weight={500}>{u.name || u.username || t('admin.noRole')}</Text>
                   </div>
                 </td>
                 <td style={{ padding: 16 }}>
@@ -145,9 +141,9 @@ export default function UsersPage() {
                         fontSize: 13,
                       }}
                     >
-                      <option value="user">普通用户</option>
-                      <option value="admin">管理员</option>
-                      {u.role !== 'sudo' && <option value="sudo">超级管理员</option>}
+                      <option value="user">{t('admin.user')}</option>
+                      <option value="admin">{t('admin.admin')}</option>
+                      {u.role !== 'sudo' && <option value="sudo">{t('admin.superAdmin')}</option>}
                     </select>
                   ) : (
                     <span style={{
@@ -158,7 +154,7 @@ export default function UsersPage() {
                       background: u.role === 'sudo' || u.role === 'admin' ? '#f0f5ff' : '#f5f5f5',
                       color: u.role === 'sudo' || u.role === 'admin' ? '#1890ff' : '#666',
                     }}>
-                      {u.role === 'sudo' ? '超级管理员' : u.role === 'admin' ? '管理员' : '普通用户'}
+                      {u.role === 'sudo' ? t('admin.superAdmin') : u.role === 'admin' ? t('admin.admin') : t('admin.user')}
                     </span>
                   )}
                 </td>
@@ -205,7 +201,7 @@ export default function UsersPage() {
                             borderRadius: 6,
                             color: '#1890ff',
                           }}
-                          title="编辑"
+                          title={t('common.edit')}
                         >
                           <Icon icon={Edit2} />
                         </button>
@@ -219,7 +215,7 @@ export default function UsersPage() {
                             borderRadius: 6,
                             color: '#ff4d4f',
                           }}
-                          title="删除"
+                          title={t('common.delete')}
                         >
                           <Icon icon={Trash2} />
                         </button>
@@ -232,7 +228,7 @@ export default function UsersPage() {
             {users.length === 0 && (
               <tr>
                 <td colSpan={4} style={{ padding: 40, textAlign: 'center' }}>
-                  <Text type="secondary">暂无用户</Text>
+                  <Text type="secondary">{t('admin.noUsers')}</Text>
                 </td>
               </tr>
             )}

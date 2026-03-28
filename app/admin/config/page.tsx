@@ -22,7 +22,7 @@ interface EnvStatus {
 
 export default function ConfigPage() {
   const { userRole } = useAuth();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [config, setConfig] = useState<EnvStatus>({
     siteTitle: '',
     siteDescription: '',
@@ -77,13 +77,13 @@ export default function ConfigPage() {
       });
       
       if (res.ok) {
-        alert(locale === 'zh-CN' ? '配置保存成功！' : 'Configuration saved!');
+        alert(t('config.saveSuccess'));
       } else {
-        alert(locale === 'zh-CN' ? '保存失败，请重试' : 'Save failed, please retry');
+        alert(t('config.saveFailed'));
       }
     } catch (error) {
       console.error('保存配置失败:', error);
-      alert(locale === 'zh-CN' ? '保存失败，请重试' : 'Save failed, please retry');
+      alert(t('config.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -92,7 +92,7 @@ export default function ConfigPage() {
   if (loading) {
     return (
       <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text type="secondary">{locale === 'zh-CN' ? '加载中...' : 'Loading...'}</Text>
+        <Text type="secondary">{t('common.loading')}</Text>
       </div>
     );
   }
@@ -101,7 +101,7 @@ export default function ConfigPage() {
     return (
       <div style={{ padding: 32, textAlign: 'center' }}>
         <Text style={{ color: 'var(--ant-color-error)' }}>
-          {locale === 'zh-CN' ? '无权限访问' : 'Access denied'}
+          {t('common.accessDenied')}
         </Text>
       </div>
     );
@@ -127,10 +127,10 @@ export default function ConfigPage() {
         </div>
         <div>
           <Text fontSize={24} weight={'bold'}>
-            {locale === 'zh-CN' ? '系统配置' : 'System Config'}
+            {t('config.title')}
           </Text>
           <Text fontSize={14} type="secondary">
-            {locale === 'zh-CN' ? '管理站点设置' : 'Manage site settings'}
+            {t('config.subtitle')}
           </Text>
         </div>
       </div>
@@ -152,12 +152,12 @@ export default function ConfigPage() {
             background: '#52c41a',
             marginRight: 8 
           }}></span>
-          {locale === 'zh-CN' ? '基础设置' : 'General Settings'}
+          {t('config.general')}
         </Text>
         
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            {locale === 'zh-CN' ? '站点标题' : 'Site Title'}
+            {t('config.siteTitle')}
           </label>
           <input 
             type="text" 
@@ -178,7 +178,7 @@ export default function ConfigPage() {
         
         <div>
           <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            {locale === 'zh-CN' ? '站点描述' : 'Site Description'}
+            {t('config.siteDescription')}
           </label>
           <textarea 
             value={config.siteDescription}
@@ -216,12 +216,12 @@ export default function ConfigPage() {
             marginRight: 8 
           }}></span>
           <Icon icon={Image} style={{ marginRight: 8 }} />
-          {locale === 'zh-CN' ? '背景设置' : 'Background Settings'}
+          {t('config.background')}
         </Text>
         
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            {locale === 'zh-CN' ? '背景图片URL' : 'Background Image URL'}
+            {t('config.backgroundUrl')}
           </label>
           <input 
             type="text" 
@@ -230,7 +230,7 @@ export default function ConfigPage() {
               ...config, 
               background: { ...config.background, url: e.target.value }
             })}
-            placeholder={locale === 'zh-CN' ? '输入图片直链地址' : 'Enter image URL'}
+            placeholder={t('config.backgroundUrlPlaceholder')}
             style={{
               width: '100%',
               height: 40,
@@ -243,13 +243,13 @@ export default function ConfigPage() {
             }}
           />
           <Text fontSize={12} type="secondary" style={{ marginTop: 4, display: 'block' }}>
-            {locale === 'zh-CN' ? '留空则不使用自定义背景' : 'Leave empty to use default background'}
+            {t('config.backgroundUrlHint')}
           </Text>
         </div>
         
         <div>
           <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            {locale === 'zh-CN' ? '蒙板透明度' : 'Overlay Opacity'}: {Math.round((config.background?.opacity ?? 0.8) * 100)}%
+            {t('config.overlayOpacity')}: {Math.round((config.background?.opacity ?? 0.8) * 100)}%
           </label>
           <Slider
             min={0}
@@ -263,7 +263,7 @@ export default function ConfigPage() {
             tooltip={{ formatter: (value) => `${Math.round((value ?? 0) * 100)}%` }}
           />
           <Text fontSize={12} type="secondary" style={{ marginTop: 4, display: 'block' }}>
-            {locale === 'zh-CN' ? '0% 为完全透明，100% 为完全不透明' : '0% is fully transparent, 100% is fully opaque'}
+            {t('config.overlayOpacityHint')}
           </Text>
         </div>
       </div>
@@ -278,7 +278,7 @@ export default function ConfigPage() {
       }}>
         <Text fontSize={16} weight={'bold'} style={{ marginBottom: 16, display: 'block' }}>
           <Icon icon={Github} style={{ marginRight: 8 }} />
-          {locale === 'zh-CN' ? 'GitHub 集成' : 'GitHub Integration'}
+          {t('config.github')}
         </Text>
         
         {/* 状态指示 */}
@@ -301,14 +301,14 @@ export default function ConfigPage() {
           <div>
             <Text weight={500}>
               {isGithubConfigured 
-                ? (locale === 'zh-CN' ? 'GitHub 已配置' : 'GitHub configured')
-                : (locale === 'zh-CN' ? 'GitHub 未配置' : 'GitHub not configured')
+                ? t('config.githubConfigured')
+                : t('config.githubNotConfigured')
               }
             </Text>
             <Text fontSize={13} type="secondary" style={{ display: 'block', marginTop: 4 }}>
               {isGithubConfigured
-                ? (locale === 'zh-CN' ? `仓库: ${config.githubRepo}` : `Repo: ${config.githubRepo}`)
-                : (locale === 'zh-CN' ? '请在环境变量中配置 GitHub 仓库和令牌' : 'Please configure GitHub repo and token in environment variables')
+                ? t('config.githubRepo') + ': ' + config.githubRepo
+                : t('config.githubHint')
               }
             </Text>
           </div>
@@ -321,7 +321,7 @@ export default function ConfigPage() {
           borderRadius: 8,
         }}>
           <Text fontSize={14} weight={500} style={{ marginBottom: 12, display: 'block' }}>
-            {locale === 'zh-CN' ? '需要配置的环境变量：' : 'Required environment variables:'}
+            {t('config.envVars')}
           </Text>
           <div style={{ marginBottom: 8 }}>
             <code style={{ 
@@ -333,7 +333,7 @@ export default function ConfigPage() {
               GITHUB_REPO
             </code>
             <Text fontSize={13} type="secondary" style={{ marginLeft: 8 }}>
-              {locale === 'zh-CN' ? '格式：用户名/仓库名' : 'Format: username/repo-name'}
+              {t('config.githubRepoFormat')}
             </Text>
           </div>
           <div>
@@ -346,7 +346,7 @@ export default function ConfigPage() {
               GITHUB_TOKEN
             </code>
             <Text fontSize={13} type="secondary" style={{ marginLeft: 8 }}>
-              {locale === 'zh-CN' ? '需要 repo 权限的 Personal Access Token' : 'Personal Access Token with repo scope'}
+              {t('config.githubTokenHint')}
             </Text>
           </div>
           <div style={{ marginTop: 12 }}>
@@ -362,7 +362,7 @@ export default function ConfigPage() {
                 fontSize: 13,
               }}
             >
-              {locale === 'zh-CN' ? '前往 Vercel 设置环境变量' : 'Go to Vercel environment variables'}
+              {t('config.goToVercel')}
               <Icon icon={ExternalLink} style={{ fontSize: 12 }} />
             </a>
           </div>
@@ -391,8 +391,8 @@ export default function ConfigPage() {
         >
           <Icon icon={Settings} />
           <span>{saving 
-            ? (locale === 'zh-CN' ? '保存中...' : 'Saving...') 
-            : (locale === 'zh-CN' ? '保存配置' : 'Save Config')
+            ? t('config.saving')
+            : t('config.save')
           }</span>
         </button>
       </div>

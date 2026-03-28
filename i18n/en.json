@@ -42,6 +42,7 @@
     "loginSubtitle": "Sign in to manage your Originium Kernel",
     "registerSubtitle": "Register and start using Originium Kernel",
     "inputEmail": "Please enter email or username",
+    "inputEmailOrUsername": "Please enter email or username",
     "inputPassword": "Please enter password",
     "inputConfirmPassword": "Please enter password again",
     "inputEmailPlaceholder": "your@email.com",
@@ -102,7 +103,12 @@
     "articles": "Articles",
     "users": "Users",
     "settings": "Settings",
-    "requests": "Requests"
+    "requests": "Requests",
+    "welcome": "Welcome back, {name}",
+    "superAdmin": "Super Admin",
+    "admin": "Admin",
+    "adminConsoleDesc": "This is your admin console",
+    "contentConsole": "This is your content console"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -163,7 +169,17 @@
     "createUserGroup": "Create User Group",
     "groupName": "Group Name",
     "groupDescription": "Description",
-    "createdAt": "Created At"
+    "createdAt": "Created At",
+    "users": "User Management",
+    "email": "Email",
+    "noRole": "No Role",
+    "cannotDemoteFirstAdmin": "Cannot demote the first admin user",
+    "updateRole": "Update User Role",
+    "updateRoleFailed": "Failed to update role",
+    "cannotDeleteFirstAdmin": "Cannot delete the first admin user",
+    "deleteConfirm": "Are you sure you want to delete this user?",
+    "deleteUserFailed": "Failed to delete user",
+    "noUsers": "No users"
   },
   "env": {
     "title": "Environment Variables Status",
@@ -177,7 +193,9 @@
     "database": "Database",
     "auth": "Authentication",
     "github": "GitHub Sync",
-    "tip": "Tip: Configure environment variables in Vercel project Settings → Environment Variables. Redeploy after changes."
+    "tip": "Tip: Configure environment variables in Vercel project Settings → Environment Variables. Redeploy after changes.",
+    "summary": "Set {set}/{total} variables, required {requiredSet}/{required}",
+    "missingList": "Missing: {missing}"
   },
   "ticket": {
     "title": "Ticket Management",
@@ -199,6 +217,59 @@
     "networkError": "Network Error",
     "404": "Page not found",
     "500": "Server error"
+  },
+  "config": {
+    "title": "System Configuration",
+    "subtitle": "Manage site settings",
+    "general": "General Settings",
+    "siteTitle": "Site Title",
+    "siteDescription": "Site Description",
+    "background": "Background Settings",
+    "backgroundUrl": "Background Image URL",
+    "backgroundUrlPlaceholder": "Enter direct image link",
+    "backgroundUrlHint": "Leave empty to disable custom background",
+    "overlayOpacity": "Overlay Opacity",
+    "overlayOpacityHint": "0% is fully transparent, 100% is fully opaque",
+    "github": "GitHub Integration",
+    "githubConfigured": "GitHub Configured",
+    "githubNotConfigured": "GitHub Not Configured",
+    "githubHint": "Please configure GitHub repository and token in environment variables",
+    "envVars": "Environment variables to configure:",
+    "githubRepoFormat": "Format: username/repository",
+    "githubTokenHint": "Personal Access Token with repo permission",
+    "goToVercel": "Go to Vercel to set environment variables",
+    "saving": "Saving...",
+    "save": "Save Configuration",
+    "saveSuccess": "Configuration saved successfully!",
+    "saveFailed": "Save failed, please try again"
+  },
+  "editor": {
+    "loading": "Loading editor...",
+    "back": "Back to article list",
+    "saveDraft": "Save Draft",
+    "publish": "Publish",
+    "titlePlaceholder": "Article title...",
+    "coverUrl": "Cover Image URL (optional)",
+    "tags": "Tags (comma separated)",
+    "contentPlaceholder": "Write your article content in Markdown here...",
+    "fetchFailed": "Failed to fetch article",
+    "pleaseLogin": "Please login first",
+    "titleContentRequired": "Title and content are required",
+    "saveFailed": "Save failed"
+  },
+  "groups": {
+    "title": "User Group Management",
+    "create": "Create New Group",
+    "createNew": "Create New User Group",
+    "name": "Group Name",
+    "namePlaceholder": "Enter group name",
+    "nameHint": "e.g.: Core Development Team",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe the permissions or purpose of this group",
+    "createdAt": "Created At",
+    "createSuccess": "User group created successfully",
+    "createFailed": "Creation failed",
+    "adminOnly": "Admin access only"
   },
   "footer": {
     "copyright": "Originium Kernel © {year}",

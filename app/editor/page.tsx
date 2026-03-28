@@ -12,7 +12,7 @@ function EditorContent() {
   const router = useRouter();
   const articleId = searchParams.get('id');
   const { user } = useAuth();
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -37,7 +37,7 @@ function EditorContent() {
             setStatus(data.status || 'draft');
           }
         } catch (error) {
-          console.error('获取文章失败:', error);
+          console.error(t('editor.fetchFailed'), error);
         } finally {
           setFetching(false);
         }
@@ -48,11 +48,11 @@ function EditorContent() {
 
   const handleSave = async (newStatus: string) => {
     if (!user) {
-      alert(locale === 'zh-CN' ? '请先登录' : 'Please login first');
+      alert(t('editor.pleaseLogin'));
       return;
     }
     if (!title.trim() || !content.trim()) {
-      alert(locale === 'zh-CN' ? '标题和内容不能为空' : 'Title and content are required');
+      alert(t('editor.titleContentRequired'));
       return;
     }
 
@@ -80,24 +80,24 @@ function EditorContent() {
       if (res.ok) {
         router.push('/dashboard/articles');
       } else {
-        alert(locale === 'zh-CN' ? '保存失败' : 'Save failed');
+        alert(t('editor.saveFailed'));
       }
     } catch (error) {
-      console.error('保存失败:', error);
-      alert(locale === 'zh-CN' ? '保存失败' : 'Save failed');
+      console.error(t('editor.saveFailed'), error);
+      alert(t('editor.saveFailed'));
     } finally {
       setLoading(false);
     }
   };
 
-  if (fetching) return <div className="p-8 text-center text-zinc-500">Loading editor...</div>;
+  if (fetching) return <div className="p-8 text-center text-zinc-500">{t('editor.loading')}</div>;
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10 min-h-screen flex flex-col">
       <div className="flex items-center justify-between mb-8">
         <Link href="/dashboard/articles" className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors">
           <ArrowLeft size={20} />
-          <span>Back to Articles</span>
+          <span>{t('editor.back')}</span>
         </Link>
         <div className="flex items-center gap-4">
           <button 
@@ -106,7 +106,7 @@ function EditorContent() {
             className="lobe-button bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 flex items-center gap-2 px-4 py-2 rounded-lg"
           >
             <Save size={18} />
-            <span>Save Draft</span>
+            <span>{t('editor.saveDraft')}</span>
           </button>
           <button 
             onClick={() => handleSave('published')}
@@ -114,7 +114,7 @@ function EditorContent() {
             className="lobe-button bg-zinc-900 text-white hover:bg-zinc-800 flex items-center gap-2 px-4 py-2 rounded-lg"
           >
             <Send size={18} />
-            <span>Publish</span>
+            <span>{t('editor.publish')}</span>
           </button>
         </div>
       </div>
@@ -122,7 +122,7 @@ function EditorContent() {
       <div className="flex-1 flex flex-col gap-6">
         <input 
           type="text" 
-          placeholder="Article Title..." 
+          placeholder={t('editor.titlePlaceholder')} 
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="text-4xl md:text-5xl font-display font-bold text-zinc-900 bg-transparent border-none outline-none placeholder:text-zinc-300 w-full"
@@ -133,7 +133,7 @@ function EditorContent() {
             <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
             <input 
               type="text" 
-              placeholder="Cover Image URL (optional)" 
+              placeholder={t('editor.coverUrl')} 
               value={coverImage}
               onChange={(e) => setCoverImage(e.target.value)}
               className="lobe-input pl-10 w-full border border-zinc-200 rounded-xl h-10 px-4 focus:ring-2 focus:ring-zinc-900 focus:outline-none"
@@ -142,7 +142,7 @@ function EditorContent() {
           <div className="flex-1">
             <input 
               type="text" 
-              placeholder="Tags (comma separated)" 
+              placeholder={t('editor.tags')} 
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               className="lobe-input w-full border border-zinc-200 rounded-xl h-10 px-4 focus:ring-2 focus:ring-zinc-900 focus:outline-none"
@@ -151,7 +151,7 @@ function EditorContent() {
         </div>
 
         <textarea 
-          placeholder="Write your article content here in Markdown..." 
+          placeholder={t('editor.contentPlaceholder')} 
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className="flex-1 w-full bg-zinc-50 border border-zinc-200 rounded-2xl p-6 text-zinc-800 font-mono text-sm resize-none outline-none focus:border-zinc-400 transition-colors min-h-[500px]"
@@ -161,9 +161,14 @@ function EditorContent() {
   );
 }
 
+function EditorLoading() {
+  const { t } = useI18n();
+  return <div className="p-8 text-center text-zinc-500">{t('editor.loading')}</div>;
+}
+
 export default function EditorPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-zinc-500">Loading editor...</div>}>
+    <Suspense fallback={<EditorLoading />}>
       <EditorContent />
     </Suspense>
   );
