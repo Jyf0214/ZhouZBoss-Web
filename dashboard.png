@@ -1,6 +1,0 @@
-{
-  "type": "scan",
-  "message": "Too many concurrent scans",
-  "code": "toomanyscans",
-  "status": 429
-}
