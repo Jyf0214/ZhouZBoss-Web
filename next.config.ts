@@ -20,7 +20,6 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   // 排除前端 UI 依赖，保留数据库依赖
   serverExternalPackages: [
-    '@lobehub/ui',
     'antd-style',
     'react-markdown',
     'react-syntax-highlighter',
