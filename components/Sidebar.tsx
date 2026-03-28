@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
-import { Home, FileText, Users, Settings, ShieldAlert, Trash2, Globe, User } from 'lucide-react';
+import { Home, FileText, Settings, ShieldAlert, Globe, User } from 'lucide-react';
 import { Flexbox, Text } from '@lobehub/ui';
 
 export function Sidebar() {
@@ -17,8 +17,6 @@ export function Sidebar() {
     { href: '/dashboard', label: t('sidebar.dashboard'), icon: Home, roles: ['admin', 'sudo', 'user'] },
     { href: '/dashboard/settings', label: t('sidebar.settings'), icon: User, roles: ['admin', 'sudo', 'user'] },
     { href: '/dashboard/articles', label: t('sidebar.articleManagement'), icon: FileText, roles: ['admin', 'sudo', 'user'] },
-    { href: '/admin/users', label: t('sidebar.userManagement'), icon: Users, roles: ['admin', 'sudo'] },
-    { href: '/admin/groups', label: t('sidebar.userGroups'), icon: Users, roles: ['admin', 'sudo'] },
     { href: '/admin/requests', label: t('sidebar.requests'), icon: ShieldAlert, roles: ['admin', 'sudo'] },
     { href: '/admin/tickets', label: t('sidebar.ticketManagement'), icon: ShieldAlert, roles: ['admin', 'sudo'] },
     { href: '/admin/config', label: t('sidebar.systemConfig'), icon: Settings, roles: ['admin', 'sudo'] },
