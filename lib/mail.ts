@@ -13,6 +13,7 @@ function getSmtpConfig() {
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
     from: process.env.SMTP_FROM || '',
+    secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
   };
 }
 
@@ -33,7 +34,7 @@ export async function sendMail(options: MailOptions): Promise<boolean> {
     const transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
-      secure: config.port === 465,
+      secure: config.secure,
       auth: { user: config.user, pass: config.pass },
     });
 

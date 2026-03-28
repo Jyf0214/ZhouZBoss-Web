@@ -120,6 +120,7 @@
 | `SMTP_USER` | SMTP 用户名 | 否 | - |
 | `SMTP_PASS` | SMTP 密码 | 否 | - |
 | `SMTP_FROM` | 发件人邮箱地址 | 否 | - |
+| `SMTP_SECURE` | 是否使用 SSL（布尔值） | 否 | 自动（端口465时为true） |
 | `POSTGRES_URL` | PostgreSQL 连接地址（备选） | 否 | - |
 | `DISABLE_HMR` | 禁用热更新（开发用） | 否 | - |
 
