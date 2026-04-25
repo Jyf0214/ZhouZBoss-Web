@@ -12,7 +12,6 @@ interface FaceItem {
   date?: string;
   tags: string[];
   description?: string;
-  content: string;
 }
 
 interface GroupItem {
@@ -33,15 +32,11 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
 
   const filteredFaces = faces.filter((f) => {
-    const matchesSearch =
-      !searchTerm ||
+    const matchesSearch = !searchTerm ||
       f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       f.description?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesGroup =
-      !activeGroup ||
+    const matchesGroup = !activeGroup ||
       f.slug.startsWith(activeGroup === '/' ? '/' : activeGroup + '/');
-
     return matchesSearch && matchesGroup;
   });
 
@@ -95,11 +90,10 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
 
       {/* 联系人卡片列表 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence>
           {filteredFaces.map((face) => (
             <motion.div
               key={face.slug}
-              layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -110,19 +104,16 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
                 <div className="w-20 h-20 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-zinc-100 group-hover:border-zinc-300 transition-colors">
                   <UserCircle size={40} className="text-zinc-300 group-hover:text-zinc-400 transition-colors" />
                 </div>
-
                 {/* 姓名 */}
                 <h3 className="text-xl font-bold text-zinc-900 text-center mb-2 group-hover:text-zinc-600 transition-colors">
                   {face.title}
                 </h3>
-
                 {/* 描述 */}
                 {face.description && (
                   <p className="text-zinc-400 text-sm text-center line-clamp-2 mb-3">
                     {face.description}
                   </p>
                 )}
-
                 {/* 标签 */}
                 {face.tags.length > 0 && (
                   <div className="flex flex-wrap justify-center gap-1.5">

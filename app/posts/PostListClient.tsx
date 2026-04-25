@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, FolderOpen, Sparkles, Calendar, User, Tag, ArrowUpRight } from 'lucide-react';
+import { Search, Filter, Sparkles, Calendar, User, ArrowUpRight } from 'lucide-react';
 import { Input, Button } from 'antd';
 import Image from 'next/image';
 
@@ -15,7 +15,6 @@ interface PostItem {
   tags: string[];
   cover?: string;
   description?: string;
-  content: string;
 }
 
 interface GroupItem {
@@ -36,19 +35,14 @@ export function PostListClient({ posts, groups }: PostListClientProps) {
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
 
   const filteredPosts = posts.filter((p) => {
-    const matchesSearch =
-      !searchTerm ||
+    const matchesSearch = !searchTerm ||
       p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.description?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesGroup =
-      !activeGroup ||
+    const matchesGroup = !activeGroup ||
       p.slug.startsWith(activeGroup === '/' ? '/' : activeGroup + '/');
-
     return matchesSearch && matchesGroup;
   });
 
-  // 提取唯一分组名
   const groupNames = [...new Set(groups.map((g) => g.groupName).filter(Boolean))] as string[];
 
   return (
@@ -106,11 +100,10 @@ export function PostListClient({ posts, groups }: PostListClientProps) {
 
       {/* 帖子列表 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence>
           {filteredPosts.map((post) => (
             <motion.div
               key={post.slug}
-              layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -138,7 +131,6 @@ export function PostListClient({ posts, groups }: PostListClientProps) {
                   <ArrowUpRight size={24} className="text-zinc-900" />
                 </div>
               </Link>
-
               <div className="p-8 flex-1 flex flex-col">
                 <div className="flex flex-wrap gap-2 mb-6">
                   {post.tags.slice(0, 3).map((tag) => (
@@ -150,17 +142,14 @@ export function PostListClient({ posts, groups }: PostListClientProps) {
                     </span>
                   ))}
                 </div>
-
                 <Link href={`/posts${post.slug}`} className="block group/title">
                   <h2 className="text-2xl font-black text-zinc-900 mb-4 line-clamp-2 leading-tight group-hover/title:text-zinc-600 transition-colors">
                     {post.title}
                   </h2>
                 </Link>
-
                 <p className="text-zinc-400 text-sm line-clamp-2 mb-8 font-medium leading-relaxed">
-                  {post.description || post.content.replace(/[#*`]/g, '').slice(0, 120)}...
+                  {post.description || ''}
                 </p>
-
                 <div className="mt-auto pt-8 border-t border-zinc-50 flex items-center justify-between text-zinc-400">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-900 group-hover:bg-zinc-900 group-hover:text-white transition-colors duration-500">

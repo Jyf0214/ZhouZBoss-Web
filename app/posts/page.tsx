@@ -28,6 +28,7 @@ export default async function PostsPage() {
     return canAccess('posts', idx.slug, isAuthenticated, dbAvailable, config);
   });
 
+  // 仅传递列表展示所需字段，不传递完整 content 避免序列化问题
   const posts = accessibleFiles.map((f) => ({
     slug: f.slug,
     title: f.meta.title,
@@ -36,7 +37,6 @@ export default async function PostsPage() {
     tags: f.meta.tags || [],
     cover: f.meta.cover,
     description: f.meta.description,
-    content: f.content,
   }));
 
   const groups = accessibleIndexes.map((idx) => ({

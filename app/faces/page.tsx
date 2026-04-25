@@ -28,13 +28,13 @@ export default async function FacesPage() {
     return canAccess('faces', idx.slug, isAuthenticated, dbAvailable, config);
   });
 
+  // 仅传递列表展示所需字段
   const faces = accessibleFiles.map((f) => ({
     slug: f.slug,
     title: f.meta.title,
     date: f.meta.date,
     tags: f.meta.tags || [],
     description: f.meta.description,
-    content: f.content,
   }));
 
   const groups = accessibleIndexes.map((idx) => ({

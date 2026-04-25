@@ -10,7 +10,7 @@ interface ArticleCardProps {
   article: {
     id: string;
     title: string;
-    content: string;
+    content?: string;
     authorName: string;
     tags: string[];
     coverImage?: string;
@@ -20,9 +20,12 @@ interface ArticleCardProps {
 }
 
 export function ArticleCard({ article }: ArticleCardProps) {
+  const excerpt = article.content
+    ? article.content.replace(/[#*`]/g, '').slice(0, 120)
+    : '';
+
   return (
     <motion.div
-      layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -30,9 +33,9 @@ export function ArticleCard({ article }: ArticleCardProps) {
     >
       <Link href={`/user/${article.id}`} className="block overflow-hidden aspect-[16/10] bg-zinc-50 relative">
         {article.coverImage ? (
-          <Image 
-            src={article.coverImage} 
-            alt={article.title} 
+          <Image
+            src={article.coverImage}
+            alt={article.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-700"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -47,7 +50,6 @@ export function ArticleCard({ article }: ArticleCardProps) {
           <ArrowUpRight size={24} className="text-zinc-900" />
         </div>
       </Link>
-
       <div className="p-8 flex-1 flex flex-col">
         <div className="flex flex-wrap gap-2 mb-6">
           {article.tags.slice(0, 3).map((tag) => (
@@ -56,17 +58,14 @@ export function ArticleCard({ article }: ArticleCardProps) {
             </span>
           ))}
         </div>
-
         <Link href={`/user/${article.id}`} className="block group/title">
           <h2 className="text-2xl font-black text-zinc-900 mb-4 line-clamp-2 leading-tight group-hover/title:text-zinc-600 transition-colors">
             {article.title}
           </h2>
         </Link>
-        
         <p className="text-zinc-400 text-sm line-clamp-2 mb-8 font-medium leading-relaxed">
-          {article.content.replace(/[#*`]/g, '').slice(0, 120)}...
+          {excerpt}
         </p>
-
         <div className="mt-auto pt-8 border-t border-zinc-50 flex items-center justify-between text-zinc-400">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-900 group-hover:bg-zinc-900 group-hover:text-white transition-colors duration-500">
@@ -74,7 +73,6 @@ export function ArticleCard({ article }: ArticleCardProps) {
             </div>
             <span className="text-xs font-bold text-zinc-900 uppercase tracking-tighter">{article.authorName}</span>
           </div>
-          
           <div className="flex items-center gap-2 text-[10px] font-black">
             <Calendar size={12} />
             <span>{new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
