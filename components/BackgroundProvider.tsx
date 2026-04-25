@@ -1,80 +1,99 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface BackgroundConfig {
   url?: string;
   opacity?: number;
 }
 
+/**
+ * 背景图提供组件
+ * 优先从站点配置 API 读取，回退到数据库配置
+ * 使用 React 状态管理替代直接 DOM 操作
+ */
 export function BackgroundProvider({ children }: { children: React.ReactNode }) {
   const [background, setBackground] = useState<BackgroundConfig | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     const fetchConfig = async () => {
+      try {
+        const res = await fetch('/api/site-config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.appearance?.background?.url) {
+            setBackground(data.appearance.background);
+            return;
+          }
+        }
+      } catch {
+        // 忽略
+      }
+
       try {
         const res = await fetch('/api/config');
         if (res.ok) {
           const data = await res.json();
-          if (data.background) {
+          if (data.appearance?.background?.url) {
+            setBackground(data.appearance.background);
+          } else if (data.background?.url) {
             setBackground(data.background);
           }
         }
-      } catch (error) {
-        console.error('获取背景配置失败:', error);
+      } catch {
+        // 忽略
       }
     };
-
     fetchConfig();
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
     if (!background?.url) {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundSize = '';
       document.body.style.backgroundPosition = '';
       document.body.style.backgroundAttachment = '';
-      
-      const overlay = document.getElementById('background-overlay');
-      if (overlay) overlay.remove();
       return;
     }
 
-    // 设置背景图片
     document.body.style.backgroundImage = `url(${background.url})`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
     document.body.style.backgroundAttachment = 'fixed';
-
-    // 创建蒙板
-    let overlay = document.getElementById('background-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'background-overlay';
-      document.body.insertBefore(overlay, document.body.firstChild);
-    }
-    
-    const opacity = background.opacity ?? 0.8;
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, ${opacity});
-      pointer-events: none;
-      z-index: -1;
-    `;
 
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundSize = '';
       document.body.style.backgroundPosition = '';
       document.body.style.backgroundAttachment = '';
-      const overlay = document.getElementById('background-overlay');
-      if (overlay) overlay.remove();
     };
-  }, [background]);
+  }, [background, mounted]);
 
-  return <>{children}</>;
+  const opacity = background?.opacity ?? 0.8;
+
+  return (
+    <>
+      {background?.url && mounted && (
+        <div
+          ref={overlayRef}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: `rgba(255, 255, 255, ${opacity})`,
+            pointerEvents: 'none',
+            zIndex: -1,
+          }}
+        />
+      )}
+      {children}
+    </>
+  );
 }

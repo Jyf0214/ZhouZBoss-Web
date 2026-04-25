@@ -213,13 +213,13 @@
     "deleteConfirm": "确定要删除这个工单模板吗？"
   },
   "error": {
+    "404": "页面不存在",
+    "500": "服务器错误",
     "notFound": "页面未找到",
     "unauthorized": "未授权访问",
     "forbidden": "禁止访问",
     "serverError": "服务器错误",
-    "networkError": "网络错误",
-    "404": "页面不存在",
-    "500": "服务器错误"
+    "networkError": "网络错误"
   },
   "config": {
     "title": "系统配置",
@@ -291,5 +291,34 @@
     "displayNameHint": "留空则默认使用邮箱@前的部分",
     "saveSuccess": "设置保存成功！",
     "saveFailed": "保存失败，请重试"
+  },
+  "posts": {
+    "title": "帖子",
+    "subtitle": "浏览所有帖子",
+    "searchPlaceholder": "搜索帖子...",
+    "noPosts": "暂无帖子",
+    "noPostsHint": "在 /posts 目录下添加 Markdown 文件即可发布内容",
+    "allPosts": "全部",
+    "latestPosts": "最新帖子",
+    "viewAll": "查看全部",
+    "backToPosts": "返回帖子列表",
+    "notFound": "帖子未找到",
+    "privateHint": "此内容需要登录后查看"
+  },
+  "faces": {
+    "title": "通讯录",
+    "subtitle": "同学录与通讯录",
+    "searchPlaceholder": "搜索联系人...",
+    "noFaces": "暂无联系人",
+    "noFacesHint": "在 /faces 目录下添加 Markdown 文件即可创建联系人",
+    "allFaces": "全部",
+    "backToFaces": "返回通讯录",
+    "notFound": "联系人未找到",
+    "groupName": "分组",
+    "contacts": "位联系人"
+  },
+  "nav": {
+    "posts": "帖子",
+    "faces": "通讯录"
   }
 }

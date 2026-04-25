@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Home, FileText, Plus, Settings, Shield, Trash2,
-  Activity, Menu, LogOut, BookOpen, UserCog, X
+  Activity, Menu, LogOut, BookOpen, UserCog, X, Users
 } from 'lucide-react';
 import { Icon, Text } from '@lobehub/ui';
 import LanguageSwitcher from '@/components/LanguageSwitcher/index';
@@ -22,6 +22,8 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { label: '控制台', labelEn: 'Dashboard', icon: Home, href: '/dashboard' },
+  { label: '帖子', labelEn: 'Posts', icon: BookOpen, href: '/posts' },
+  { label: '通讯录', labelEn: 'Faces', icon: Users, href: '/faces' },
   { label: '写文章', labelEn: 'Write Article', icon: Plus, href: '/editor' },
   { label: '文章管理', labelEn: 'Articles', icon: BookOpen, href: '/dashboard/articles' },
   { label: '回收站', labelEn: 'Recycle Bin', icon: Trash2, href: '/dashboard/articles?status=pending_deletion' },

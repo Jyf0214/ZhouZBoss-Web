@@ -3,14 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
-import { LogoutOutlined, LoginOutlined, SettingOutlined, UserOutlined, UsergroupAddOutlined } from '@ant-design/icons';
+import { LogoutOutlined, LoginOutlined, SettingOutlined, UserOutlined, UsergroupAddOutlined, BookOutlined, TeamOutlined } from '@ant-design/icons';
 import { Tag, Button } from 'antd';
 import { Flexbox, Text } from '@lobehub/ui';
 
 export function Navbar() {
   const { user, userRole, logout } = useAuth();
-
-  // 临时逻辑：根据角色判断是否为管理员
   const isSudo = userRole === 'sudo' || userRole === 'admin';
   const userUid = user?.uid || '';
 
@@ -25,6 +23,19 @@ export function Navbar() {
               </div>
               <span className="font-display font-bold text-xl tracking-tight text-zinc-900">Originium Kernel</span>
             </Link>
+            {/* 导航链接 */}
+            <div className="hidden md:flex items-center gap-1 ml-8">
+              <Link href="/posts">
+                <Button type="text" icon={<BookOutlined />} size="small" className="text-zinc-500 hover:text-zinc-900">
+                  帖子
+                </Button>
+              </Link>
+              <Link href="/faces">
+                <Button type="text" icon={<TeamOutlined />} size="small" className="text-zinc-500 hover:text-zinc-900">
+                  通讯录
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -49,44 +60,20 @@ export function Navbar() {
                     </Flexbox>
                   </div>
                 </Flexbox>
-
                 {isSudo && (
                   <>
                     <Link href="/admin/groups">
-                      <Button
-                        type="text"
-                        icon={<UsergroupAddOutlined />}
-                        size="small"
-                        className="text-zinc-500 hover:text-zinc-900"
-                      />
+                      <Button type="text" icon={<UsergroupAddOutlined />} size="small" className="text-zinc-500 hover:text-zinc-900" />
                     </Link>
                     <Link href="/admin/users">
-                      <Button
-                        type="text"
-                        icon={<SettingOutlined />}
-                        size="small"
-                        className="text-zinc-500 hover:text-zinc-900"
-                      />
+                      <Button type="text" icon={<SettingOutlined />} size="small" className="text-zinc-500 hover:text-zinc-900" />
                     </Link>
                   </>
                 )}
-
                 <Link href="/dashboard">
-                  <Button
-                    type="text"
-                    icon={<SettingOutlined />}
-                    size="small"
-                    className="text-zinc-500 hover:text-zinc-900"
-                  />
+                  <Button type="text" icon={<SettingOutlined />} size="small" className="text-zinc-500 hover:text-zinc-900" />
                 </Link>
-
-                <Button
-                  type="text"
-                  icon={<LogoutOutlined />}
-                  onClick={logout}
-                  size="small"
-                  className="text-zinc-500 hover:text-zinc-900"
-                />
+                <Button type="text" icon={<LogoutOutlined />} onClick={logout} size="small" className="text-zinc-500 hover:text-zinc-900" />
               </Flexbox>
             ) : (
               <>
@@ -96,10 +83,7 @@ export function Navbar() {
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button 
-                    size="large" 
-                    className="bg-zinc-900 text-white hover:bg-zinc-800 border-0 rounded-xl px-6"
-                  >
+                  <Button size="large" className="bg-zinc-900 text-white hover:bg-zinc-800 border-0 rounded-xl px-6">
                     <Flexbox horizontal align="center" gap={6}>
                       <LoginOutlined />
                       <span>注册</span>

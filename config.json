@@ -1,0 +1,25 @@
+{
+  "site": {
+    "title": "Originium Kernel",
+    "description": "现代内容发布平台",
+    "lang": "zh-CN"
+  },
+  "appearance": {
+    "background": {
+      "url": "",
+      "opacity": 0.8
+    },
+    "customCSS": "",
+    "customHead": ""
+  },
+  "access": {
+    "posts": {
+      "public": ["*"],
+      "private": []
+    },
+    "faces": {
+      "public": ["*"],
+      "private": []
+    }
+  }
+}
