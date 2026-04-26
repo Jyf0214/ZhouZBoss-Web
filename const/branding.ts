@@ -1,22 +1,18 @@
 /**
- * Branding Constants
- * 
- * 品牌常量配置 - 参考 LobeChat business-const
- * 
- * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
- * @author LobeChat Team
- * @copyright LobeHub. All rights reserved.
+ * 品牌标识常量
  */
 
-// 品牌名称
-export const BRANDING_NAME = 'Originium Kernel';
+/** 产品名称 */
+export const APP_NAME = 'Originium Kernel';
 
-// 组织名称
+/** 组织名称 */
 export const ORG_NAME = 'Originium Kernel';
 
-// 版权信息
+/** 版权声明 */
 export const COPYRIGHT = `© ${new Date().getFullYear()} ${ORG_NAME}`;
+
+/** 完整版权声明 */
 export const COPYRIGHT_FULL = `${COPYRIGHT}. All rights reserved.`;
 
-// 服务提供商
-export const BRANDING_PROVIDER = 'originium-kernel';
+/** 服务商标识 */
+export const PROVIDER_ID = 'originium-kernel';

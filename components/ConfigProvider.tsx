@@ -9,7 +9,7 @@ interface ConfigProviderProps {
 }
 
 /**
- * AntD Config Provider with LobeChat-inspired theme
+ * AntD Config Provider
  */
 export function ConfigProvider({ children }: ConfigProviderProps) {
   return (

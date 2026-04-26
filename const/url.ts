@@ -1,24 +1,22 @@
 /**
- * URL Constants
- * 
- * URL 常量配置 - 参考 LobeChat const
- * 
- * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
- * @author LobeChat Team
- * @copyright LobeHub. All rights reserved.
+ * 站点 URL 常量
  */
 
-// 环境判断
 const isDev = process.env.NODE_ENV === 'development';
 
-// 官方 URL（可配置为实际部署地址）
-export const OFFICIAL_URL = isDev ? 'http://localhost:3000' : 'https://your-domain.com';
-export const OFFICIAL_SITE = OFFICIAL_URL;
-export const OFFICIAL_DOMAIN = new URL(OFFICIAL_URL).hostname;
+/** 站点根地址 */
+export const SITE_URL = isDev ? 'http://localhost:3000' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com');
 
-// 隐私政策和服务条款
+/** 站点域名 */
+export const SITE_DOMAIN = (() => {
+  try { return new URL(SITE_URL).hostname; } catch { return 'localhost'; }
+})();
+
+/** 隐私政策页 */
 export const PRIVACY_URL = '/privacy';
+
+/** 服务条款页 */
 export const TERMS_URL = '/terms';
 
-// 图片 URL
+/** 生成站点图片路径 */
 export const imageUrl = (filename: string) => `/images/${filename}`;

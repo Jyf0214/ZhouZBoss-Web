@@ -1,6 +1,5 @@
 /**
  * Prisma Client 单例
- * 参考 LobeChat 数据库设计
  */
 
 // 屏蔽 Prisma 广告

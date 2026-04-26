@@ -2,15 +2,18 @@
 
 import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
-import { useI18n } from '@/hooks/use-i18n';
+import Link from 'next/link';
 import { Button, Input, Form, message } from 'antd';
 import { ChevronRight, Lock, Mail } from 'lucide-react';
 import { Flexbox, Text, Icon } from '@lobehub/ui';
-import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { useI18n } from '@/hooks/use-i18n';
 import AuthCard from '@/components/AuthCard';
 import AuthLayout from '@/components/AuthLayout';
 
+/**
+ * 登录表单 — 两步流程：先输入邮箱/用户名，再输入密码
+ */
 function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'email' | 'password'>('email');
@@ -20,38 +23,40 @@ function LoginForm() {
   const { login } = useAuth();
   const [form] = Form.useForm();
   const inputRef = useRef<any>(null);
-  const { t, locale } = useI18n();
-
+  const { t } = useI18n();
   const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
 
   useEffect(() => {
     inputRef.current?.focus();
   }, [step]);
 
+  /** 第一步：验证用户标识，进入密码输入 */
   const handleCheckUser = async (values: { login: string }) => {
     setLoading(true);
     try {
       setEmail(values.login);
       setStep('password');
-    } catch (error: any) {
-      message.error(error.message || (locale === 'zh-CN' ? '验证用户失败' : 'Verification failed'));
+    } catch {
+      message.error(t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }
   };
 
+  /** 第二步：提交密码完成登录 */
   const handleLogin = async (values: { password: string }) => {
     setLoading(true);
     try {
       await login(email, values.password);
       router.push(callbackUrl);
-    } catch (error: any) {
-      // 错误已在 useAuth 中处理
+    } catch {
+      // useAuth 内部已处理错误提示
     } finally {
       setLoading(false);
     }
   };
 
+  /** 返回邮箱输入步骤 */
   const handleBackToEmail = () => {
     setStep('email');
     setEmail('');
@@ -65,6 +70,7 @@ function LoginForm() {
     borderRadius: 12,
   };
 
+  /** 邮箱/用户名输入步骤 */
   const renderEmailStep = () => (
     <AuthCard
       footer={
@@ -93,9 +99,7 @@ function LoginForm() {
         <Form.Item
           name="login"
           style={{ marginBottom: 0 }}
-          rules={[
-            { required: true, message: t('auth.inputEmailOrUsername') }
-          ]}
+          rules={[{ required: true, message: t('auth.inputEmailOrUsername') }]}
         >
           <Input
             placeholder={t('auth.inputEmailOrUsername')}
@@ -118,6 +122,7 @@ function LoginForm() {
     </AuthCard>
   );
 
+  /** 密码输入步骤 */
   const renderPasswordStep = () => (
     <AuthCard
       footer={
@@ -140,12 +145,7 @@ function LoginForm() {
       title={t('auth.welcomeBack')}
     >
       <Text fontSize={18} style={{ lineHeight: '28px' }}>{email}</Text>
-      <Form
-        form={form}
-        layout="vertical"
-        style={{ marginTop: 16 }}
-        onFinish={handleLogin}
-      >
+      <Form form={form} layout="vertical" style={{ marginTop: 16 }} onFinish={handleLogin}>
         <Form.Item
           name="password"
           rules={[{ required: true, message: t('auth.inputPassword') }]}

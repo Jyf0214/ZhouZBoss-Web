@@ -3,7 +3,7 @@
 /* AntD CSS Variables */
 @import "antd/dist/reset.css";
 
-/* 全局样式 - 基于 LobeChat 设计语言 */
+/* 全局样式 */
 :root {
   --font-settings: 'cv01', 'tnum', 'kern';
   --font-variations: 'opsz' auto, tabular-nums;

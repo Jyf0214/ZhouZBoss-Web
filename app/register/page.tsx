@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Form, notification, message, Select } from 'antd';
-import { ChevronRight, User, Lock, Mail } from 'lucide-react';
-import { Flexbox, Text, Icon } from '@lobehub/ui';
 import Link from 'next/link';
+import { Button, Input, Form, notification, message, Select } from 'antd';
+import { User, Lock, Mail } from 'lucide-react';
+import { Flexbox, Text, Icon } from '@lobehub/ui';
 import AuthCard from '@/components/AuthCard';
 import AuthLayout from '@/components/AuthLayout';
 
@@ -16,19 +16,23 @@ interface UserGroup {
   isDefault?: boolean;
 }
 
+/**
+ * 注册页面 — 收集用户信息并创建账号
+ */
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState<UserGroup[]>([]);
   const router = useRouter();
   const [form] = Form.useForm();
 
+  /** 获取可选用户组列表 */
   useEffect(() => {
     const fetchGroups = async () => {
       try {
         const res = await fetch('/api/user-groups');
         if (res.ok) {
           const data = await res.json();
-          // 过滤掉 sudo 和 admin 组，普通用户不能选择
+          // 过滤掉管理组，普通注册不可选择
           setGroups(data.filter((g: UserGroup) => g.id !== 'sudo' && g.id !== 'admin'));
         }
       } catch (error) {
@@ -38,6 +42,7 @@ export default function RegisterPage() {
     fetchGroups();
   }, []);
 
+  /** 提交注册表单 */
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
@@ -56,19 +61,15 @@ export default function RegisterPage() {
           userGroup: values.userGroup || 'default',
         }),
       });
+
       const data = await res.json();
 
       if (res.ok && data.success) {
-        const roleMsg = data.user?.role === 'sudo'
-          ? '您是首个注册用户，已获得管理员权限！'
-          : '账号已创建，请前往登录';
-
-        notification.success({
-          message: '注册成功',
-          description: roleMsg,
-          placement: 'topRight',
-          duration: 5,
-        });
+        const roleMsg =
+          data.user?.role === 'sudo'
+            ? '您是首个注册用户，已获得管理员权限！'
+            : '账号已创建，请前往登录';
+        notification.success({ message: '注册成功', description: roleMsg, placement: 'topRight', duration: 5 });
         router.push('/login');
       } else {
         throw new Error(data.error || data.message || '注册失败');
@@ -173,19 +174,12 @@ export default function RegisterPage() {
           </Form.Item>
 
           {groups.length > 0 && (
-            <Form.Item
-              name="userGroup"
-              style={{ marginBottom: 16 }}
-              initialValue="default"
-            >
+            <Form.Item name="userGroup" style={{ marginBottom: 16 }} initialValue="default">
               <Select
                 size="large"
                 placeholder="选择用户组"
                 style={{ height: 56 }}
-                options={groups.map(g => ({
-                  label: g.name,
-                  value: g.id,
-                }))}
+                options={groups.map(g => ({ label: g.name, value: g.id }))}
               />
             </Form.Item>
           )}

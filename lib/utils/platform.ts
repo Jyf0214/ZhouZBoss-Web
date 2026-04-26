@@ -1,96 +1,67 @@
 /**
- * Platform Utilities
- * 
- * 平台检测工具函数 - 参考 LobeChat utils
- * 
- * @see https://github.com/lobehub/lobe-chat - branch: canary, commit: 81bd6dc
- * @author LobeChat Team
- * @copyright LobeHub. All rights reserved.
+ * 客户端平台与浏览器检测工具
  */
 
 import { isOnServerSide } from './env';
 
-/**
- * 获取用户代理解析器
- */
-const getParser = () => {
+/** 解析 User-Agent 字符串，提取平台和浏览器信息 */
+function resolveUA() {
   if (isOnServerSide) {
-    return {
-      getOS: () => ({ name: 'Node' }),
-      getDevice: () => ({ type: undefined }),
-      getResult: () => ({ browser: { name: 'Node' } }),
-    };
+    return { os: 'Node', browser: 'Node', isMobile: false };
   }
 
   const ua = navigator.userAgent;
-  // Simple UA parsing without external dependencies
+
   const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(ua);
   const isWindows = /Windows NT/.test(ua);
-  const isLinux = /Linux|X11/.test(ua);
+  const isLinux = /Linux|X11/.test(ua) && !/Android/.test(ua);
   const isIOS = /iPhone|iPad|iPod/.test(ua);
   const isAndroid = /Android/.test(ua);
-  const isMobile = /Mobile|Android|iPhone|iPad/.test(ua);
+  const mobile = /Mobile|Android|iPhone|iPad/.test(ua);
 
-  let browserName = 'Unknown';
-  if (/Edg/.test(ua)) browserName = 'Edge';
-  else if (/Chrome/.test(ua)) browserName = 'Chrome';
-  else if (/Safari/.test(ua)) browserName = 'Safari';
-  else if (/Firefox/.test(ua)) browserName = 'Firefox';
-  else if (/MSIE|Trident/.test(ua)) browserName = 'IE';
+  let os = 'Unknown';
+  if (isMac) os = 'Mac OS';
+  else if (isWindows) os = 'Windows';
+  else if (isLinux) os = 'Linux';
+  else if (isIOS) os = 'iOS';
+  else if (isAndroid) os = 'Android';
 
-  return {
-    getOS: () => ({
-      name: isMac ? 'Mac OS' : isWindows ? 'Windows' : isLinux ? 'Linux' : isIOS ? 'iOS' : isAndroid ? 'Android' : 'Unknown',
-    }),
-    getDevice: () => ({ type: isMobile ? 'mobile' : undefined }),
-    getResult: () => ({ browser: { name: browserName } }),
-  };
-};
+  let browser = 'Unknown';
+  if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/Chrome\//.test(ua)) browser = 'Chrome';
+  else if (/Safari\//.test(ua)) browser = 'Safari';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  else if (/MSIE|Trident\//.test(ua)) browser = 'IE';
 
-/**
- * 获取操作系统名称
- */
-export const getPlatform = () => {
-  return getParser().getOS().name;
-};
+  return { os, browser, isMobile: mobile };
+}
 
-/**
- * 获取浏览器名称
- */
-export const getBrowser = () => {
-  return getParser().getResult().browser.name;
-};
+const uaInfo = resolveUA();
 
-/**
- * 浏览器信息对象
- */
+/** 获取操作系统名称 */
+export const getPlatform = (): string => uaInfo.os;
+
+/** 获取浏览器名称 */
+export const getBrowser = (): string => uaInfo.browser;
+
+/** 浏览器与平台信息快照 */
 export const browserInfo = {
-  browser: getBrowser(),
-  isMobile: getParser().getDevice().type === 'mobile',
-  os: getParser().getOS().name,
+  browser: uaInfo.browser,
+  isMobile: uaInfo.isMobile,
+  os: uaInfo.os,
 };
 
-/**
- * 检查是否为 macOS
- */
-export const isMacOS = () => getPlatform() === 'Mac OS';
+/** 是否为 macOS */
+export const isMacOS = (): boolean => uaInfo.os === 'Mac OS';
 
-/**
- * 检查是否为移动设备
- */
-export const isMobile = () => getParser().getDevice().type === 'mobile';
+/** 是否为移动设备 */
+export const isMobile = (): boolean => uaInfo.isMobile;
 
-/**
- * 检查是否为 Safari 浏览器
- */
-export const isSafari = () => getBrowser() === 'Safari';
+/** 是否为 Safari */
+export const isSafari = (): boolean => uaInfo.browser === 'Safari';
 
-/**
- * 检查是否为 Chrome 浏览器
- */
-export const isChrome = () => getBrowser() === 'Chrome';
+/** 是否为 Chrome */
+export const isChrome = (): boolean => uaInfo.browser === 'Chrome';
 
-/**
- * 检查是否为 Firefox 浏览器
- */
-export const isFirefox = () => getBrowser() === 'Firefox';
+/** 是否为 Firefox */
+export const isFirefox = (): boolean => uaInfo.browser === 'Firefox';
