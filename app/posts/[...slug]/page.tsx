@@ -1,22 +1,29 @@
-import { getContentFile, getAllSlugs } from '@/lib/content';
-import { canAccess, hasDatabase, loadConfigAsync } from '@/lib/config';
+import { getContentFile, getAllSlugs, getContentIndexes } from '@/lib/content';
 import { getSession } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
 }
 
+/** 判断 slug 所在目录是否为 private */
+function isPrivateSlug(slug: string): boolean {
+  const indexes = getContentIndexes('posts');
+  const dirSlug = '/' + slug.split('/').filter(Boolean).slice(0, -1).join('/');
+  const dirIndex = indexes.find((idx) => idx.slug === dirSlug || (dirSlug === '/' && idx.slug === '/'));
+  return dirIndex ? dirIndex.public === false : false;
+}
+
+/** 静态生成仅包含公开内容 */
 export async function generateStaticParams() {
   const slugs = getAllSlugs('posts');
-  // 静态生成仅包含公开内容，私有内容在运行时动态渲染
   return slugs
-    .filter((slug) => canAccess('posts', slug, false, false))
+    .filter((slug) => !isPrivateSlug(slug))
     .map((slug) => ({
       slug: slug.slice(1).split('/'),
     }));
@@ -33,17 +40,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+/**
+ * 帖子详情页 — 纯文件系统读取
+ * private 内容需要登录（cookie 判断），不查数据库
+ */
 export default async function PostDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const fullPath = '/' + slug.join('/');
-  const session = await getSession();
-  const isAuthenticated = !!session;
-  const dbAvailable = hasDatabase();
-  const config = await loadConfigAsync();
 
-  // 访问控制：根据认证状态和数据库可用性判断
-  if (!canAccess('posts', fullPath, isAuthenticated, dbAvailable, config)) {
-    notFound();
+  // 访问控制：private 内容需要登录
+  if (isPrivateSlug(fullPath)) {
+    const session = await getSession();
+    if (!session) {
+      redirect(`/login?callbackUrl=/posts${fullPath}`);
+    }
   }
 
   const file = getContentFile('posts', fullPath);
@@ -63,8 +73,7 @@ export default async function PostDetailPage({ params }: PageProps) {
         {/* 面包屑 */}
         <nav className="flex items-center gap-2 text-sm text-zinc-400 mb-8 flex-wrap">
           <Link href="/posts" className="hover:text-zinc-900 transition-colors flex items-center gap-1">
-            <ArrowLeft size={14} />
-            帖子
+            <ArrowLeft size={14} /> 帖子
           </Link>
           {breadcrumbs.map((crumb) => (
             <span key={crumb.href} className="flex items-center gap-2">
@@ -86,10 +95,7 @@ export default async function PostDetailPage({ params }: PageProps) {
             {file.meta.tags && file.meta.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {file.meta.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-zinc-50 text-zinc-500 text-xs font-bold uppercase tracking-widest rounded-full border border-zinc-100"
-                  >
+                  <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-zinc-50 text-zinc-500 text-xs font-bold uppercase tracking-widest rounded-full border border-zinc-100">
                     {tag}
                   </span>
                 ))}

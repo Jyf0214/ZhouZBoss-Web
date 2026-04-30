@@ -1,33 +1,38 @@
 import { getContentFiles, getContentIndexes } from '@/lib/content';
-import { loadConfig } from '@/lib/config';
+import { getSession } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
-import { PostListClient } from './PostListClient';
+import { PostListClient } from '../PostListClient';
+import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '帖子 - Originium Kernel',
-  description: '浏览所有公开帖子',
+  title: '私人内容 - Originium Kernel',
+  description: '仅登录用户可见的私人帖子',
 };
 
 /**
- * 帖子列表页 — 服务端组件，直接从文件系统读取
- * 仅展示 public 内容，不查数据库
+ * 私人帖子页 — 需要登录，展示 public: false 的内容
+ * 不查数据库，仅通过 cookie 判断登录状态
  */
-export default async function PostsPage() {
-  const config = loadConfig();
+export default async function PrivatePostsPage() {
+  const session = await getSession();
+  if (!session) {
+    redirect('/login?callbackUrl=/posts/private');
+  }
+
   const allFiles = getContentFiles('posts');
   const indexes = getContentIndexes('posts');
 
-  // 仅展示 public 的帖子
-  const publicFiles = allFiles.filter((file) => {
+  // 仅展示 private 的帖子（目录标记 public: false）
+  const privateFiles = allFiles.filter((file) => {
     const dirSlug = '/' + file.slug.split('/').filter(Boolean).slice(0, -1).join('/');
     const dirIndex = indexes.find((idx) => idx.slug === dirSlug || (dirSlug === '/' && idx.slug === '/'));
-    return dirIndex ? dirIndex.public !== false : true;
+    return dirIndex ? dirIndex.public === false : false;
   });
 
-  const publicIndexes = indexes.filter((idx) => idx.public !== false);
+  const privateIndexes = indexes.filter((idx) => idx.public === false);
 
-  const posts = publicFiles.map((f) => ({
+  const posts = privateFiles.map((f) => ({
     slug: f.slug,
     title: f.meta.title,
     date: f.meta.date,
@@ -37,7 +42,7 @@ export default async function PostsPage() {
     description: f.meta.description,
   }));
 
-  const groups = publicIndexes.map((idx) => ({
+  const groups = privateIndexes.map((idx) => ({
     slug: idx.slug,
     title: idx.title,
     description: idx.description,
@@ -50,9 +55,9 @@ export default async function PostsPage() {
       <Navbar />
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12 md:py-20">
         <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-zinc-900 mb-4">
-          {config.site.title}
+          🔒 私人内容
         </h1>
-        <p className="text-zinc-400 text-lg mb-12">{config.site.description}</p>
+        <p className="text-zinc-400 text-lg mb-12">仅登录用户可见的私人帖子</p>
         <PostListClient posts={posts} groups={groups} />
       </main>
     </div>
