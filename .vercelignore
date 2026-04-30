@@ -1,6 +1,8 @@
-# 排除不需要的文件
+# 排除不需要的文件（保留 posts/ 和 faces/ 的内容文件）
 *.md
 !README.md
+!posts/**
+!faces/**
 .git
 .github
 .vscode
