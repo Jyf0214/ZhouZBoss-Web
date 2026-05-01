@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
-// 禁止静态预渲染
-export const dynamic = 'force-dynamic';
 import { Navbar } from '@/components/Navbar';
 import { Button, Input, Form, message, Steps } from 'antd';
 import { Mail, Shield, KeyRound, ArrowRight, CheckCircle2 } from 'lucide-react';

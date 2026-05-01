@@ -3,9 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-
-// 禁止静态预渲染，必须在 ClerkProvider 运行时环境中渲染
-export const dynamic = 'force-dynamic';
 import { Navbar } from '@/components/Navbar';
 import { Spin, Button } from 'antd';
 import { Link, ExternalLink } from 'lucide-react';
