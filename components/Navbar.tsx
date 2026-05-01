@@ -7,7 +7,6 @@ import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
 import { ClerkLoginSection } from '@/components/ClerkLoginSection';
 import { LogoutOutlined, LoginOutlined, SettingOutlined, UserOutlined, UsergroupAddOutlined, BookOutlined, TeamOutlined } from '@ant-design/icons';
 import { Tag, Button } from 'antd';
-import { Flexbox, Text } from '@lobehub/ui';
 
 export function Navbar() {
   const { user, userRole, logout, clerkAvailable } = useAuth();
@@ -40,26 +39,26 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-3">
             {user ? (
-              <Flexbox horizontal align="center" gap={12}>
-                <Flexbox horizontal align="center" gap={8}>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <div className="w-9 h-9 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-full flex items-center justify-center border border-zinc-200">
                     <UserOutlined className="text-zinc-500" />
                   </div>
                   <div className="hidden md:block">
-                    <Flexbox horizontal align="center" gap={6}>
-                      <Text weight={500} style={{ fontSize: 14, lineHeight: 1.2 }}>{user.displayName}</Text>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium text-sm text-zinc-900 leading-tight">{user.displayName}</span>
                       {isSudo && (
                         <Tag color="gold" className="shrink-0 text-xs" style={{ borderRadius: 6 }}>Sudo</Tag>
                       )}
-                    </Flexbox>
-                    <Flexbox horizontal align="center" gap={6}>
-                      <Text type="secondary" style={{ fontSize: 12, fontFamily: 'monospace' }}>{userUid}</Text>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-zinc-400 font-mono leading-tight">{userUid}</span>
                       {user.userGroup && (
                         <Tag color="blue" className="shrink-0 text-xs" style={{ borderRadius: 6 }}>{user.userGroup}</Tag>
                       )}
-                    </Flexbox>
+                    </div>
                   </div>
-                </Flexbox>
+                </div>
                 {isSudo && (
                   <>
                     <Link href="/admin/groups">
@@ -74,7 +73,7 @@ export function Navbar() {
                   <Button type="text" icon={<SettingOutlined />} size="small" className="text-zinc-500 hover:text-zinc-900" />
                 </Link>
                 <Button type="text" icon={<LogoutOutlined />} onClick={logout} size="small" className="text-zinc-500 hover:text-zinc-900" />
-              </Flexbox>
+              </div>
             ) : (
               <>
                 <Link href="/login">
@@ -84,10 +83,10 @@ export function Navbar() {
                 </Link>
                 <Link href="/register">
                   <Button size="large" className="bg-zinc-900 text-white hover:bg-zinc-800 border-0 rounded-xl px-6">
-                    <Flexbox horizontal align="center" gap={6}>
+                    <span className="flex items-center gap-1.5">
                       <LoginOutlined />
                       <span>注册</span>
-                    </Flexbox>
+                    </span>
                   </Button>
                 </Link>
                 {clerkAvailable && (

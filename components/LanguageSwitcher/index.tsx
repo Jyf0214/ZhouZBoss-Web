@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Globe } from 'lucide-react';
-import { Icon } from '@lobehub/ui';
 import { useI18n } from '@/hooks/use-i18n';
 
 export default function LanguageSwitcher() {
@@ -22,75 +21,26 @@ export default function LanguageSwitcher() {
   const currentLang = locales.find(l => l.code === locale) || locales[0];
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          width: '100%',
-          padding: '8px 12px',
-          background: 'transparent',
-          border: '1px solid #d9d9d9',
-          borderRadius: 6,
-          cursor: 'pointer',
-          fontSize: 13,
-        }}
+        className="flex items-center gap-1.5 w-full px-3 py-2 bg-transparent border border-zinc-200 rounded-lg cursor-pointer text-[13px] hover:border-zinc-300 transition-colors"
       >
-        <Icon icon={Globe} style={{ fontSize: 14 }} />
+        <Globe size={14} className="text-zinc-500" />
         <span>{currentLang.flag}</span>
         <span>{currentLang.name}</span>
       </button>
-
       {isOpen && (
         <>
-          <div
-            onClick={() => setIsOpen(false)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 999,
-            }}
-          />
-          <div style={{
-            position: 'absolute',
-            bottom: '100%',
-            left: 0,
-            marginBottom: 4,
-            background: '#ffffff',
-            border: '1px solid #d9d9d9',
-            borderRadius: 8,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            overflow: 'hidden',
-            zIndex: 1000,
-            minWidth: 150,
-          }}>
+          <div className="fixed inset-0 z-[999]" onClick={() => setIsOpen(false)} />
+          <div className="absolute bottom-full left-0 mb-1 bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden z-[1000] min-w-[150px]">
             {locales.map(l => (
               <button
                 key={l.code}
                 onClick={() => handleSwitch(l.code)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  width: '100%',
-                  padding: '10px 16px',
-                  background: locale === l.code ? '#f5f5f5' : 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  textAlign: 'left',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f5f5f5';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = locale === l.code ? '#f5f5f5' : 'transparent';
-                }}
+                className={`flex items-center gap-2 w-full px-4 py-2.5 border-none cursor-pointer text-sm text-left hover:bg-zinc-50 transition-colors ${
+                  locale === l.code ? 'bg-zinc-50' : ''
+                }`}
               >
                 <span>{l.flag}</span>
                 <span>{l.name}</span>

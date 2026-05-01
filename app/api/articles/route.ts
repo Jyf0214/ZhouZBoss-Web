@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { syncPostToGithub } from '@/lib/github';
-import yaml from 'js-yaml';
 
 /**
  * Articles API
  *
  * - GET：返回已发布文章（从 posts/ 文件索引）+ 数据库草稿
- * - POST：草稿存数据库；发布时推送 MD 到 GitHub posts/ 目录
+ * - POST：草稿存数据库；发布时通过统一 /api/github 端点推送 MD 到 GitHub posts/ 目录
  */
 
 /** 从数据库读取所有草稿元数据 */
@@ -83,31 +81,37 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
     };
 
-    // 发布状态：推送到 GitHub posts/ 目录
+    // 发布状态：通过统一 /api/github 端点推送到 GitHub posts/ 目录
     if (status === 'published') {
-      const db = getDb();
-      const configStr = await db.get('config:main');
-      if (!configStr) {
-        return NextResponse.json({ error: '发布文章需要配置系统参数' }, { status: 400 });
-      }
-      const config = JSON.parse(configStr);
-      if (!config.githubRepo || !config.githubToken) {
-        return NextResponse.json({ error: '发布文章需要配置 GitHub，请先在系统配置中设置' }, { status: 400 });
-      }
-
       const postSlug = slug || `/${articleMeta.authorName}/${id}`;
-      await syncPostToGithub(config.githubRepo, config.githubToken, {
-        slug: postSlug,
-        title,
-        content: content || '',
-        author: articleMeta.authorName,
-        tags: articleMeta.tags,
-        cover: coverImage || '',
-        date: now,
-        description: description || '',
+      const filePath = `posts${postSlug}.md`;
+
+      const ghResponse = await fetch(`${req.nextUrl.origin}/api/github`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          path: filePath,
+          frontMatter: {
+            title,
+            author: articleMeta.authorName,
+            date: now,
+            tags: articleMeta.tags,
+            ...(coverImage && { cover: coverImage }),
+            ...(description && { description }),
+          },
+          body: content || '',
+          message: `feat: publish post "${title}"`,
+        }),
       });
 
+      if (!ghResponse.ok) {
+        const error = await ghResponse.json();
+        return NextResponse.json({ error: error.error || '发布到 GitHub 失败' }, { status: 500 });
+      }
+
       // 发布成功后，数据库仅保留备份元数据（不含内容）
+      const db = getDb();
       const backupMeta = { ...articleMeta, status: 'published', content: '', slug: postSlug };
       await db.set(`article:data:${id}`, JSON.stringify(backupMeta));
       await db.hset('articles:published', id, JSON.stringify(backupMeta));

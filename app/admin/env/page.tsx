@@ -16,7 +16,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Card, Tag, Spin, Progress, Button } from 'antd';
-import { Flexbox, Text } from '@lobehub/ui';
 
 interface EnvVar {
   name: string;
@@ -94,7 +93,7 @@ export default function EnvStatusPage() {
   if (!envStatus) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Text type="secondary">获取环境变量状态失败</Text>
+        <span className="text-zinc-400">获取环境变量状态失败</span>
       </div>
     );
   }

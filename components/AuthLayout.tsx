@@ -1,7 +1,6 @@
 'use client';
 
 import { type FC, type PropsWithChildren } from 'react';
-import { Center, Flexbox, Text } from '@lobehub/ui';
 import { cx } from 'antd-style';
 import { authStyles } from './style';
 import { useIsDark } from '@/hooks/useIsDark';
@@ -13,32 +12,26 @@ const AuthLayout: FC<PropsWithChildren> = ({ children }) => {
   const isDarkMode = useIsDark();
 
   return (
-    <Flexbox className={authStyles.outer} height={'100%'} padding={8} width={'100%'}>
-      <Flexbox
-        className={cx(isDarkMode ? authStyles.innerDark : authStyles.innerLight)}
-        height={'100%'}
-        width={'100%'}
-      >
+    <div className={authStyles.outer} style={{ height: '100%', padding: 8, width: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div className={cx(isDarkMode ? authStyles.innerDark : authStyles.innerLight)} style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* 品牌标题 */}
-        <Flexbox horizontal align={'center'} gap={8} justify={'space-between'} padding={16} width={'100%'}>
-          <Text fontSize={20} weight={'bold'}>
-            Originium Kernel
-          </Text>
-        </Flexbox>
+        <div className="flex items-center gap-2 justify-between w-full px-4 py-4">
+          <span className="text-xl font-bold text-zinc-900">Originium Kernel</span>
+        </div>
 
         {/* 居中内容 */}
-        <Center height={'100%'} padding={16} width={'100%'}>
+        <div className="flex-1 flex items-center justify-center w-full p-4">
           {children}
-        </Center>
+        </div>
 
         {/* 底部版权 */}
-        <Center padding={24}>
-          <Text align={'center'} type={'secondary'}>
+        <div className="flex items-center justify-center py-6">
+          <span className="text-sm text-zinc-400 text-center">
             Originium Kernel © {new Date().getFullYear()}
-          </Text>
-        </Center>
-      </Flexbox>
-    </Flexbox>
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 

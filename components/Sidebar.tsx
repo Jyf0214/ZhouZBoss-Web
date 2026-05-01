@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { Home, LayoutDashboard, FileText, Settings, ShieldAlert, Globe, User } from 'lucide-react';
-import { Flexbox, Text } from '@lobehub/ui';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -18,8 +17,8 @@ export function Sidebar() {
     { href: '/dashboard', label: t('sidebar.dashboard'), icon: LayoutDashboard, roles: ['admin', 'sudo', 'user'] },
     { href: '/dashboard/settings', label: t('sidebar.settings'), icon: User, roles: ['admin', 'sudo', 'user'] },
     { href: '/dashboard/articles', label: t('sidebar.articleManagement'), icon: FileText, roles: ['admin', 'sudo', 'user'] },
+    { href: '/tickets', label: t('sidebar.tickets'), icon: FileText, roles: ['admin', 'sudo', 'user'] },
     { href: '/admin/requests', label: t('sidebar.requests'), icon: ShieldAlert, roles: ['admin', 'sudo'] },
-    { href: '/admin/tickets', label: t('sidebar.ticketManagement'), icon: ShieldAlert, roles: ['admin', 'sudo'] },
     { href: '/admin/config', label: t('sidebar.systemConfig'), icon: Settings, roles: ['admin', 'sudo'] },
     { href: '/admin/env', label: t('sidebar.envVariables'), icon: Globe, roles: ['admin', 'sudo'] },
   ];
@@ -27,22 +26,20 @@ export function Sidebar() {
   if (!userRole) return null;
 
   const filteredLinks = links.filter(link => userRole && link.roles.includes(userRole));
-
   if (filteredLinks.length === 0) return null;
 
   return (
     <aside className="w-72 border-r border-zinc-200/60 bg-gradient-to-b from-zinc-50/80 to-transparent hidden md:block min-h-[calc(100vh-4rem)] backdrop-blur-sm">
       <div className="p-6">
-        <Flexbox gap={2} paddingBlock={8}>
-          <Text fontSize={11} weight={700} className="text-zinc-400 uppercase tracking-widest">
+        <div className="py-2">
+          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
             {t('sidebar.originiumKernel')}
-          </Text>
-        </Flexbox>
+          </span>
+        </div>
         <nav className="space-y-1 mt-4">
           {filteredLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href || (pathname ?? '').startsWith(`${link.href}/`);
-
             return (
               <Link
                 key={link.href}
@@ -53,13 +50,8 @@ export function Sidebar() {
                     : 'text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900'
                 }`}
               >
-                <Icon 
-                  size={18} 
-                  className={`transition-colors ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-900'}`} 
-                />
-                <Text weight={isActive ? 600 : 500} style={{ fontSize: 14 }}>
-                  {link.label}
-                </Text>
+                <Icon size={18} className={`transition-colors ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-900'}`} />
+                <span className={`text-sm ${isActive ? 'font-semibold' : 'font-medium'}`}>{link.label}</span>
               </Link>
             );
           })}

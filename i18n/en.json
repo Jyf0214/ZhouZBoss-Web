@@ -122,7 +122,7 @@
     "requests": "Requests",
     "systemConfig": "System Config",
     "envVariables": "Env Variables",
-    "ticketManagement": "Ticket Management",
+    "tickets": "Tickets",
     "originiumKernel": "Originium Kernel"
   },
   "article": {

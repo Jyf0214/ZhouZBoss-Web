@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input, Form, Divider, message } from 'antd';
 import { ChevronRight, Lock, Mail } from 'lucide-react';
-import { Flexbox, Text, Icon } from '@lobehub/ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
@@ -72,7 +71,6 @@ function LoginForm() {
     borderRadius: 12,
   };
 
-  /** Clerk 登录区块 — 包裹在 ClerkAuthProvider 内确保 hooks 可用 */
   const clerkSection = clerkAvailable ? (
     <ClerkAuthProvider>
       <ClerkLoginSection />
@@ -82,23 +80,19 @@ function LoginForm() {
   const renderEmailStep = () => (
     <AuthCard
       footer={
-        <Flexbox gap={16} align="center" style={{ marginTop: 16 }}>
+        <div className="flex flex-col items-center gap-4 mt-4">
           <Link href="/forgot-password">
-            <Text style={{ fontSize: 14, color: 'var(--ant-color-text-secondary)', cursor: 'pointer' }}>
+            <span className="text-sm text-zinc-400 cursor-pointer hover:text-zinc-600">
               {t('auth.forgotPassword')}
-            </Text>
+            </span>
           </Link>
-          <Flexbox horizontal justify="center" gap={8}>
-            <Text type="secondary" style={{ fontSize: 14, lineHeight: '22px' }}>
-              {t('auth.noAccount')}
-            </Text>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-sm text-zinc-400">{t('auth.noAccount')}</span>
             <Link href="/register">
-              <Text style={{ fontSize: 14, fontWeight: 500, lineHeight: '22px' }}>
-                {t('auth.registerNow')}
-              </Text>
+              <span className="text-sm font-medium text-zinc-900">{t('auth.registerNow')}</span>
             </Link>
-          </Flexbox>
-        </Flexbox>
+          </div>
+        </div>
       }
       subtitle={t('auth.loginSubtitle')}
       title={t('auth.welcomeBack')}
@@ -113,11 +107,11 @@ function LoginForm() {
             placeholder={t('auth.inputEmailOrUsername')}
             ref={inputRef}
             size="large"
-            prefix={<Icon icon={Mail} style={{ marginInline: 8 }} />}
+            prefix={<Mail size={16} className="mx-2 text-zinc-400" />}
             style={inputStyle}
             suffix={
               <Button
-                icon={<Icon icon={ChevronRight} />}
+                icon={<ChevronRight size={14} />}
                 loading={loading}
                 title={t('auth.nextStep')}
                 variant={'filled'}
@@ -134,25 +128,25 @@ function LoginForm() {
   const renderPasswordStep = () => (
     <AuthCard
       footer={
-        <Flexbox gap={16}>
+        <div className="flex flex-col gap-4">
           <Link href="/forgot-password">
-            <Text style={{ fontSize: 14, color: 'var(--ant-color-primary)', cursor: 'pointer' }}>
+            <span className="text-sm cursor-pointer" style={{ color: 'var(--ant-color-primary)' }}>
               {t('auth.forgotPassword')}
-            </Text>
+            </span>
           </Link>
           <Button
-            icon={<Icon icon={ChevronRight} style={{ transform: 'rotate(180deg)' }} />}
+            icon={<ChevronRight size={14} className="rotate-180" />}
             size={'large'}
             onClick={handleBackToEmail}
           >
             {t('common.back')}
           </Button>
-        </Flexbox>
+        </div>
       }
       subtitle={t('auth.inputPasswordToLogin')}
       title={t('auth.welcomeBack')}
     >
-      <Text fontSize={18} style={{ lineHeight: '28px' }}>{email}</Text>
+      <span className="text-lg text-zinc-900">{email}</span>
       <Form form={form} layout="vertical" style={{ marginTop: 16 }} onFinish={handleLogin}>
         <Form.Item
           name="password"
@@ -163,11 +157,11 @@ function LoginForm() {
             placeholder={t('auth.inputPassword')}
             ref={inputRef}
             size="large"
-            prefix={<Icon icon={Lock} style={{ marginInline: 8 }} />}
+            prefix={<Lock size={16} className="mx-2 text-zinc-400" />}
             style={inputStyle}
             suffix={
               <Button
-                icon={<Icon icon={ChevronRight} />}
+                icon={<ChevronRight size={14} />}
                 loading={loading}
                 style={{ color: 'var(--ant-color-primary)' }}
                 title={t('auth.login')}

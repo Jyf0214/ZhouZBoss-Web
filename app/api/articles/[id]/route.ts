@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { getFileFromGithub, syncPostToGithub, deletePostFromGithub } from '@/lib/github';
 
 /**
  * Article Detail API (GET, PATCH, DELETE)
  *
- * - GET：草稿从数据库读内容，已发布从 GitHub posts/ 读
- * - PATCH：发布时推送 GitHub；草稿更新存数据库
- * - DELETE：删除 GitHub 文件 + 数据库记录
+ * - GET：草稿从数据库读内容，已发布通过 /api/github GET 端点读取
+ * - PATCH：发布时通过 /api/github POST 端点推送 GitHub；草稿更新存数据库
+ * - DELETE：通过 /api/github POST 端点删除 GitHub 文件 + 数据库记录
  */
-
-/** 获取 GitHub 配置 */
-async function getGithubConfig() {
-  const db = getDb();
-  const configStr = await db.get('config:main');
-  if (!configStr) return null;
-  const config = JSON.parse(configStr);
-  if (!config.githubRepo || !config.githubToken) return null;
-  return { repo: config.githubRepo, token: config.githubToken };
-}
 
 export async function GET(
   req: NextRequest,
@@ -40,16 +29,23 @@ export async function GET(
         return NextResponse.json(meta);
       }
 
-      // 已发布：从 GitHub 获取内容
+      // 已发布：通过 /api/github GET 端点获取内容
       if (meta.status === 'published' && meta.slug) {
-        const ghConfig = await getGithubConfig();
-        if (ghConfig) {
-          const file = await getFileFromGithub(ghConfig.repo, ghConfig.token, `posts${meta.slug}.md`);
-          if (file) {
-            // 解析 front matter 提取正文
-            const match = file.content.match(/^---\n[\s\S]*?\n---\n\n?([\s\S]*)$/);
-            return NextResponse.json({ ...meta, content: match ? match[1] : file.content });
-          }
+        const ghResponse = await fetch(
+          `${req.nextUrl.origin}/api/github?path=posts${meta.slug}.md`
+        );
+        if (ghResponse.ok) {
+          const { frontMatter, body } = await ghResponse.json();
+          return NextResponse.json({
+            ...meta,
+            title: frontMatter.title || meta.title,
+            content: body || '',
+            author: frontMatter.author || meta.authorName,
+            tags: frontMatter.tags || meta.tags || [],
+            cover: frontMatter.cover || meta.coverImage,
+            description: frontMatter.description || meta.description,
+            date: frontMatter.date || meta.createdAt,
+          });
         }
       }
 
@@ -111,24 +107,34 @@ export async function PATCH(
       updatedAt: new Date().toISOString(),
     };
 
-    // 发布操作：推送到 GitHub posts/ 目录
+    // 发布操作：通过 /api/github POST 端点推送到 GitHub posts/ 目录
     if (body.status === 'published') {
-      const ghConfig = await getGithubConfig();
-      if (!ghConfig) {
-        return NextResponse.json({ error: '发布文章需要配置 GitHub' }, { status: 400 });
-      }
-
       const postSlug = body.slug || meta.slug || `/${updated.authorName}/${id}`;
-      await syncPostToGithub(ghConfig.repo, ghConfig.token, {
-        slug: postSlug,
-        title: updated.title,
-        content: updated.content || '',
-        author: updated.authorName,
-        tags: updated.tags || [],
-        cover: updated.coverImage || '',
-        date: updated.createdAt,
-        description: updated.description || '',
+      const filePath = `posts${postSlug}.md`;
+
+      const ghResponse = await fetch(`${req.nextUrl.origin}/api/github`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          path: filePath,
+          frontMatter: {
+            title: updated.title,
+            author: updated.authorName,
+            date: updated.createdAt,
+            tags: updated.tags || [],
+            ...(updated.coverImage && { cover: updated.coverImage }),
+            ...(updated.description && { description: updated.description }),
+          },
+          body: updated.content || '',
+          message: `feat: publish post "${updated.title}"`,
+        }),
       });
+
+      if (!ghResponse.ok) {
+        const error = await ghResponse.json();
+        return NextResponse.json({ error: error.error || '发布到 GitHub 失败' }, { status: 500 });
+      }
 
       // 发布后数据库仅保留备份元数据（不含内容）
       updated.status = 'published';
@@ -171,12 +177,17 @@ export async function DELETE(
 
     // 管理员直接永久删除
     if (session.role === 'admin' || session.role === 'sudo') {
-      // 删除 GitHub 文件
+      // 删除 GitHub 文件（通过 /api/github POST 端点）
       if (meta.status === 'published' && meta.slug) {
-        const ghConfig = await getGithubConfig();
-        if (ghConfig) {
-          await deletePostFromGithub(ghConfig.repo, ghConfig.token, meta.slug);
-        }
+        await fetch(`${req.nextUrl.origin}/api/github`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'delete',
+            path: `posts${meta.slug}.md`,
+            message: `delete: remove post "${meta.title}"`,
+          }),
+        });
       }
 
       // 删除数据库记录

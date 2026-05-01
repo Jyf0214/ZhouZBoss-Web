@@ -2,7 +2,6 @@
 
 import { SignInButton, useClerk } from '@clerk/nextjs';
 import { Button } from 'antd';
-import { Flexbox } from '@lobehub/ui';
 
 /**
  * Clerk 登录区块 — 必须在 ClerkProvider 内部使用
@@ -18,12 +17,12 @@ export function ClerkLoginSection({ variant = 'full' }: { variant?: 'full' | 'co
     return (
       <SignInButton mode="modal" fallbackRedirectUrl="/clerk/after-auth">
         <Button size="large" className="border-zinc-200 hover:border-zinc-300 rounded-xl px-4">
-          <Flexbox horizontal align="center" gap={6}>
+          <span className="flex items-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9.5 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="#6C47FF"/>
             </svg>
             <span>Clerk</span>
-          </Flexbox>
+          </span>
         </Button>
       </SignInButton>
     );
@@ -43,12 +42,12 @@ export function ClerkLoginSection({ variant = 'full' }: { variant?: 'full' | 'co
           className="h-12 rounded-xl border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
           style={{ fontSize: 14, fontWeight: 500 }}
         >
-          <Flexbox horizontal align="center" gap={8}>
+          <span className="flex items-center gap-2">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9.5 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="#6C47FF"/>
             </svg>
             使用 Clerk 登录
-          </Flexbox>
+          </span>
         </Button>
       </SignInButton>
     </>

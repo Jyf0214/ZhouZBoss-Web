@@ -4,8 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { Settings, Github, ExternalLink, CheckCircle, XCircle, Image } from 'lucide-react';
-import { Icon, Text } from '@lobehub/ui';
-import { Slider } from 'antd';
+import { Slider, Button } from 'antd';
 
 interface BackgroundConfig {
   url?: string;
@@ -38,7 +37,6 @@ export default function ConfigPage() {
       setLoading(false);
       return;
     }
-
     const fetchConfig = async () => {
       setLoading(true);
       try {
@@ -59,7 +57,6 @@ export default function ConfigPage() {
         setLoading(false);
       }
     };
-
     fetchConfig();
   }, [userRole]);
 
@@ -75,7 +72,6 @@ export default function ConfigPage() {
           background: config.background,
         }),
       });
-      
       if (res.ok) {
         alert(t('config.saveSuccess'));
       } else {
@@ -91,18 +87,16 @@ export default function ConfigPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text type="secondary">{t('common.loading')}</Text>
+      <div className="p-8 text-center">
+        <span className="text-zinc-400">{t('common.loading')}</span>
       </div>
     );
   }
 
   if (userRole !== 'sudo' && userRole !== 'admin') {
     return (
-      <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text style={{ color: 'var(--ant-color-error)' }}>
-          {t('common.accessDenied')}
-        </Text>
+      <div className="p-8 text-center">
+        <span className="text-red-500">{t('common.accessDenied')}</span>
       </div>
     );
   }
@@ -110,291 +104,125 @@ export default function ConfigPage() {
   const isGithubConfigured = config.githubRepo && config.githubToken;
 
   return (
-    <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
+    <div className="p-6 md:p-10 max-w-3xl mx-auto">
       {/* 标题 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <div style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          background: '#1a1a1a',
-          color: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <Icon icon={Settings} />
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center">
+          <Settings size={18} className="text-white" />
         </div>
         <div>
-          <Text fontSize={24} weight={'bold'}>
-            {t('config.title')}
-          </Text>
-          <Text fontSize={14} type="secondary">
-            {t('config.subtitle')}
-          </Text>
+          <h1 className="text-2xl font-bold text-zinc-900">{t('config.title')}</h1>
+          <p className="text-sm text-zinc-400">{t('config.subtitle')}</p>
         </div>
       </div>
 
       {/* 基础设置 */}
-      <div style={{
-        background: '#ffffff',
-        borderRadius: 12,
-        border: '1px solid #e5e5e5',
-        padding: 20,
-        marginBottom: 16,
-      }}>
-        <Text fontSize={16} weight={'bold'} style={{ marginBottom: 16, display: 'block' }}>
-          <span style={{ 
-            display: 'inline-block',
-            width: 8, 
-            height: 8, 
-            borderRadius: '50%', 
-            background: '#52c41a',
-            marginRight: 8 
-          }}></span>
+      <div className="bg-white rounded-2xl border border-zinc-100 p-6 mb-4">
+        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
           {t('config.general')}
-        </Text>
-        
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            {t('config.siteTitle')}
-          </label>
-          <input 
-            type="text" 
+        </h2>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">{t('config.siteTitle')}</label>
+          <input
+            type="text"
             value={config.siteTitle}
-            onChange={e => setConfig({...config, siteTitle: e.target.value})}
-            style={{
-              width: '100%',
-              height: 40,
-              padding: '0 12px',
-              border: '1px solid #d9d9d9',
-              borderRadius: 8,
-              fontSize: 14,
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            onChange={e => setConfig({ ...config, siteTitle: e.target.value })}
+            className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400 transition-colors"
           />
         </div>
-        
         <div>
-          <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            {t('config.siteDescription')}
-          </label>
-          <textarea 
+          <label className="block text-sm font-medium mb-2">{t('config.siteDescription')}</label>
+          <textarea
             value={config.siteDescription}
-            onChange={e => setConfig({...config, siteDescription: e.target.value})}
-            style={{
-              width: '100%',
-              minHeight: 100,
-              padding: 12,
-              border: '1px solid #d9d9d9',
-              borderRadius: 8,
-              fontSize: 14,
-              resize: 'vertical',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            onChange={e => setConfig({ ...config, siteDescription: e.target.value })}
+            className="w-full min-h-[100px] p-3 border border-zinc-200 rounded-lg text-sm resize-vertical outline-none focus:border-zinc-400 transition-colors"
           />
         </div>
       </div>
 
       {/* 背景设置 */}
-      <div style={{
-        background: '#ffffff',
-        borderRadius: 12,
-        border: '1px solid #e5e5e5',
-        padding: 20,
-        marginBottom: 16,
-      }}>
-        <Text fontSize={16} weight={'bold'} style={{ marginBottom: 16, display: 'block' }}>
-          <span style={{ 
-            display: 'inline-block',
-            width: 8, 
-            height: 8, 
-            borderRadius: '50%', 
-            background: '#1890ff',
-            marginRight: 8 
-          }}></span>
-          <Icon icon={Image} style={{ marginRight: 8 }} />
+      <div className="bg-white rounded-2xl border border-zinc-100 p-6 mb-4">
+        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-blue-500" />
+          <Image size={16} />
           {t('config.background')}
-        </Text>
-        
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
-            {t('config.backgroundUrl')}
-          </label>
-          <input 
-            type="text" 
+        </h2>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">{t('config.backgroundUrl')}</label>
+          <input
+            type="text"
             value={config.background?.url || ''}
-            onChange={e => setConfig({
-              ...config, 
-              background: { ...config.background, url: e.target.value }
-            })}
+            onChange={e => setConfig({ ...config, background: { ...config.background, url: e.target.value } })}
             placeholder={t('config.backgroundUrlPlaceholder')}
-            style={{
-              width: '100%',
-              height: 40,
-              padding: '0 12px',
-              border: '1px solid #d9d9d9',
-              borderRadius: 8,
-              fontSize: 14,
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400 transition-colors"
           />
-          <Text fontSize={12} type="secondary" style={{ marginTop: 4, display: 'block' }}>
-            {t('config.backgroundUrlHint')}
-          </Text>
+          <p className="text-xs text-zinc-400 mt-1">{t('config.backgroundUrlHint')}</p>
         </div>
-        
         <div>
-          <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
+          <label className="block text-sm font-medium mb-2">
             {t('config.overlayOpacity')}: {Math.round((config.background?.opacity ?? 0.8) * 100)}%
           </label>
           <Slider
-            min={0}
-            max={1}
-            step={0.05}
+            min={0} max={1} step={0.05}
             value={config.background?.opacity ?? 0.8}
-            onChange={value => setConfig({
-              ...config, 
-              background: { ...config.background, opacity: value }
-            })}
+            onChange={value => setConfig({ ...config, background: { ...config.background, opacity: value } })}
             tooltip={{ formatter: (value) => `${Math.round((value ?? 0) * 100)}%` }}
           />
-          <Text fontSize={12} type="secondary" style={{ marginTop: 4, display: 'block' }}>
-            {t('config.overlayOpacityHint')}
-          </Text>
+          <p className="text-xs text-zinc-400 mt-1">{t('config.overlayOpacityHint')}</p>
         </div>
       </div>
 
       {/* GitHub 集成状态 */}
-      <div style={{
-        background: '#ffffff',
-        borderRadius: 12,
-        border: '1px solid #e5e5e5',
-        padding: 20,
-        marginBottom: 24,
-      }}>
-        <Text fontSize={16} weight={'bold'} style={{ marginBottom: 16, display: 'block' }}>
-          <Icon icon={Github} style={{ marginRight: 8 }} />
+      <div className="bg-white rounded-2xl border border-zinc-100 p-6 mb-6">
+        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
+          <Github size={16} />
           {t('config.github')}
-        </Text>
-        
-        {/* 状态指示 */}
-        <div style={{
-          padding: 16,
-          background: isGithubConfigured ? '#f6ffed' : '#fff7e6',
-          borderRadius: 8,
-          marginBottom: 16,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-        }}>
-          <Icon 
-            icon={isGithubConfigured ? CheckCircle : XCircle} 
-            style={{ 
-              fontSize: 20, 
-              color: isGithubConfigured ? '#52c41a' : '#faad14' 
-            }} 
-          />
+        </h2>
+        <div className="p-4 rounded-xl mb-4 flex items-center gap-3" style={{ background: isGithubConfigured ? '#f6ffed' : '#fff7e6' }}>
+          {isGithubConfigured ? (
+            <CheckCircle size={20} style={{ color: '#52c41a' }} />
+          ) : (
+            <XCircle size={20} style={{ color: '#faad14' }} />
+          )}
           <div>
-            <Text weight={500}>
-              {isGithubConfigured 
-                ? t('config.githubConfigured')
-                : t('config.githubNotConfigured')
-              }
-            </Text>
-            <Text fontSize={13} type="secondary" style={{ display: 'block', marginTop: 4 }}>
-              {isGithubConfigured
-                ? t('config.githubRepo') + ': ' + config.githubRepo
-                : t('config.githubHint')
-              }
-            </Text>
+            <span className="font-medium text-sm">
+              {isGithubConfigured ? t('config.githubConfigured') : t('config.githubNotConfigured')}
+            </span>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              {isGithubConfigured ? t('config.githubRepo') + ': ' + config.githubRepo : t('config.githubHint')}
+            </p>
           </div>
         </div>
-
-        {/* 环境变量说明 */}
-        <div style={{
-          padding: 16,
-          background: '#f5f5f5',
-          borderRadius: 8,
-        }}>
-          <Text fontSize={14} weight={500} style={{ marginBottom: 12, display: 'block' }}>
-            {t('config.envVars')}
-          </Text>
-          <div style={{ marginBottom: 8 }}>
-            <code style={{ 
-              background: '#e6e6e6', 
-              padding: '2px 8px', 
-              borderRadius: 4,
-              fontSize: 13,
-            }}>
-              GITHUB_REPO
-            </code>
-            <Text fontSize={13} type="secondary" style={{ marginLeft: 8 }}>
-              {t('config.githubRepoFormat')}
-            </Text>
+        <div className="p-4 bg-zinc-50 rounded-xl">
+          <span className="text-sm font-medium block mb-3">{t('config.envVars')}</span>
+          <div className="mb-2">
+            <code className="bg-zinc-200 px-2 py-0.5 rounded text-xs font-mono">GITHUB_REPO</code>
+            <span className="text-xs text-zinc-400 ml-2">{t('config.githubRepoFormat')}</span>
           </div>
           <div>
-            <code style={{ 
-              background: '#e6e6e6', 
-              padding: '2px 8px', 
-              borderRadius: 4,
-              fontSize: 13,
-            }}>
-              GITHUB_TOKEN
-            </code>
-            <Text fontSize={13} type="secondary" style={{ marginLeft: 8 }}>
-              {t('config.githubTokenHint')}
-            </Text>
+            <code className="bg-zinc-200 px-2 py-0.5 rounded text-xs font-mono">GITHUB_TOKEN</code>
+            <span className="text-xs text-zinc-400 ml-2">{t('config.githubTokenHint')}</span>
           </div>
-          <div style={{ marginTop: 12 }}>
-            <a 
-              href="https://vercel.com/dashboard" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                color: '#1890ff',
-                fontSize: 13,
-              }}
-            >
-              {t('config.goToVercel')}
-              <Icon icon={ExternalLink} style={{ fontSize: 12 }} />
+          <div className="mt-3">
+            <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600">
+              {t('config.goToVercel')} <ExternalLink size={12} />
             </a>
           </div>
         </div>
       </div>
 
       {/* 保存按钮 */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button 
+      <div className="flex justify-end">
+        <Button
           onClick={handleSave}
           disabled={saving}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '12px 32px',
-            background: '#1a1a1a',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1,
-          }}
+          icon={<Settings size={14} />}
+          type="primary"
+          className="bg-zinc-900 hover:bg-zinc-800 rounded-xl h-10 px-8"
         >
-          <Icon icon={Settings} />
-          <span>{saving 
-            ? t('config.saving')
-            : t('config.save')
-          }</span>
-        </button>
+          {saving ? t('config.saving') : t('config.save')}
+        </Button>
       </div>
     </div>
   );

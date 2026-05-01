@@ -50,6 +50,7 @@ const adminItems: MenuItem[] = [
   { label: '系统配置', labelEn: 'Config', icon: Settings, href: '/admin/config', adminOnly: true, group: 'admin' },
   { label: '环境变量', labelEn: 'Env', icon: Activity, href: '/admin/env', adminOnly: true, group: 'admin' },
   { label: '工单管理', labelEn: 'Tickets', icon: FileText, href: '/admin/tickets', adminOnly: true, group: 'admin' },
+  { label: '新建模板', labelEn: 'New Template', icon: FileText, href: '/admin/tickets/new', adminOnly: true, group: 'admin' },
 ];
 
 const groupLabels: Record<string, { zh: string; en: string }> = {

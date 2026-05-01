@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { Trash2, Edit2, Check, X, User } from 'lucide-react';
-import { Icon, Text } from '@lobehub/ui';
+import { Button, Tag, Popconfirm, Spin, Select } from 'antd';
 
 export default function UsersPage() {
   const { userRole } = useAuth();
@@ -13,12 +13,10 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState('');
-
   const hasAccess = userRole === 'sudo' || userRole === 'admin';
 
   useEffect(() => {
     if (!hasAccess) return;
-    
     const fetchUsers = async () => {
       try {
         const res = await fetch('/api/users');
@@ -32,7 +30,6 @@ export default function UsersPage() {
         setLoading(false);
       }
     };
-    
     fetchUsers();
   }, [hasAccess]);
 
@@ -44,7 +41,6 @@ export default function UsersPage() {
         setEditingId(null);
         return;
       }
-      
       console.log(t('admin.updateRole'), id, editRole);
       setEditingId(null);
     } catch (error) {
@@ -58,8 +54,6 @@ export default function UsersPage() {
       alert(t('admin.cannotDeleteFirstAdmin'));
       return;
     }
-    
-    if (!confirm(t('admin.deleteConfirm'))) return;
     try {
       console.log(t('admin.deleteUser'), id);
     } catch (error) {
@@ -69,171 +63,97 @@ export default function UsersPage() {
 
   if (!hasAccess) {
     return (
-      <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text style={{ color: 'var(--ant-color-error)' }}>{t('groups.adminOnly')}</Text>
+      <div className="p-8 text-center">
+        <span className="text-red-500">{t('groups.adminOnly')}</span>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div style={{ padding: 32, textAlign: 'center' }}>
-        <Text type="secondary">{t('common.loading')}</Text>
+      <div className="flex items-center justify-center h-96">
+        <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-      <Text fontSize={24} weight={'bold'} style={{ marginBottom: 24, display: 'block' }}>
-        {t('admin.users')}
-      </Text>
-      
-      <div style={{
-        background: '#ffffff',
-        borderRadius: 12,
-        border: '1px solid #e5e5e5',
-        overflow: 'hidden',
-      }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ 
-              background: '#fafafa',
-              borderBottom: '1px solid #e5e5e5',
-            }}>
-              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{t('common.user')}</th>
-              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{t('admin.email')}</th>
-              <th style={{ padding: 16, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>{t('admin.role')}</th>
-              <th style={{ padding: 16, textAlign: 'right', fontSize: 13, fontWeight: 600 }}>{t('admin.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
+    <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold text-zinc-900 mb-6">{t('admin.users')}</h1>
+
+      <div className="bg-white rounded-2xl border border-zinc-100 overflow-hidden">
+        {/* 表头 */}
+        <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-zinc-50 border-b border-zinc-100 text-xs font-bold text-zinc-500 uppercase tracking-wider">
+          <div className="col-span-3">{t('common.user')}</div>
+          <div className="col-span-4">{t('admin.email')}</div>
+          <div className="col-span-3">{t('admin.role')}</div>
+          <div className="col-span-2 text-right">{t('admin.actions')}</div>
+        </div>
+
+        {users.length > 0 ? (
+          <div className="divide-y divide-zinc-50">
             {users.map((u) => (
-              <tr key={u.uid || u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                <td style={{ padding: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{
-                      width: 32,
-                      height: 32,
-                      background: '#f5f5f5',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                      <Icon icon={User} style={{ fontSize: 16, color: '#999' }} />
-                    </div>
-                    <Text weight={500}>{u.name || u.username || t('admin.noRole')}</Text>
+              <div key={u.uid || u.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-zinc-50/50 transition-colors">
+                {/* 用户 */}
+                <div className="col-span-3 flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 bg-zinc-100 rounded-full flex items-center justify-center shrink-0">
+                    <User size={14} className="text-zinc-400" />
                   </div>
-                </td>
-                <td style={{ padding: 16 }}>
-                  <Text type="secondary">{u.email}</Text>
-                </td>
-                <td style={{ padding: 16 }}>
+                  <span className="font-medium text-sm text-zinc-900 truncate">{u.name || u.username || t('admin.noRole')}</span>
+                </div>
+
+                {/* 邮箱 */}
+                <div className="col-span-4 text-sm text-zinc-400 truncate">{u.email}</div>
+
+                {/* 角色 */}
+                <div className="col-span-3">
                   {editingId === u.uid ? (
-                    <select 
+                    <Select
                       value={editRole}
-                      onChange={(e) => setEditRole(e.target.value)}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: 6,
-                        border: '1px solid #d9d9d9',
-                        fontSize: 13,
-                      }}
-                    >
-                      <option value="user">{t('admin.user')}</option>
-                      <option value="admin">{t('admin.admin')}</option>
-                      {u.role !== 'sudo' && <option value="sudo">{t('admin.superAdmin')}</option>}
-                    </select>
+                      onChange={setEditRole}
+                      size="small"
+                      className="w-28"
+                      options={[
+                        { label: t('admin.user'), value: 'user' },
+                        { label: t('admin.admin'), value: 'admin' },
+                        ...(u.role !== 'sudo' ? [{ label: t('admin.superAdmin'), value: 'sudo' }] : []),
+                      ]}
+                    />
                   ) : (
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '4px 12px',
-                      borderRadius: 16,
-                      fontSize: 12,
-                      background: u.role === 'sudo' || u.role === 'admin' ? '#f0f5ff' : '#f5f5f5',
-                      color: u.role === 'sudo' || u.role === 'admin' ? '#1890ff' : '#666',
-                    }}>
+                    <Tag color={u.role === 'sudo' || u.role === 'admin' ? 'blue' : 'default'} className="rounded-lg text-xs">
                       {u.role === 'sudo' ? t('admin.superAdmin') : u.role === 'admin' ? t('admin.admin') : t('admin.user')}
-                    </span>
+                    </Tag>
                   )}
-                </td>
-                <td style={{ padding: 16, textAlign: 'right' }}>
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                    {editingId === u.uid ? (
-                      <>
-                        <button 
-                          onClick={() => handleUpdateRole(u.uid)}
-                          style={{ 
-                            padding: 8, 
-                            background: 'none', 
-                            border: 'none', 
-                            cursor: 'pointer',
-                            borderRadius: 6,
-                            color: '#52c41a',
-                          }}
-                        >
-                          <Icon icon={Check} />
-                        </button>
-                        <button 
-                          onClick={() => setEditingId(null)}
-                          style={{ 
-                            padding: 8, 
-                            background: 'none', 
-                            border: 'none', 
-                            cursor: 'pointer',
-                            borderRadius: 6,
-                            color: '#999',
-                          }}
-                        >
-                          <Icon icon={X} />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button 
-                          onClick={() => { setEditingId(u.uid); setEditRole(u.role); }}
-                          style={{ 
-                            padding: 8, 
-                            background: 'none', 
-                            border: 'none', 
-                            cursor: 'pointer',
-                            borderRadius: 6,
-                            color: '#1890ff',
-                          }}
-                          title={t('common.edit')}
-                        >
-                          <Icon icon={Edit2} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(u.uid)}
-                          style={{ 
-                            padding: 8, 
-                            background: 'none', 
-                            border: 'none', 
-                            cursor: 'pointer',
-                            borderRadius: 6,
-                            color: '#ff4d4f',
-                          }}
-                          title={t('common.delete')}
-                        >
-                          <Icon icon={Trash2} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
+                </div>
+
+                {/* 操作 */}
+                <div className="col-span-2 flex items-center gap-1 justify-end">
+                  {editingId === u.uid ? (
+                    <>
+                      <Button size="small" type="text" icon={<Check size={14} className="text-emerald-500" />} onClick={() => handleUpdateRole(u.uid)} />
+                      <Button size="small" type="text" icon={<X size={14} className="text-zinc-400" />} onClick={() => setEditingId(null)} />
+                    </>
+                  ) : (
+                    <>
+                      <Button size="small" type="text" icon={<Edit2 size={14} className="text-blue-500" />} onClick={() => { setEditingId(u.uid); setEditRole(u.role); }} title={t('common.edit')} />
+                      <Popconfirm
+                        title={t('admin.deleteConfirm')}
+                        onConfirm={() => handleDelete(u.uid)}
+                        okButtonProps={{ danger: true }}
+                      >
+                        <Button size="small" type="text" danger icon={<Trash2 size={14} />} title={t('common.delete')} />
+                      </Popconfirm>
+                    </>
+                  )}
+                </div>
+              </div>
             ))}
-            {users.length === 0 && (
-              <tr>
-                <td colSpan={4} style={{ padding: 40, textAlign: 'center' }}>
-                  <Text type="secondary">{t('admin.noUsers')}</Text>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          <div className="py-16 text-center">
+            <span className="text-zinc-400">{t('admin.noUsers')}</span>
+          </div>
+        )}
       </div>
     </div>
   );

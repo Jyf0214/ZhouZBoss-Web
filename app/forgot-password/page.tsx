@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Button, Input, Form, message } from 'antd';
 import { ChevronRight, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
-import { Flexbox, Text, Icon } from '@lobehub/ui';
 import { useI18n } from '@/hooks/use-i18n';
 import AuthCard from '@/components/AuthCard';
 import AuthLayout from '@/components/AuthLayout';
@@ -17,9 +16,7 @@ export default function ForgotPasswordPage() {
   const inputRef = useRef<any>(null);
   const { t } = useI18n();
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
   const handleSubmit = async (values: { email: string }) => {
     if (loading) return;
@@ -58,34 +55,25 @@ export default function ForgotPasswordPage() {
       <AuthLayout>
         <AuthCard
           footer={
-            <Flexbox horizontal justify="center" gap={8} paddingBlock={24}>
+            <div className="flex items-center justify-center gap-2 py-6">
               <Link href="/login">
-                <Button icon={<Icon icon={ArrowLeft} />} size="large">
+                <Button icon={<ArrowLeft size={14} />} size="large">
                   {t('auth.backToLogin')}
                 </Button>
               </Link>
-            </Flexbox>
+            </div>
           }
           subtitle={t('auth.checkEmail')}
           title={t('auth.emailSent')}
         >
-          <Flexbox align="center" gap={16} padding={24} style={{
-            background: 'var(--ant-color-success-bg)',
-            borderRadius: 12,
-            border: '1px solid var(--ant-color-success-border)'
-          }}>
-            <Icon icon={CheckCircle} size={32} style={{ color: 'var(--ant-color-success)' }} />
-            <Flexbox>
-              <Text style={{ fontSize: 16, marginBottom: 4 }}>{t('auth.resetLinkSent')}</Text>
-              <Text type="secondary" style={{ fontSize: 14 }}>{sentEmail}</Text>
-            </Flexbox>
-          </Flexbox>
-          <Button
-            size="large"
-            block
-            style={{ marginTop: 24 }}
-            onClick={() => { setEmailSent(false); form.resetFields(); inputRef.current?.focus(); }}
-          >
+          <div className="flex items-center gap-4 p-6 rounded-xl" style={{ background: 'var(--ant-color-success-bg)', border: '1px solid var(--ant-color-success-border)' }}>
+            <CheckCircle size={32} style={{ color: 'var(--ant-color-success)' }} />
+            <div>
+              <span className="text-base block mb-1">{t('auth.resetLinkSent')}</span>
+              <span className="text-sm text-zinc-400">{sentEmail}</span>
+            </div>
+          </div>
+          <Button size="large" block style={{ marginTop: 24 }} onClick={() => { setEmailSent(false); form.resetFields(); inputRef.current?.focus(); }}>
             {t('auth.resendEmail')}
           </Button>
         </AuthCard>
@@ -97,41 +85,30 @@ export default function ForgotPasswordPage() {
     <AuthLayout>
       <AuthCard
         footer={
-          <Flexbox horizontal justify="center" gap={8} paddingBlock={24}>
+          <div className="flex items-center justify-center gap-2 py-6">
             <Link href="/login">
-              <Button icon={<Icon icon={ArrowLeft} />} size="large">
+              <Button icon={<ArrowLeft size={14} />} size="large">
                 {t('auth.backToLogin')}
               </Button>
             </Link>
-          </Flexbox>
+          </div>
         }
         subtitle={t('auth.forgotPasswordSubtitle')}
         title={t('auth.forgotPasswordTitle')}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item
-            name="email"
-            style={{ marginBottom: 0 }}
-            rules={[
-              { required: true, message: t('validation.required') },
-              { type: 'email', message: t('validation.emailInvalid') }
-            ]}
-          >
+          <Form.Item name="email" style={{ marginBottom: 0 }} rules={[
+            { required: true, message: t('validation.required') },
+            { type: 'email', message: t('validation.emailInvalid') },
+          ]}>
             <Input
               placeholder={t('auth.inputEmailPlaceholder')}
               ref={inputRef}
               size="large"
-              prefix={<Icon icon={Mail} style={{ marginInline: 8 }} />}
+              prefix={<Mail size={16} className="mx-2 text-zinc-400" />}
               style={inputStyle}
               suffix={
-                <Button
-                  icon={<Icon icon={ChevronRight} />}
-                  loading={loading}
-                  disabled={loading}
-                  title={t('auth.sendResetLink')}
-                  variant="filled"
-                  onClick={() => form.submit()}
-                />
+                <Button icon={<ChevronRight size={14} />} loading={loading} disabled={loading} title={t('auth.sendResetLink')} variant="filled" onClick={() => form.submit()} />
               }
             />
           </Form.Item>
