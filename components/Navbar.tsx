@@ -3,14 +3,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
+import { SignInButton, useClerk } from '@clerk/nextjs';
 import { LogoutOutlined, LoginOutlined, SettingOutlined, UserOutlined, UsergroupAddOutlined, BookOutlined, TeamOutlined } from '@ant-design/icons';
 import { Tag, Button } from 'antd';
 import { Flexbox, Text } from '@lobehub/ui';
 
 export function Navbar() {
-  const { user, userRole, logout } = useAuth();
+  const { user, userRole, logout, clerkAvailable } = useAuth();
   const isSudo = userRole === 'sudo' || userRole === 'admin';
   const userUid = user?.uid || '';
+  const clerk = useClerk();
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200/60">
@@ -37,7 +39,6 @@ export function Navbar() {
               </Link>
             </div>
           </div>
-
           <div className="flex items-center gap-3">
             {user ? (
               <Flexbox horizontal align="center" gap={12}>
@@ -90,6 +91,18 @@ export function Navbar() {
                     </Flexbox>
                   </Button>
                 </Link>
+                {clerkAvailable && !clerk.user && (
+                  <SignInButton mode="modal" fallbackRedirectUrl="/clerk/after-auth">
+                    <Button size="large" className="border-zinc-200 hover:border-zinc-300 rounded-xl px-4">
+                      <Flexbox horizontal align="center" gap={6}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9.5 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="#6C47FF"/>
+                        </svg>
+                        <span>Clerk</span>
+                      </Flexbox>
+                    </Button>
+                  </SignInButton>
+                )}
               </>
             )}
           </div>

@@ -2,10 +2,12 @@
 
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { message } from 'antd';
+import { useClerk as useClerkAuth, useUser } from '@clerk/nextjs';
 
 /**
  * Originium Kernel Authentication Hook (Frontend)
  * Calls Backend APIs at /api/auth/*
+ * 兼容自定义 JWT 和 Clerk 双认证
  */
 
 export type UserRole = 'user' | 'admin' | 'sudo';
@@ -29,6 +31,7 @@ interface AuthContextType {
   register: (email: string, pass: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  clerkAvailable: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,6 +39,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Clerk hooks — 如果未配置 Clerk 则返回空值
+  let clerkSignOut: (() => Promise<void>) | null = null;
+  let clerkUserId: string | null = null;
+  try {
+    const clerk = useClerkAuth();
+    const clerkUser = useUser();
+    clerkSignOut = clerk.signOut;
+    clerkUserId = clerkUser.user?.id ?? null;
+  } catch {
+    // Clerk 未配置，忽略
+  }
+
+  const clerkAvailable = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   const refresh = useCallback(async () => {
     try {
@@ -124,6 +141,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
+      // 同时登出 Clerk
+      if (clerkSignOut) {
+        try { await clerkSignOut(); } catch {}
+      }
       message.info('已登出');
     } catch (err) {
       console.error('Logout error:', err);
@@ -139,7 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       register,
       logout,
-      refresh
+      refresh,
+      clerkAvailable,
     }}>
       {children}
     </AuthContext.Provider>

@@ -34,6 +34,58 @@ export async function GET() {
         },
       ],
     },
+    clerk: {
+      name: 'Clerk 第三方登录',
+      variables: [
+        {
+          name: 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
+          isSet: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+          required: false,
+          description: 'Clerk 公钥（前端可见）',
+        },
+        {
+          name: 'CLERK_SECRET_KEY',
+          isSet: !!process.env.CLERK_SECRET_KEY,
+          required: false,
+          description: 'Clerk 密钥（后端 API 用）',
+        },
+        {
+          name: 'CLERK_WEBHOOK_SECRET',
+          isSet: !!process.env.CLERK_WEBHOOK_SECRET,
+          required: false,
+          description: 'Clerk Webhook 签名验证密钥',
+        },
+      ],
+    },
+    smtp: {
+      name: 'SMTP 邮件服务',
+      variables: [
+        {
+          name: 'SMTP_HOST',
+          isSet: !!process.env.SMTP_HOST,
+          required: false,
+          description: 'SMTP 服务器地址（如 smtp.gmail.com）',
+        },
+        {
+          name: 'SMTP_PORT',
+          isSet: !!process.env.SMTP_PORT,
+          required: false,
+          description: 'SMTP 端口（587/465/25）',
+        },
+        {
+          name: 'SMTP_USER',
+          isSet: !!process.env.SMTP_USER,
+          required: false,
+          description: 'SMTP 登录用户名',
+        },
+        {
+          name: 'SMTP_PASS',
+          isSet: !!process.env.SMTP_PASS,
+          required: false,
+          description: 'SMTP 登录密码或应用专用密码',
+        },
+      ],
+    },
     github: {
       name: 'GitHub 同步',
       variables: [

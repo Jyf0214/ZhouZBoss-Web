@@ -3,16 +3,18 @@
 import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Button, Input, Form, message } from 'antd';
+import { Button, Input, Form, message, Divider } from 'antd';
 import { ChevronRight, Lock, Mail } from 'lucide-react';
 import { Flexbox, Text, Icon } from '@lobehub/ui';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
+import { SignInButton, useClerk } from '@clerk/nextjs';
 import AuthCard from '@/components/AuthCard';
 import AuthLayout from '@/components/AuthLayout';
 
 /**
  * 登录表单 — 两步流程：先输入邮箱/用户名，再输入密码
+ * 底部提供 Clerk 第三方登录选项
  */
 function LoginForm() {
   const [loading, setLoading] = useState(false);
@@ -21,16 +23,18 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const clerk = useClerk();
   const [form] = Form.useForm();
   const inputRef = useRef<any>(null);
   const { t } = useI18n();
+
   const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
+  const clerkAvailable = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   useEffect(() => {
     inputRef.current?.focus();
   }, [step]);
 
-  /** 第一步：验证用户标识，进入密码输入 */
   const handleCheckUser = async (values: { login: string }) => {
     setLoading(true);
     try {
@@ -43,7 +47,6 @@ function LoginForm() {
     }
   };
 
-  /** 第二步：提交密码完成登录 */
   const handleLogin = async (values: { password: string }) => {
     setLoading(true);
     try {
@@ -56,10 +59,13 @@ function LoginForm() {
     }
   };
 
-  /** 返回邮箱输入步骤 */
   const handleBackToEmail = () => {
     setStep('email');
     setEmail('');
+  };
+
+  const handleClerkSignIn = () => {
+    router.push('/clerk/sign-in');
   };
 
   const inputStyle = {
@@ -70,7 +76,6 @@ function LoginForm() {
     borderRadius: 12,
   };
 
-  /** 邮箱/用户名输入步骤 */
   const renderEmailStep = () => (
     <AuthCard
       footer={
@@ -119,10 +124,32 @@ function LoginForm() {
           />
         </Form.Item>
       </Form>
+
+      {/* Clerk 第三方登录 */}
+      {clerkAvailable && (
+        <>
+          <Divider style={{ margin: '20px 0 16px', fontSize: 12, color: 'var(--ant-color-text-quaternary)' }}>
+            或
+          </Divider>
+          <Button
+            block
+            size="large"
+            onClick={handleClerkSignIn}
+            className="h-12 rounded-xl border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
+            style={{ fontSize: 14, fontWeight: 500 }}
+          >
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9.5 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="#6C47FF"/>
+              </svg>
+              使用 Clerk 登录
+            </div>
+          </Button>
+        </>
+      )}
     </AuthCard>
   );
 
-  /** 密码输入步骤 */
   const renderPasswordStep = () => (
     <AuthCard
       footer={
@@ -170,6 +197,29 @@ function LoginForm() {
           />
         </Form.Item>
       </Form>
+
+      {/* Clerk 第三方登录 */}
+      {clerkAvailable && (
+        <>
+          <Divider style={{ margin: '20px 0 16px', fontSize: 12, color: 'var(--ant-color-text-quaternary)' }}>
+            或
+          </Divider>
+          <Button
+            block
+            size="large"
+            onClick={handleClerkSignIn}
+            className="h-12 rounded-xl border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
+            style={{ fontSize: 14, fontWeight: 500 }}
+          >
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9.5 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="#6C47FF"/>
+              </svg>
+              使用 Clerk 登录
+            </div>
+          </Button>
+        </>
+      )}
     </AuthCard>
   );
 

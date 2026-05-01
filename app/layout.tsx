@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/hooks/use-auth';
 import { ConfigProvider } from '@/components/ConfigProvider';
 import { BackgroundProvider } from '@/components/BackgroundProvider';
+import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
 import { CustomHead } from '@/components/CustomHead';
 import { loadConfigAsync } from '@/lib/config';
 import { validateEnv } from '@/lib/env';
@@ -51,9 +52,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ConfigProvider>
             <BackgroundProvider>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
+              <ClerkAuthProvider>
+                <AuthProvider>
+                  {children}
+                </AuthProvider>
+              </ClerkAuthProvider>
             </BackgroundProvider>
           </ConfigProvider>
         </NextIntlClientProvider>
