@@ -4,8 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { useRouter } from 'next/navigation';
-import { FileText, Users, Clock, CheckCircle, Plus, Settings, BookOpen, ArrowRight, Shield, UserCog, Trash2, Activity, Globe } from 'lucide-react';
-import { Button, Flexbox, Text, Icon } from '@lobehub/ui';
+import {
+  FileText, Users, Clock, CheckCircle, Plus, Settings,
+  BookOpen, ArrowRight, Shield, UserCog, Trash2, Activity,
+  Globe, PenLine, Sparkles,
+} from 'lucide-react';
+import { Button, Spin, Tag } from 'antd';
 import Link from 'next/link';
 
 interface Stats {
@@ -43,14 +47,12 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 文章列表：已发布（文件索引）+ 草稿（数据库）
         const articlesRes = await fetch('/api/articles');
         if (articlesRes.ok) {
           const articles = await articlesRes.json();
           const published = articles.filter((a: any) => a.status === 'published').length;
           const drafts = articles.filter((a: any) => a.status === 'draft').length;
           const pending = articles.filter((a: any) => a.status === 'pending_deletion').length;
-
           setStats(prev => ({
             ...prev,
             totalArticles: articles.length,
@@ -58,7 +60,6 @@ export default function DashboardPage() {
             draftArticles: drafts,
             pendingDeletion: pending,
           }));
-
           setRecentArticles(articles.slice(0, 5).map((a: any) => ({
             id: a.id,
             title: a.title,
@@ -67,8 +68,6 @@ export default function DashboardPage() {
             updatedAt: a.updatedAt || a.date || '',
           })));
         }
-
-        // 用户统计（仅管理员）
         if (isSudo) {
           const usersRes = await fetch('/api/users');
           if (usersRes.ok) {
@@ -86,186 +85,175 @@ export default function DashboardPage() {
   }, [isSudo]);
 
   const statCards = [
-    { title: t('dashboard.allArticles'), value: stats.totalArticles, icon: FileText, color: 'var(--ant-color-primary)', bgColor: 'var(--ant-color-primary-bg)' },
-    { title: t('dashboard.published'), value: stats.publishedArticles, icon: Globe, color: 'var(--ant-color-success)', bgColor: 'var(--ant-color-success-bg)' },
-    { title: t('dashboard.drafts'), value: stats.draftArticles, icon: Clock, color: 'var(--ant-color-warning)', bgColor: 'var(--ant-color-warning-bg)' },
+    { title: t('dashboard.allArticles'), value: stats.totalArticles, icon: FileText, color: 'bg-zinc-900', textColor: 'text-white' },
+    { title: t('dashboard.published'), value: stats.publishedArticles, icon: Globe, color: 'bg-emerald-500', textColor: 'text-white' },
+    { title: t('dashboard.drafts'), value: stats.draftArticles, icon: Clock, color: 'bg-amber-500', textColor: 'text-white' },
     ...(isSudo ? [
-      { title: t('dashboard.totalUsers'), value: stats.totalUsers, icon: Users, color: 'var(--ant-color-info)', bgColor: 'var(--ant-color-info-bg)' },
-      { title: t('dashboard.pendingDeletion'), value: stats.pendingDeletion, icon: Trash2, color: 'var(--ant-color-error)', bgColor: 'var(--ant-color-error-bg)' },
+      { title: t('dashboard.totalUsers'), value: stats.totalUsers, icon: Users, color: 'bg-blue-500', textColor: 'text-white' },
+      { title: t('dashboard.pendingDeletion'), value: stats.pendingDeletion, icon: Trash2, color: 'bg-red-500', textColor: 'text-white' },
     ] : []),
   ];
 
   const userActions = [
-    { label: t('sidebar.writeArticle'), icon: Plus, href: '/editor', color: 'var(--ant-color-primary)' },
-    { label: t('sidebar.articleManagement'), icon: BookOpen, href: '/dashboard/articles', color: 'var(--ant-color-success)' },
-    { label: t('sidebar.recycleBin'), icon: Trash2, href: '/dashboard/articles?status=pending_deletion', color: 'var(--ant-color-warning)' },
+    { label: t('sidebar.writeArticle'), icon: PenLine, href: '/editor', desc: locale === 'zh-CN' ? '创建新内容' : 'Create new content' },
+    { label: t('sidebar.articleManagement'), icon: BookOpen, href: '/dashboard/articles', desc: locale === 'zh-CN' ? '管理所有文章' : 'Manage all articles' },
+    { label: t('sidebar.recycleBin'), icon: Trash2, href: '/dashboard/articles?status=pending_deletion', desc: locale === 'zh-CN' ? '恢复或永久删除' : 'Restore or permanently delete' },
   ];
 
   const adminActions = [
-    { label: t('sidebar.userManagement'), icon: UserCog, href: '/admin/users', color: 'var(--ant-color-info)' },
-    { label: t('sidebar.userGroups'), icon: Shield, href: '/admin/groups', color: 'var(--ant-color-purple)' },
-    { label: t('sidebar.systemConfig'), icon: Settings, href: '/admin/config', color: 'var(--ant-color-warning)' },
-    { label: t('sidebar.envVariables'), icon: Activity, href: '/admin/env', color: 'var(--ant-color-success)' },
-    { label: t('sidebar.recycleBin'), icon: Trash2, href: '/admin/requests', color: 'var(--ant-color-error)' },
+    { label: t('sidebar.userManagement'), icon: UserCog, href: '/admin/users', desc: locale === 'zh-CN' ? '用户与权限' : 'Users & permissions' },
+    { label: t('sidebar.userGroups'), icon: Shield, href: '/admin/groups', desc: locale === 'zh-CN' ? '用户组配置' : 'Group configuration' },
+    { label: t('sidebar.systemConfig'), icon: Settings, href: '/admin/config', desc: locale === 'zh-CN' ? '站点与外观' : 'Site & appearance' },
+    { label: t('sidebar.envVariables'), icon: Activity, href: '/admin/env', desc: locale === 'zh-CN' ? '检查配置状态' : 'Check config status' },
   ];
 
   const quickActions = isSudo ? [...userActions, ...adminActions] : userActions;
 
   if (loading) {
     return (
-      <Flexbox align="center" justify="center" style={{ height: '100%', minHeight: 400 }}>
-        <Text type="secondary">{t('common.loading')}</Text>
-      </Flexbox>
+      <div className="flex items-center justify-center h-[60vh]">
+        <Spin size="large" />
+      </div>
     );
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div className="p-6 md:p-10 max-w-6xl mx-auto">
       {/* 欢迎区域 */}
-      <Flexbox gap={8} style={{ marginBottom: 32 }}>
-        <Flexbox horizontal gap={12} align="center">
-          <Text fontSize={28} weight={'bold'}>
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-black tracking-tight text-zinc-900">
             {t('dashboard.welcomeBack')}，{user?.name || '用户'}
-          </Text>
+          </h1>
           {isSudo && (
-            <span style={{
-              padding: '4px 12px', borderRadius: 16, fontSize: 12,
-              background: 'var(--ant-color-primary-bg)', color: 'var(--ant-color-primary)',
-            }}>
+            <Tag color="gold" className="rounded-lg text-xs font-bold">
               {userRole === 'sudo' ? t('dashboard.superAdmin') : t('dashboard.admin')}
-            </span>
+            </Tag>
           )}
-        </Flexbox>
-        <Text fontSize={16} type={'secondary'}>
+        </div>
+        <p className="text-zinc-400 text-base">
           {isSudo ? t('dashboard.adminConsole') : t('dashboard.contentConsole')}
-        </Text>
-      </Flexbox>
+        </p>
+      </div>
 
       {/* 统计卡片 */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: 16, marginBottom: 32,
-      }}>
-        {statCards.map((card, index) => (
-          <div key={index} style={{
-            background: '#ffffff', borderRadius: 16, padding: 24,
-            border: '1px solid #e5e5e5', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            transition: 'all 0.2s', cursor: 'pointer',
-          }}
-            onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-          >
-            <Flexbox gap={16} align="flex-start">
-              <div style={{
-                width: 52, height: 52, borderRadius: 14, background: card.bgColor,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Icon icon={card.icon} style={{ color: card.color, fontSize: 24 }} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
+        {statCards.map((card, index) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={index}
+              className="bg-white rounded-2xl border border-zinc-100 p-5 hover:shadow-lg hover:shadow-zinc-100 transition-all duration-300 group"
+            >
+              <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <Icon size={18} className={card.textColor} />
               </div>
-              <div>
-                <Text type="secondary" style={{ fontSize: 14 }}>{card.title}</Text>
-                <Text fontSize={32} weight={'bold'}>{card.value}</Text>
-              </div>
-            </Flexbox>
-          </div>
-        ))}
+              <div className="text-3xl font-black text-zinc-900 mb-1">{card.value}</div>
+              <div className="text-xs text-zinc-400 font-medium">{card.title}</div>
+            </div>
+          );
+        })}
       </div>
 
       {/* 快捷操作 */}
-      <div style={{ marginBottom: 32 }}>
-        <Text fontSize={18} weight={'bold'} style={{ marginBottom: 16, display: 'block' }}>
-          {t('dashboard.quickActions')}
-        </Text>
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12,
-        }}>
-          {quickActions.map((action, index) => (
-            <Link key={index} href={action.href} style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: 'var(--ant-color-bg-container)', borderRadius: 12, padding: 16,
-                border: '1px solid var(--ant-color-border-secondary)', cursor: 'pointer', transition: 'all 0.2s',
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = action.color; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--ant-color-border-secondary)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-              >
-                <Flexbox horizontal justify="space-between" align="center">
-                  <Flexbox horizontal gap={12} align="center">
-                    <Icon icon={action.icon} style={{ color: action.color }} />
-                    <Text>{action.label}</Text>
-                  </Flexbox>
-                  <Icon icon={ArrowRight} style={{ color: 'var(--ant-color-text-tertiary)' }} />
-                </Flexbox>
-              </div>
-            </Link>
-          ))}
+      <div className="mb-10">
+        <h2 className="text-lg font-bold text-zinc-900 mb-4">{t('dashboard.quickActions')}</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {quickActions.map((action, index) => {
+            const Icon = action.icon;
+            return (
+              <Link key={index} href={action.href} className="group">
+                <div className="bg-white rounded-2xl border border-zinc-100 p-5 hover:border-zinc-300 hover:shadow-md transition-all duration-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-zinc-50 rounded-xl flex items-center justify-center group-hover:bg-zinc-900 transition-colors duration-300">
+                        <Icon size={16} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-zinc-900">{action.label}</div>
+                        <div className="text-xs text-zinc-400">{action.desc}</div>
+                      </div>
+                    </div>
+                    <ArrowRight size={16} className="text-zinc-300 group-hover:text-zinc-900 group-hover:translate-x-1 transition-all" />
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
 
       {/* 最近文章 */}
       <div>
-        <Flexbox horizontal justify="space-between" align="center" style={{ marginBottom: 16 }}>
-          <Text fontSize={18} weight={'bold'}>{t('dashboard.recentArticles')}</Text>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-zinc-900">{t('dashboard.recentArticles')}</h2>
           <Link href="/dashboard/articles">
-            <Button size="small" icon={<Icon icon={ArrowRight} />}>
+            <Button size="small" icon={<ArrowRight size={14} />} className="rounded-xl">
               {t('dashboard.viewAll')}
             </Button>
           </Link>
-        </Flexbox>
-        <div style={{
-          background: 'var(--ant-color-bg-container)', borderRadius: 12,
-          border: '1px solid var(--ant-color-border-secondary)', overflow: 'hidden',
-        }}>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-zinc-100 overflow-hidden">
           {recentArticles.length > 0 ? (
-            recentArticles.map((article, index) => (
-              <div key={article.id} style={{
-                padding: '16px 20px',
-                borderBottom: index < recentArticles.length - 1 ? '1px solid var(--ant-color-border-secondary)' : 'none',
-                cursor: 'pointer',
-              }}
-                onClick={() => {
-                  // 已发布文章跳转到 posts/ 页面，草稿跳转到编辑器
-                  if (article.status === 'published' && article.slug) {
-                    router.push(`/posts${article.slug}`);
-                  } else {
-                    router.push(`/editor?id=${article.id}`);
-                  }
-                }}
-              >
-                <Flexbox horizontal justify="space-between" align="center">
-                  <div>
-                    <Text weight={500}>{article.title}</Text>
-                    <Text fontSize={12} type="secondary" style={{ display: 'block', marginTop: 4 }}>
+            <div className="divide-y divide-zinc-50">
+              {recentArticles.map((article) => (
+                <div
+                  key={article.id}
+                  className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50/50 transition-colors cursor-pointer group"
+                  onClick={() => {
+                    if (article.status === 'published' && article.slug) {
+                      router.push(`/posts${article.slug}`);
+                    } else {
+                      router.push(`/editor?id=${article.id}`);
+                    }
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-zinc-900 truncate group-hover:text-zinc-600 transition-colors">
+                      {article.title}
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-0.5">
                       {article.updatedAt
-                        ? new Date(article.updatedAt).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US')
+                        ? new Date(article.updatedAt).toLocaleDateString(
+                            locale === 'zh-CN' ? 'zh-CN' : 'en-US'
+                          )
                         : '—'}
-                    </Text>
+                    </div>
                   </div>
-                  <span style={{
-                    padding: '4px 12px', borderRadius: 16, fontSize: 12,
-                    background: article.status === 'published' ? 'var(--ant-color-success-bg)'
-                      : article.status === 'pending_deletion' ? 'var(--ant-color-error-bg)'
-                        : 'var(--ant-color-warning-bg)',
-                    color: article.status === 'published' ? 'var(--ant-color-success)'
-                      : article.status === 'pending_deletion' ? 'var(--ant-color-error)'
-                        : 'var(--ant-color-warning)',
-                  }}>
-                    {article.status === 'published' ? t('article.published')
-                      : article.status === 'pending_deletion' ? t('article.pendingDeletion')
+                  <div className="flex items-center gap-3 ml-4">
+                    <Tag
+                      color={
+                        article.status === 'published'
+                          ? 'success'
+                          : article.status === 'pending_deletion'
+                          ? 'error'
+                          : 'warning'
+                      }
+                      className="rounded-lg text-xs"
+                    >
+                      {article.status === 'published'
+                        ? t('article.published')
+                        : article.status === 'pending_deletion'
+                        ? t('article.pendingDeletion')
                         : t('article.draft')}
-                  </span>
-                </Flexbox>
-              </div>
-            ))
+                    </Tag>
+                    <ArrowRight size={14} className="text-zinc-300 group-hover:text-zinc-600 transition-colors" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
-            <div style={{ padding: 40, textAlign: 'center' }}>
-              <Text type="secondary">{t('dashboard.noArticles')}</Text>
-              <div style={{ marginTop: 16 }}>
-                <Link href="/editor">
-                  <Button type="primary" icon={<Icon icon={Plus} />}>
-                    {t('dashboard.writeFirstArticle')}
-                  </Button>
-                </Link>
+            <div className="py-20 text-center">
+              <div className="w-16 h-16 bg-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-zinc-300">
+                <Sparkles size={28} />
               </div>
+              <p className="text-zinc-400 mb-4">{t('dashboard.noArticles')}</p>
+              <Link href="/editor">
+                <Button type="primary" icon={<Plus size={14} />} className="bg-zinc-900 rounded-xl h-10">
+                  {t('dashboard.writeFirstArticle')}
+                </Button>
+              </Link>
             </div>
           )}
         </div>

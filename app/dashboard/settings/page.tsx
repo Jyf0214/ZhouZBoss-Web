@@ -5,8 +5,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { Button, Input, Form, message, Avatar } from 'antd';
 import { User, AtSign, Image, Save } from 'lucide-react';
-import { Flexbox, Text, Icon } from '@lobehub/ui';
-import AuthCard from '@/components/AuthCard';
 
 export default function SettingsPage() {
   const { user, refresh } = useAuth();
@@ -36,7 +34,6 @@ export default function SettingsPage() {
           name: values.displayName || undefined,
         }),
       });
-
       const data = await res.json();
       if (res.ok) {
         message.success(t('settings.saveSuccess'));
@@ -53,73 +50,60 @@ export default function SettingsPage() {
 
   const avatarUrl = Form.useWatch('avatarUrl', form);
 
-  const inputStyle = {
-    padding: '14px 16px',
-    height: 56,
-    fontSize: 16,
-    lineHeight: 1.6,
-    borderRadius: 12,
-  };
-
   return (
-    <div style={{
-      padding: 24,
-      maxWidth: 600,
-      margin: '0 auto',
-      display: 'flex',
-      justifyContent: 'center',
-      minHeight: 'calc(100vh - 100px)',
-    }}>
-      <AuthCard
-        subtitle={t('settings.subtitle')}
-        title={t('settings.title')}
-      >
-        <Flexbox align="center" style={{ marginBottom: 32 }}>
+    <div className="p-6 md:p-10 max-w-xl mx-auto">
+      <h1 className="text-2xl font-black tracking-tight text-zinc-900 mb-1">
+        {t('settings.title')}
+      </h1>
+      <p className="text-zinc-400 text-sm mb-8">{t('settings.subtitle')}</p>
+
+      <div className="bg-white rounded-2xl border border-zinc-100 p-8">
+        {/* 头像预览 */}
+        <div className="flex items-center gap-5 mb-8 pb-8 border-b border-zinc-50">
           <Avatar
-            size={80}
+            size={72}
             src={avatarUrl || undefined}
-            icon={!avatarUrl && <Icon icon={User} />}
-            style={{
-              backgroundColor: 'var(--ant-color-primary)',
-              fontSize: 32,
-            }}
+            icon={!avatarUrl && <User size={28} />}
+            className="bg-zinc-100 text-zinc-400 shrink-0"
           />
-        </Flexbox>
+          <div>
+            <div className="text-lg font-bold text-zinc-900">
+              {user?.displayName || user?.name || '用户'}
+            </div>
+            <div className="text-sm text-zinc-400">{user?.email}</div>
+          </div>
+        </div>
 
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSave}
-          initialValues={{
-            avatarUrl: '',
-            username: '',
-            displayName: '',
-          }}
+          initialValues={{ avatarUrl: '', username: '', displayName: '' }}
+          requiredMark={false}
         >
           <Form.Item
             name="avatarUrl"
             label={
-              <Flexbox horizontal gap={8} align="center">
-                <Icon icon={Image} style={{ fontSize: 16 }} />
-                <Text>{t('settings.avatarUrl')}</Text>
-              </Flexbox>
+              <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
+                <Image size={14} />
+                {t('settings.avatarUrl')}
+              </div>
             }
-            extra={t('settings.avatarUrlHint')}
+            extra={<span className="text-xs text-zinc-400">{t('settings.avatarUrlHint')}</span>}
           >
             <Input
               placeholder={t('settings.avatarUrlPlaceholder')}
-              size="large"
-              style={inputStyle}
+              className="h-12 rounded-xl text-base"
             />
           </Form.Item>
 
           <Form.Item
             name="username"
             label={
-              <Flexbox horizontal gap={8} align="center">
-                <Icon icon={AtSign} style={{ fontSize: 16 }} />
-                <Text>{t('settings.username')}</Text>
-              </Flexbox>
+              <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
+                <AtSign size={14} />
+                {t('settings.username')}
+              </div>
             }
             rules={[
               { required: true, message: t('validation.required') },
@@ -129,47 +113,40 @@ export default function SettingsPage() {
           >
             <Input
               placeholder={t('settings.usernamePlaceholder')}
-              size="large"
-              style={inputStyle}
+              className="h-12 rounded-xl text-base"
             />
           </Form.Item>
 
           <Form.Item
             name="displayName"
             label={
-              <Flexbox horizontal gap={8} align="center">
-                <Icon icon={User} style={{ fontSize: 16 }} />
-                <Text>{t('settings.displayName')}</Text>
-              </Flexbox>
+              <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
+                <User size={14} />
+                {t('settings.displayName')}
+              </div>
             }
-            extra={t('settings.displayNameHint')}
+            extra={<span className="text-xs text-zinc-400">{t('settings.displayNameHint')}</span>}
           >
             <Input
               placeholder={t('settings.displayNamePlaceholder')}
-              size="large"
-              style={inputStyle}
+              className="h-12 rounded-xl text-base"
             />
           </Form.Item>
 
-          <Form.Item style={{ marginTop: 32, marginBottom: 0 }}>
+          <Form.Item className="mb-0 mt-8">
             <Button
               type="primary"
               htmlType="submit"
               loading={loading}
-              size="large"
-              icon={<Icon icon={Save} />}
+              icon={<Save size={14} />}
               block
-              style={{
-                height: 56,
-                fontSize: 16,
-                borderRadius: 12,
-              }}
+              className="bg-zinc-900 hover:bg-zinc-800 h-12 rounded-xl text-base font-semibold"
             >
               {t('common.save')}
             </Button>
           </Form.Item>
         </Form>
-      </AuthCard>
+      </div>
     </div>
   );
 }
