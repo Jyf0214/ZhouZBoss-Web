@@ -2,7 +2,6 @@
 
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { message } from 'antd';
-import { useClerk as useClerkAuth, useUser } from '@clerk/nextjs';
 
 /**
  * Originium Kernel Authentication Hook (Frontend)
@@ -16,7 +15,7 @@ export interface User {
   uid: string;
   email: string;
   name: string;
-  displayName: string; // Map name to displayName
+  displayName: string;
   role: UserRole;
   userGroup?: string;
   avatar?: string;
@@ -39,19 +38,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Clerk hooks — 如果未配置 Clerk 则返回空值
-  let clerkSignOut: (() => Promise<void>) | null = null;
-  let clerkUserId: string | null = null;
-  try {
-    const clerk = useClerkAuth();
-    const clerkUser = useUser();
-    clerkSignOut = clerk.signOut;
-    clerkUserId = clerkUser.user?.id ?? null;
-  } catch {
-    // Clerk 未配置，忽略
-  }
-
   const clerkAvailable = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   const refresh = useCallback(async () => {
@@ -60,10 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         if (data.authenticated) {
-          setUser({
-            ...data.user,
-            displayName: data.user.name
-          });
+          setUser({ ...data.user, displayName: data.user.name });
         } else {
           setUser(null);
         }
@@ -89,13 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login: email, password: pass }),
       });
-
       const data = await res.json();
       if (res.ok && data.success) {
-        setUser({
-          ...data.user,
-          displayName: data.user.name
-        });
+        setUser({ ...data.user, displayName: data.user.name });
         message.success('登录成功');
       } else {
         message.error(data.error || '登录失败');
@@ -117,13 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass, name }),
       });
-
       const data = await res.json();
       if (res.ok && data.success) {
-        setUser({
-          ...data.user,
-          displayName: data.user.name
-        });
+        setUser({ ...data.user, displayName: data.user.name });
         message.success('注册成功');
       } else {
         message.error(data.error || '注册失败');
@@ -141,10 +116,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
-      // 同时登出 Clerk
-      if (clerkSignOut) {
-        try { await clerkSignOut(); } catch {}
-      }
       message.info('已登出');
     } catch (err) {
       console.error('Logout error:', err);
@@ -152,17 +123,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      userRole: user?.role || null,
-      isSudo: user?.role === 'sudo' || false,
-      login,
-      register,
-      logout,
-      refresh,
-      clerkAvailable,
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        userRole: user?.role || null,
+        isSudo: user?.role === 'sudo' || false,
+        login,
+        register,
+        logout,
+        refresh,
+        clerkAvailable,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
