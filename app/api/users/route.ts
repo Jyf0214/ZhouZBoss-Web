@@ -43,6 +43,7 @@ export async function GET(req: NextRequest) {
               email: user.email,
               createdAt: user.createdAt,
               role: user.role,
+              userGroup: user.userGroup,
             };
             break;
           }
@@ -69,6 +70,7 @@ export async function GET(req: NextRequest) {
         email: user.email,
         createdAt: user.createdAt,
         role: user.role,
+        userGroup: user.userGroup,
       });
     }
 
@@ -96,6 +98,7 @@ export async function GET(req: NextRequest) {
           createdAt: user.createdAt,
           role: user.role,
           status: user.status,
+          userGroup: user.userGroup,
         });
       }
     }

@@ -69,7 +69,7 @@ export async function createUserGroup(
   description: string,
   createdBy: string
 ): Promise<UserGroup> {
-  const res = await fetch('/api/groups', {
+  const res = await fetch('/api/user-groups', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, description, createdBy }),
@@ -100,4 +100,30 @@ export async function assignUserToGroup(
     body: JSON.stringify({ userGroup: groupId }),
   });
   if (!res.ok) throw new Error('Failed to assign group');
+}
+
+/**
+ * Update user group (sudo only)
+ */
+export async function updateUserGroup(
+  id: string,
+  data: { name?: string; description?: string }
+): Promise<UserGroup> {
+  const res = await fetch(`/api/groups/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to update group');
+  return res.json();
+}
+
+/**
+ * Delete user group (sudo only)
+ */
+export async function deleteUserGroup(id: string): Promise<void> {
+  const res = await fetch(`/api/groups/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete group');
 }
