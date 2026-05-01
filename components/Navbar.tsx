@@ -9,13 +9,12 @@ import { Tag, Button } from 'antd';
 import { Flexbox, Text } from '@lobehub/ui';
 
 /**
- * Clerk 登录按钮 — 单独组件，始终在顶层调用 useClerk
- * 仅在 Clerk 已配置且用户未登录时渲染
+ * Clerk 登录按钮 — 仅在 ClerkProvider 内部渲染
+ * 始终在顶层调用 useClerk
  */
 function ClerkLoginButton() {
   const { user: clerkUser } = useClerk();
 
-  // Clerk 用户已登录或无 JWT 用户时不显示
   if (clerkUser) return null;
 
   return (

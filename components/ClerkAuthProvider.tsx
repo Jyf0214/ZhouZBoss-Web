@@ -5,8 +5,8 @@ import { useEffect } from 'react';
 
 /**
  * Clerk 认证提供者包装器
- * 仅在配置了 Clerk 环境变量时启用
- * 内置 ClerkSync 组件，将 signOut 传递给外部
+ * 仅在配置了 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY 时启用
+ * 未配置时直接透传 children，不加载任何 Clerk 代码
  */
 export function ClerkAuthProvider({
   children,
@@ -17,6 +17,7 @@ export function ClerkAuthProvider({
 }) {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
+  // 无 key 时不渲染 ClerkProvider，避免运行时报错
   if (!publishableKey) {
     return <>{children}</>;
   }
