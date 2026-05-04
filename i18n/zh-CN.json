@@ -338,6 +338,8 @@
     "general": "基础设置",
     "siteTitle": "站点标题",
     "siteDescription": "站点描述",
+    "heroTitle1": "英雄标题第一行",
+    "heroTitle2": "英雄标题第二行",
     "background": "背景设置",
     "backgroundUrl": "背景图片URL",
     "backgroundUrlPlaceholder": "输入图片直链地址",

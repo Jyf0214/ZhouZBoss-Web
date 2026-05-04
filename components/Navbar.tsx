@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Avatar } from '@/components/Avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
 import { ClerkLoginSection } from '@/components/ClerkLoginSection';
@@ -43,9 +44,7 @@ export function Navbar() {
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-full flex items-center justify-center border border-zinc-200">
-                    <UserOutlined className="text-zinc-500" />
-                  </div>
+                  <Avatar name={user.name} avatarUrl={user.avatar} size={36} />
                   <div className="hidden md:block">
                     <div className="flex items-center gap-1.5">
                       <span className="font-medium text-sm text-zinc-900 leading-tight">{user.displayName}</span>

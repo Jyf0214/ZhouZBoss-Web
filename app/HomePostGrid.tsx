@@ -22,12 +22,14 @@ interface HomePostGridProps {
   posts: PostItem[];
   postCount: number;
   facesCount: number;
+  heroTitleLine1?: string;
+  heroTitleLine2?: string;
 }
 
 /**
  * 首页帖子网格 — 客户端组件，负责搜索/筛选交互
  */
-export function HomePostGrid({ posts, postCount, facesCount }: HomePostGridProps) {
+export function HomePostGrid({ posts, postCount, facesCount, heroTitleLine1, heroTitleLine2 }: HomePostGridProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const { t, locale } = useI18n();
 
@@ -60,8 +62,8 @@ export function HomePostGrid({ posts, postCount, facesCount }: HomePostGridProps
           transition={{ delay: 0.1 }}
           className="text-5xl md:text-7xl font-display font-black tracking-tighter text-zinc-900 mb-8 leading-[0.95]"
         >
-          {t('home.heroTitleLine1')} <br />
-          <span className="text-zinc-300">{t('home.heroTitleLine2')}</span>
+          {heroTitleLine1 || t('home.heroTitleLine1')} <br />
+          <span className="text-zinc-300">{heroTitleLine2 || t('home.heroTitleLine2')}</span>
         </motion.h1>
 
         <motion.div

@@ -14,6 +14,8 @@ export function hasDatabase(): boolean {
 export interface SiteConfig {
   title: string;
   description: string;
+  heroTitleLine1: string;
+  heroTitleLine2: string;
   lang: string;
 }
 
@@ -58,6 +60,8 @@ const defaultConfig: AppConfig = {
   site: {
     title: 'Originium Kernel',
     description: '现代内容发布平台',
+    heroTitleLine1: '书写。同步。',
+    heroTitleLine2: '部署。',
     lang: 'zh-CN',
   },
   appearance: {
@@ -96,9 +100,9 @@ export function loadConfig(): AppConfig {
           customHead: parsed.appearance?.customHead ?? defaultConfig.appearance.customHead,
         },
         access: { ...defaultConfig.access, ...parsed.access },
-          auth: {
-            allowRegistration: parsed.auth?.allowRegistration ?? defaultConfig.auth.allowRegistration,
-          },
+        auth: {
+          allowRegistration: parsed.auth?.allowRegistration ?? defaultConfig.auth.allowRegistration,
+        },
       };
     } else {
       cachedConfig = { ...defaultConfig };
@@ -132,6 +136,8 @@ export async function loadConfigAsync(): Promise<AppConfig> {
       site: {
         title: dbConfig.siteTitle ?? fileConfig.site.title,
         description: dbConfig.siteDescription ?? fileConfig.site.description,
+        heroTitleLine1: dbConfig.heroTitleLine1 ?? fileConfig.site.heroTitleLine1,
+        heroTitleLine2: dbConfig.heroTitleLine2 ?? fileConfig.site.heroTitleLine2,
         lang: fileConfig.site.lang,
       },
       appearance: {
@@ -160,6 +166,8 @@ export async function saveConfigToDb(config: AppConfig): Promise<void> {
   const dbData = {
     siteTitle: config.site.title,
     siteDescription: config.site.description,
+    heroTitleLine1: config.site.heroTitleLine1,
+    heroTitleLine2: config.site.heroTitleLine2,
     background: config.appearance.background,
     customCSS: config.appearance.customCSS,
     customHead: config.appearance.customHead,

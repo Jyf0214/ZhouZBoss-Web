@@ -14,6 +14,8 @@ interface BackgroundConfig {
 interface ConfigState {
   siteTitle: string;
   siteDescription: string;
+  heroTitleLine1: string;
+  heroTitleLine2: string;
   background: BackgroundConfig;
   githubRepo: string;
   githubToken: string;
@@ -26,6 +28,8 @@ export default function ConfigPage() {
   const [config, setConfig] = useState<ConfigState>({
     siteTitle: '',
     siteDescription: '',
+    heroTitleLine1: '',
+    heroTitleLine2: '',
     background: { url: '', opacity: 0.8 },
     githubRepo: '',
     githubToken: '',
@@ -50,6 +54,8 @@ export default function ConfigPage() {
           setConfig({
             siteTitle: data.siteTitle || data.site?.title || 'Originium Kernel',
             siteDescription: data.siteDescription || data.site?.description || '',
+            heroTitleLine1: data.heroTitleLine1 || data.site?.heroTitleLine1 || '书写。同步。',
+            heroTitleLine2: data.heroTitleLine2 || data.site?.heroTitleLine2 || '部署。',
             background: data.background || data.appearance?.background || { url: '', opacity: 0.8 },
             githubRepo: data.githubRepo || '',
             githubToken: data.githubToken ? '********' : '',
@@ -74,6 +80,8 @@ export default function ConfigPage() {
         body: JSON.stringify({
           siteTitle: config.siteTitle,
           siteDescription: config.siteDescription,
+          heroTitleLine1: config.heroTitleLine1,
+          heroTitleLine2: config.heroTitleLine2,
           background: config.background,
           auth: { allowRegistration: config.allowRegistration },
         }),
@@ -137,12 +145,30 @@ export default function ConfigPage() {
             className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400 transition-colors"
           />
         </div>
-        <div>
+        <div className="mb-4">
           <label className="block text-sm font-medium mb-2">{t('config.siteDescription')}</label>
           <textarea
             value={config.siteDescription}
             onChange={e => setConfig({ ...config, siteDescription: e.target.value })}
             className="w-full min-h-[100px] p-3 border border-zinc-200 rounded-lg text-sm resize-vertical outline-none focus:border-zinc-400 transition-colors"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">{t('config.heroTitle1')}</label>
+          <input
+            type="text"
+            value={config.heroTitleLine1}
+            onChange={e => setConfig({ ...config, heroTitleLine1: e.target.value })}
+            className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400 transition-colors"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">{t('config.heroTitle2')}</label>
+          <input
+            type="text"
+            value={config.heroTitleLine2}
+            onChange={e => setConfig({ ...config, heroTitleLine2: e.target.value })}
+            className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400 transition-colors"
           />
         </div>
       </div>

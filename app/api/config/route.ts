@@ -36,6 +36,8 @@ export async function POST(req: NextRequest) {
       site: {
         title: newConfig.site?.title ?? currentConfig.site.title,
         description: newConfig.site?.description ?? currentConfig.site.description,
+        heroTitleLine1: newConfig.site?.heroTitleLine1 ?? currentConfig.site.heroTitleLine1,
+        heroTitleLine2: newConfig.site?.heroTitleLine2 ?? currentConfig.site.heroTitleLine2,
         lang: newConfig.site?.lang ?? currentConfig.site.lang,
       },
       appearance: {

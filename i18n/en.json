@@ -338,6 +338,8 @@
     "general": "General Settings",
     "siteTitle": "Site Title",
     "siteDescription": "Site Description",
+    "heroTitle1": "Hero Title Line 1",
+    "heroTitle2": "Hero Title Line 2",
     "background": "Background Settings",
     "backgroundUrl": "Background Image URL",
     "backgroundUrlPlaceholder": "Enter direct image link",
