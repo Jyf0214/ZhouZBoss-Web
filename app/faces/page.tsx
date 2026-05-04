@@ -19,6 +19,8 @@ export default function FacesPage() {
             faces: json.faces || [],
             groups: json.indexes || []
           });
+        } else {
+          console.error('API response not ok:', res.status);
         }
       } catch (err) {
         console.error('Failed to fetch faces:', err);
@@ -34,8 +36,8 @@ export default function FacesPage() {
         <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-zinc-900 mb-4">
           {t('nav.faces')}
         </h1>
-        <p className="text-zinc-400 text-lg mb-12">{t('home.facesDesc', { count: data.faces.length })}</p>
-        <FacesListClient faces={data.faces} groups={data.groups} />
+        <p className="text-zinc-400 text-lg mb-12">{t('home.facesDesc', { count: data.faces?.length || 0 })}</p>
+        <FacesListClient faces={data.faces || []} groups={data.groups || []} />
       </main>
     </div>
   );

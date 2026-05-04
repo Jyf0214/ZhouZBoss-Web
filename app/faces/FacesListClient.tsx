@@ -42,7 +42,7 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
     return matchesSearch && matchesGroup;
   });
 
-  const groupNames = [...new Set(groups.map((g) => g.groupName).filter(Boolean))] as string[];
+  const groupNames = Array.isArray(groups) ? [...new Set(groups.map((g) => g.groupName).filter(Boolean))] as string[] : [];
 
   return (
     <div>

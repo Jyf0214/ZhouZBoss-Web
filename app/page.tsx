@@ -62,7 +62,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f8f8f8]">
       <Navbar />
-      <HomePostGrid posts={posts} postCount={posts.length} facesCount={facesCount} siteTitle={config.site.title} siteDescription={config.site.description} />
+      <HomePostGrid posts={posts} postCount={posts.length} facesCount={facesCount} />
     </div>
   );
 }
