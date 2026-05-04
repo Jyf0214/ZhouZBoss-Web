@@ -146,7 +146,7 @@ export function HomePostGrid({ posts, postCount, facesCount, heroTitleLine1, her
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="group bg-white rounded-[2rem] border-2 border-zinc-50 overflow-hidden hover:border-zinc-900 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-zinc-100 flex flex-col"
                   >
-                    <Link href={`/posts${post.slug}`} className="block overflow-hidden aspect-[16/10] bg-zinc-50 relative">
+                    <Link href={`/posts${post.slug}`} className="block overflow-hidden aspect-[3/2] bg-zinc-50 relative">
                       {post.cover ? (
                         <Image
                           src={post.cover}

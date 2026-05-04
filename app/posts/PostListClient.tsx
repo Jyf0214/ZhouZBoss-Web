@@ -118,7 +118,7 @@ export function PostListClient({ posts, groups }: PostListClientProps) {
             >
               <Link
                 href={`/posts${post.slug}`}
-                className="block overflow-hidden aspect-[16/10] bg-zinc-50 relative"
+                className="block overflow-hidden aspect-[3/2] bg-zinc-50 relative"
               >
                 {post.cover ? (
                   <Image
