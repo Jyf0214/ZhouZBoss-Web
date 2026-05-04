@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Spin } from 'antd';
-import Sidebar from '@/components/Sidebar/index';
+import { Sidebar } from '@/components/Sidebar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isSudo, loading } = useAuth();

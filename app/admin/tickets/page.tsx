@@ -115,9 +115,12 @@ export default function TicketsPage() {
       });
       if (res.ok) {
         setTemplates(templates.filter(t => t.id !== id));
+      } else {
+        alert(t('tickets.deleteFailed') || 'Delete failed');
       }
     } catch (error) {
       console.error('Failed to delete template:', error);
+      alert(t('tickets.deleteFailed') || 'Delete failed');
     }
   };
 
