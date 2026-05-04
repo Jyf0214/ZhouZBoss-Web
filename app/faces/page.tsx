@@ -16,8 +16,8 @@ export default function FacesPage() {
         if (res.ok) {
           const json = await res.json();
           setData({
-            faces: json.faces || [],
-            groups: json.indexes || []
+            faces: Array.isArray(json.faces) ? json.faces : [],
+            groups: Array.isArray(json.indexes) ? json.indexes : []
           });
         } else {
           console.error('API response not ok:', res.status);

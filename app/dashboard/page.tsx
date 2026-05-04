@@ -52,20 +52,21 @@ export default function DashboardPage() {
         if (articlesRes.ok) {
           const articles = await articlesRes.json();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const published = articles.filter((a: any) => a.status === 'published').length;
+          const articlesArray = Array.isArray(articles) ? articles : [];
+          const published = articlesArray.filter((a: any) => a.status === 'published').length;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const drafts = articles.filter((a: any) => a.status === 'draft').length;
+          const drafts = articlesArray.filter((a: any) => a.status === 'draft').length;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const pending = articles.filter((a: any) => a.status === 'pending_deletion').length;
+          const pending = articlesArray.filter((a: any) => a.status === 'pending_deletion').length;
           setStats(prev => ({
             ...prev,
-            totalArticles: articles.length,
+            totalArticles: articlesArray.length,
             publishedArticles: published,
             draftArticles: drafts,
             pendingDeletion: pending,
           }));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setRecentArticles(articles.slice(0, 5).map((a: any) => ({
+          setRecentArticles(articlesArray.slice(0, 5).map((a: any) => ({
             id: a.id,
             title: a.title,
             status: a.status,
