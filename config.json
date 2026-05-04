@@ -2,6 +2,8 @@
   "site": {
     "title": "Originium Kernel",
     "description": "现代内容发布平台",
+    "heroTitleLine1": "",
+    "heroTitleLine2": "",
     "lang": "zh-CN"
   },
   "appearance": {

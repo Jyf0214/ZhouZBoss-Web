@@ -6,7 +6,7 @@ import { Avatar } from '@/components/Avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
 import { ClerkLoginSection } from '@/components/ClerkLoginSection';
-import { LogoutOutlined, LoginOutlined, SettingOutlined, UserOutlined, UsergroupAddOutlined, BookOutlined, TeamOutlined } from '@ant-design/icons';
+import { LogoutOutlined, LoginOutlined, SettingOutlined, UsergroupAddOutlined, BookOutlined, TeamOutlined } from '@ant-design/icons';
 import { Tag, Button } from 'antd';
 import { useI18n } from '@/hooks/use-i18n';
 

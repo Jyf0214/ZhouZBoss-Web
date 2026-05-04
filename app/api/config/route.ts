@@ -73,10 +73,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, config: mergedConfig });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('更新配置失败:', error);
-    return NextResponse.json({ error: error.message || '保存失败' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : '保存失败' }, { status: 500 });
   }
 }
 
@@ -99,7 +98,7 @@ export async function PUT() {
     if (!remote) {
       return NextResponse.json({ error: 'config.yaml 不存在' }, { status: 404 });
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parsed = yaml.load(remote.content) as any;
     const currentConfig = await loadConfigAsync();
 
@@ -108,6 +107,8 @@ export async function PUT() {
       site: {
         title: parsed.siteTitle ?? currentConfig.site.title,
         description: parsed.siteDescription ?? currentConfig.site.description,
+        heroTitleLine1: parsed.heroTitleLine1 ?? currentConfig.site.heroTitleLine1,
+        heroTitleLine2: parsed.heroTitleLine2 ?? currentConfig.site.heroTitleLine2,
         lang: currentConfig.site.lang,
       },
       appearance: {
