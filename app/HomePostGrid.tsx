@@ -165,33 +165,33 @@ export function HomePostGrid({ posts, postCount, facesCount, heroTitleLine1, her
                         <ArrowRight size={24} className="text-zinc-900" />
                       </div>
                     </Link>
-                    <div className="p-8 flex-1 flex flex-col">
-                      <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="px-5 py-4 flex-1 flex flex-col">
+                      <div className="flex flex-wrap gap-1.5 mb-3">
                         {post.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="text-[10px] font-black uppercase tracking-widest text-zinc-400 border border-zinc-100 px-2 py-0.5 rounded-full">
+                          <span key={tag} className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 bg-zinc-50 px-2.5 py-1 rounded-lg">
                             {tag}
                           </span>
                         ))}
                       </div>
                       <Link href={`/posts${post.slug}`} className="block group/title">
-                        <h3 className="text-2xl font-black text-zinc-900 mb-4 line-clamp-2 leading-tight group-hover/title:text-zinc-600 transition-colors">
+                        <h3 className="text-lg font-bold text-zinc-900 mb-2 line-clamp-2 leading-snug group-hover/title:text-zinc-600 transition-colors">
                           {post.title}
                         </h3>
                       </Link>
-                      <p className="text-zinc-400 text-sm line-clamp-2 mb-8 font-medium leading-relaxed">
+                      <p className="text-zinc-400 text-sm line-clamp-2 mb-3 leading-relaxed">
                         {post.description || ''}
                       </p>
-                      <div className="mt-auto pt-8 border-t border-zinc-50 flex items-center justify-between text-zinc-400">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-900 group-hover:bg-zinc-900 group-hover:text-white transition-colors duration-500">
-                            <UserIcon size={14} />
+                      <div className="mt-auto pt-3 border-t border-zinc-50 flex items-center justify-between text-zinc-400">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 bg-zinc-100 rounded flex items-center justify-center text-zinc-500">
+                            <UserIcon size={10} />
                           </div>
-                          <span className="text-xs font-bold text-zinc-900 uppercase tracking-tighter">
+                          <span className="text-xs font-medium text-zinc-500">
                             {post.author || t('home.anonymous')}
                           </span>
                         </div>
                         {post.date && (
-                          <div className="flex items-center gap-2 text-[10px] font-black">
+                          <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
                             <Calendar size={12} />
                             <span>
                               {new Date(post.date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
