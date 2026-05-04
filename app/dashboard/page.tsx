@@ -29,6 +29,15 @@ interface RecentArticle {
   updatedAt: string;
 }
 
+interface Article {
+  id?: string;
+  title: string;
+  status: string;
+  slug?: string;
+  updatedAt?: string;
+  date?: string;
+}
+
 export default function DashboardPage() {
   const { user, userRole, isSudo } = useAuth();
   const { t, locale } = useI18n();
@@ -51,13 +60,10 @@ export default function DashboardPage() {
         const articlesRes = await fetch('/api/articles');
         if (articlesRes.ok) {
           const articles = await articlesRes.json();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const articlesArray = Array.isArray(articles) ? articles : [];
-          const published = articlesArray.filter((a: any) => a.status === 'published').length;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const drafts = articlesArray.filter((a: any) => a.status === 'draft').length;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const pending = articlesArray.filter((a: any) => a.status === 'pending_deletion').length;
+          const published = articlesArray.filter((a: Article) => a.status === 'published').length;
+          const drafts = articlesArray.filter((a: Article) => a.status === 'draft').length;
+          const pending = articlesArray.filter((a: Article) => a.status === 'pending_deletion').length;
           setStats(prev => ({
             ...prev,
             totalArticles: articlesArray.length,
@@ -65,9 +71,8 @@ export default function DashboardPage() {
             draftArticles: drafts,
             pendingDeletion: pending,
           }));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setRecentArticles(articlesArray.slice(0, 5).map((a: any) => ({
-            id: a.id,
+          setRecentArticles(articlesArray.slice(0, 5).map((a: Article) => ({
+            id: a.id || '',
             title: a.title,
             status: a.status,
             slug: a.slug,
