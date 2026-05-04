@@ -88,12 +88,6 @@ function LoginForm() {
               {t('auth.forgotPassword')}
             </span>
           </Link>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-sm text-zinc-400">{t('auth.noAccount')}</span>
-            <Link href="/register">
-              <span className="text-sm font-medium text-zinc-900">{t('auth.registerNow')}</span>
-            </Link>
-          </div>
         </div>
       }
       subtitle={t('auth.loginSubtitle')}

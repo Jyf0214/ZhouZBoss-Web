@@ -17,15 +17,19 @@ export default async function FacesPage() {
   const dbAvailable = hasDatabase();
   const allFiles = getContentFiles('faces');
   const indexes = getContentIndexes('faces');
+  const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
 
   const accessibleFiles = allFiles.filter((file) => {
+    if (isAdmin) return true;
     const dirSlug = '/' + file.slug.split('/').filter(Boolean).slice(0, -1).join('/');
     return canAccess('faces', file.slug, isAuthenticated, dbAvailable, config) &&
-      canAccess('faces', dirSlug || '/', isAuthenticated, dbAvailable, config);
+      canAccess('faces', dirSlug || '/', isAuthenticated, dbAvailable, config) &&
+      file.meta.public === true;
   });
 
   const accessibleIndexes = indexes.filter((idx) => {
-    return canAccess('faces', idx.slug, isAuthenticated, dbAvailable, config);
+    if (isAdmin) return true;
+    return canAccess('faces', idx.slug, isAuthenticated, dbAvailable, config) && idx.public === true;
   });
 
   // 仅传递列表展示所需字段

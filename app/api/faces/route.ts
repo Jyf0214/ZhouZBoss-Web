@@ -17,15 +17,20 @@ export async function GET(req: NextRequest) {
   const dbAvailable = hasDatabase();
   const allFiles = getContentFiles('faces');
   const indexes = getContentIndexes('faces');
+  const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
 
   const accessibleFiles = allFiles.filter((file) => {
+    if (isAdmin) return true;
     const dirSlug = '/' + file.slug.split('/').filter(Boolean).slice(0, -1).join('/');
+    // Must be allowed by config AND explicitly marked as public in markdown
     return canAccess('faces', file.slug, isAuthenticated, dbAvailable, config) &&
-      canAccess('faces', dirSlug || '/', isAuthenticated, dbAvailable, config);
+      canAccess('faces', dirSlug || '/', isAuthenticated, dbAvailable, config) &&
+      file.meta.public === true;
   });
 
   const accessibleIndexes = indexes.filter((idx) => {
-    return canAccess('faces', idx.slug, isAuthenticated, dbAvailable, config);
+    if (isAdmin) return true;
+    return canAccess('faces', idx.slug, isAuthenticated, dbAvailable, config) && idx.public === true;
   });
 
   return NextResponse.json({
@@ -53,9 +58,7 @@ export async function GET(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function canManageFace(session: SessionPayload | null, faceEmail: string, faceSlug: string): boolean {
   if (!session) return false;
-  if (session.role === 'admin' || session.role === 'sudo') return true;
-  if (faceEmail && session.email === faceEmail) return true;
-  return false;
+  return session.role === 'admin' || session.role === 'sudo';
 }
 
 /**
@@ -95,8 +98,8 @@ async function getFileFromGitHub(req: NextRequest, filePath: string): Promise<{ 
  */
 export async function POST(req: NextRequest) {
   const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
   try {
@@ -151,8 +154,8 @@ export async function POST(req: NextRequest) {
  */
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
   try {
@@ -263,8 +266,8 @@ export async function PATCH(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
   try {

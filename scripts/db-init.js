@@ -68,32 +68,30 @@ async function main() {
       return
     }
     
-    // 检查 ADMIN_PASSWORD 环境变量
-    if (process.env.ADMIN_PASSWORD) {
-  // eslint-disable-next-line no-console
-      console.log('[数据库初始化] 检测到 ADMIN_PASSWORD，正在更新管理员密码...')
-      
-      try {
+    try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { PrismaClient } = require('@prisma/client')
-        const prisma = new PrismaClient()
+      const { PrismaClient } = require('@prisma/client')
+      const prisma = new PrismaClient()
+      
+      const users = await prisma.originiumKV.findMany({
+        where: { key: { startsWith: 'user:uid:' } }
+      })
+      
+      let hasAdmin = false
+      let updatedCount = 0
+      
+      for (const record of users) {
+        if (!record.value) continue
         
-        const hashedPassword = hashPassword(process.env.ADMIN_PASSWORD)
-        
-        // 查找所有 admin 和 sudo 用户
-        const users = await prisma.originiumKV.findMany({
-          where: { key: { startsWith: 'user:uid:' } }
-        })
-        
-        let updatedCount = 0
-        
-        for (const record of users) {
-          if (!record.value) continue
+        try {
+          const user = JSON.parse(record.value)
           
-          try {
-            const user = JSON.parse(record.value)
+          if (user.role === 'admin' || user.role === 'sudo') {
+            hasAdmin = true
             
-            if (user.role === 'admin' || user.role === 'sudo') {
+            // 检查 ADMIN_PASSWORD 环境变量并更新
+            if (process.env.ADMIN_PASSWORD) {
+              const hashedPassword = hashPassword(process.env.ADMIN_PASSWORD)
               user.password = hashedPassword
               await prisma.originiumKV.update({
                 where: { key: record.key },
@@ -101,27 +99,70 @@ async function main() {
               })
               updatedCount++
   // eslint-disable-next-line no-console
-              console.log(`[数据库初始化] ✓ 已更新用户: ${user.email || user.username || user.uid}`)
+              console.log(`[数据库初始化] ✓ 已更新用户密码: ${user.email || user.username || user.uid}`)
             }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          } catch (e) {
-            // 忽略解析错误
           }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (e) {
+          // 忽略解析错误
+        }
+      }
+      
+      if (!hasAdmin) {
+  // eslint-disable-next-line no-console
+        console.log('[数据库初始化] ⚠️ 系统内未检测到任何管理员账户。');
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        
+        if (!adminEmail || !adminPassword) {
+   
+          console.error("❌ 致命错误：系统内没有任何管理员账户，且未提供 ADMIN_EMAIL 和 ADMIN_PASSWORD！");
+   
+          console.error("请配置 ADMIN_EMAIL 和 ADMIN_PASSWORD 环境变量来初始化管理员账户！");
+          process.exit(1);
         }
         
-        await prisma.$disconnect()
+  // eslint-disable-next-line no-console
+        console.log(`[数据库初始化] 正在根据环境变量创建初始管理员: ${adminEmail}...`);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const crypto = require('crypto');
+        const hashedPassword = hashPassword(adminPassword);
+        const uid = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const newAdmin = {
+          uid,
+          email: adminEmail,
+          password: hashedPassword,
+          role: 'sudo', // 最高权限
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        await prisma.originiumKV.upsert({
+          where: { key: `user:uid:${uid}` },
+          update: { value: JSON.stringify(newAdmin) },
+          create: { key: `user:uid:${uid}`, value: JSON.stringify(newAdmin) },
+        });
+
+        await prisma.originiumKV.upsert({
+          where: { key: `user:email:${adminEmail}` },
+          update: { value: uid },
+          create: { key: `user:email:${adminEmail}`, value: uid },
+        });
         
+  // eslint-disable-next-line no-console
+        console.log("[数据库初始化] ✓ 初始管理员创建成功");
+      } else if (process.env.ADMIN_PASSWORD) {
         if (updatedCount > 0) {
   // eslint-disable-next-line no-console
-          console.log(`[数据库初始化] ✓ 已更新 ${updatedCount} 个管理员密码`)
-        } else {
-  // eslint-disable-next-line no-console
-          console.log('[数据库初始化] ⚠️ 未找到管理员用户')
+          console.log(`[数据库初始化] ✓ 已更新 ${updatedCount} 个管理员配置密码`)
         }
-      } catch (err) {
-  // eslint-disable-next-line no-console
-        console.log('[数据库初始化] ⚠️ 更新管理员密码失败:', err.message?.split('\n')[0])
       }
+      
+      await prisma.$disconnect()
+    } catch (err) {
+  // eslint-disable-next-line no-console
+      console.log('[数据库初始化] ⚠️ 初始管理员流程失败:', err.message?.split('\n')[0])
     }
     
   // eslint-disable-next-line no-console

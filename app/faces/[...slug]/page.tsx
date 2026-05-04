@@ -39,13 +39,16 @@ export default async function FaceDetailPage({ params }: PageProps) {
   const isAuthenticated = !!session;
   const dbAvailable = hasDatabase();
   const config = await loadConfigAsync();
-
-  if (!canAccess('faces', fullPath, isAuthenticated, dbAvailable, config)) {
-    notFound();
-  }
+  const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
 
   const file = getContentFile('faces', fullPath);
   if (!file) notFound();
+
+  if (!isAdmin) {
+    if (!canAccess('faces', fullPath, isAuthenticated, dbAvailable, config) || file.meta.public !== true) {
+      notFound();
+    }
+  }
 
   const breadcrumbs = slug.map((segment, index) => ({
     label: segment,

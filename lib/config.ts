@@ -67,7 +67,7 @@ const defaultConfig: AppConfig = {
   },
   access: {
     posts: { public: ['*'], private: [] },
-    faces: { public: ['*'], private: [] },
+    faces: { public: [], private: ['*'] },
   },
   auth: {
     allowRegistration: true,
