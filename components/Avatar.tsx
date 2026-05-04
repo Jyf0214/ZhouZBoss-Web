@@ -7,19 +7,39 @@ interface AvatarProps {
   size?: number;
 }
 
+/** 自定义 loader：直接返回原始 URL，不做域名限制 */
+function avatarLoader({ src }: { src: string }) {
+  return src;
+}
+
 export function Avatar({ name, avatarUrl, size = 32 }: AvatarProps) {
   const initials = name ? name.charAt(0).toUpperCase() : '?';
 
+  if (avatarUrl) {
+    return (
+      <div
+        className="flex items-center justify-center rounded-xl bg-zinc-100 overflow-hidden shrink-0"
+        style={{ width: size, height: size }}
+      >
+        <Image
+          src={avatarUrl}
+          alt={name}
+          width={size}
+          height={size}
+          loader={avatarLoader}
+          unoptimized
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
-      className="flex items-center justify-center rounded-xl bg-zinc-900 text-white font-bold overflow-hidden"
+      className="flex items-center justify-center rounded-xl bg-zinc-900 text-white font-bold shrink-0"
       style={{ width: size, height: size }}
     >
-      {avatarUrl ? (
-        <Image src={avatarUrl} alt={name} width={size} height={size} className="object-cover" />
-      ) : (
-        <span>{initials}</span>
-      )}
+      <span style={{ fontSize: size * 0.4 }}>{initials}</span>
     </div>
   );
 }
