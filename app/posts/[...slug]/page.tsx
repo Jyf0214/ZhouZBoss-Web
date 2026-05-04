@@ -11,13 +11,8 @@ interface PageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-/**
- * 强制动态渲染：页面使用 getSession() 读取 cookie，
- * private 内容需要运行时认证，不能静态生成
- */
 export const dynamic = 'force-dynamic';
 
-/** 判断 slug 所在目录是否为 private */
 function isPrivateSlug(slug: string): boolean {
   const indexes = getContentIndexes('posts');
   const dirSlug = '/' + slug.split('/').filter(Boolean).slice(0, -1).join('/');
@@ -25,7 +20,6 @@ function isPrivateSlug(slug: string): boolean {
   return dirIndex ? dirIndex.public === false : false;
 }
 
-/** 静态生成仅包含公开内容 */
 export async function generateStaticParams() {
   const slugs = getAllSlugs('posts');
   return slugs
@@ -46,15 +40,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-/**
- * 帖子详情页 — 纯文件系统读取
- * private 内容需要登录（cookie 判断），不查数据库
- */
 export default async function PostDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const fullPath = '/' + slug.join('/');
 
-  // 访问控制：private 内容需要登录
   if (isPrivateSlug(fullPath)) {
     const session = await getSession();
     if (!session) {
@@ -65,7 +54,6 @@ export default async function PostDetailPage({ params }: PageProps) {
   const file = getContentFile('posts', fullPath);
   if (!file) notFound();
 
-  // 面包屑导航
   const breadcrumbs = slug.map((segment, index) => ({
     label: segment,
     href: '/posts/' + slug.slice(0, index + 1).join('/'),
@@ -73,21 +61,22 @@ export default async function PostDetailPage({ params }: PageProps) {
   }));
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-6 pt-8 pb-16">
         {/* 面包屑 */}
-        <nav className="flex items-center gap-2 text-sm text-zinc-400 mb-8 flex-wrap">
-          <Link href="/posts" className="hover:text-zinc-900 transition-colors flex items-center gap-1">
-            <ArrowLeft size={14} /> 帖子
+        <nav className="flex items-center gap-1.5 text-sm text-zinc-400 mb-10 flex-wrap">
+          <Link href="/posts" className="hover:text-zinc-900 transition-colors flex items-center gap-1.5 text-zinc-500">
+            <ArrowLeft size={14} />
+            <span className="font-medium">{t_posts('title')}</span>
           </Link>
           {breadcrumbs.map((crumb) => (
-            <span key={crumb.href} className="flex items-center gap-2">
-              <span>/</span>
+            <span key={crumb.href} className="flex items-center gap-1.5">
+              <span className="text-zinc-300">/</span>
               {crumb.isLast ? (
-                <span className="text-zinc-900 font-medium">{crumb.label}</span>
+                <span className="text-zinc-900 font-semibold max-w-[200px] truncate">{crumb.label}</span>
               ) : (
-                <Link href={crumb.href} className="hover:text-zinc-900 transition-colors">
+                <Link href={crumb.href} className="hover:text-zinc-900 transition-colors font-medium">
                   {crumb.label}
                 </Link>
               )}
@@ -99,24 +88,29 @@ export default async function PostDetailPage({ params }: PageProps) {
         <article>
           <header className="mb-12">
             {file.meta.tags && file.meta.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap gap-2 mb-5">
                 {file.meta.tags.map((tag) => (
-                  <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-zinc-50 text-zinc-500 text-xs font-bold uppercase tracking-widest rounded-full border border-zinc-100">
+                  <span key={tag} className="inline-flex items-center gap-1 px-3 py-1.5 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg">
                     {tag}
                   </span>
                 ))}
               </div>
             )}
-            <h1 className="text-4xl md:text-6xl font-display font-black tracking-tight text-zinc-900 mb-6 leading-[1.05]">
+            <h1 className="text-4xl md:text-[3.5rem] font-black tracking-tight text-zinc-900 mb-8 leading-[1.1]">
               {file.meta.title}
             </h1>
             {(file.meta.author || file.meta.date) && (
-              <div className="flex flex-wrap items-center gap-6 text-zinc-400 border-y border-zinc-100 py-6">
+              <div className="flex flex-wrap items-center gap-4 text-sm">
                 {file.meta.author && (
-                  <span className="font-medium text-zinc-600">{file.meta.author}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-zinc-100 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-zinc-500">{file.meta.author.charAt(0)}</span>
+                    </div>
+                    <span className="font-semibold text-zinc-700">{file.meta.author}</span>
+                  </div>
                 )}
                 {file.meta.date && (
-                  <time className="text-sm">
+                  <time className="text-zinc-400">
                     {new Date(file.meta.date).toLocaleDateString('zh-CN', {
                       year: 'numeric',
                       month: 'long',
@@ -128,17 +122,34 @@ export default async function PostDetailPage({ params }: PageProps) {
             )}
           </header>
 
+          {/* 分割线 */}
+          <div className="h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent mb-12" />
+
           {/* 文章内容 */}
-          <div className="max-w-3xl mx-auto">
+          <div>
             <MarkdownRenderer content={file.content} />
           </div>
         </article>
-      </main>
-      <footer className="border-t border-zinc-100 py-12 bg-zinc-50/50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-zinc-400 text-sm font-medium">Published with Originium Kernel</p>
+
+        {/* 底部导航 */}
+        <div className="mt-20 pt-8 border-t border-zinc-100">
+          <Link
+            href="/posts"
+            className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors group"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            {t_posts('backToPosts')}
+          </Link>
         </div>
-      </footer>
+      </main>
     </div>
   );
+}
+
+function t_posts(key: string): string {
+  const map: Record<string, string> = {
+    title: '帖子',
+    backToPosts: '返回帖子列表',
+  };
+  return map[key] || key;
 }
