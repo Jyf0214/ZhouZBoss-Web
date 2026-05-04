@@ -6,7 +6,7 @@ import { Avatar } from '@/components/Avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
 import { ClerkLoginSection } from '@/components/ClerkLoginSection';
-import { LogoutOutlined, LoginOutlined, SettingOutlined, UsergroupAddOutlined, BookOutlined, TeamOutlined } from '@ant-design/icons';
+import { LogoutOutlined, LoginOutlined, SettingOutlined, BookOutlined, TeamOutlined } from '@ant-design/icons';
 import { Tag, Button } from 'antd';
 import { useI18n } from '@/hooks/use-i18n';
 
@@ -62,10 +62,7 @@ export function Navbar() {
                 </div>
                 {isSudo && (
                   <>
-                    <Link href="/admin/groups">
-                      <Button type="text" icon={<UsergroupAddOutlined />} size="small" className="text-zinc-500 hover:text-zinc-900" />
-                    </Link>
-                    <Link href="/admin/users">
+                    <Link href="/dashboard">
                       <Button type="text" icon={<SettingOutlined />} size="small" className="text-zinc-500 hover:text-zinc-900" />
                     </Link>
                   </>

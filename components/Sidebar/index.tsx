@@ -12,7 +12,6 @@ import {
   Archive,
   Trash2,
   Settings,
-  Shield,
   Activity,
   FileText,
   LogOut,
@@ -46,8 +45,6 @@ const menuItems: MenuItem[] = [
 ];
 
 const adminItems: MenuItem[] = [
-  { key: 'sidebar.userManagement', icon: Users, href: '/admin/users', adminOnly: true, group: 'admin' },
-  { key: 'sidebar.userGroups', icon: Shield, href: '/admin/groups', adminOnly: true, group: 'admin' },
   { key: 'sidebar.systemConfig', icon: Settings, href: '/admin/config', adminOnly: true, group: 'admin' },
   { key: 'sidebar.envVariables', icon: Activity, href: '/admin/env', adminOnly: true, group: 'admin' },
   { key: 'sidebar.tickets', icon: FileText, href: '/admin/tickets', adminOnly: true, group: 'admin' },

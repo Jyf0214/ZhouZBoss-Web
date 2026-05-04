@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   FileText, Users, Clock, CheckCircle, Plus, Settings,
-  BookOpen, ArrowRight, Shield, UserCog, Trash2, Activity,
+  BookOpen, ArrowRight, Trash2, Activity,
   Globe, PenLine, Sparkles,
 } from 'lucide-react';
 import { Button, Spin, Tag } from 'antd';
@@ -106,8 +106,6 @@ export default function DashboardPage() {
   ];
 
   const adminActions = [
-    { label: t('sidebar.userManagement'), icon: UserCog, href: '/admin/users', desc: t('dashboard.userManagementDesc') },
-    { label: t('sidebar.userGroups'), icon: Shield, href: '/admin/groups', desc: t('dashboard.userGroupsDesc') },
     { label: t('sidebar.systemConfig'), icon: Settings, href: '/admin/config', desc: t('dashboard.systemConfigDesc') },
     { label: t('sidebar.envVariables'), icon: Activity, href: '/admin/env', desc: t('dashboard.envVariablesDesc') },
   ];
