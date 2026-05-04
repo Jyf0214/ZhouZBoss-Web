@@ -450,10 +450,10 @@
     "groupName": "Group",
     "contacts": "contacts"
   },
-  "nav": {
-    "posts": "Posts",
-    "faces": "Faces",
-    "settings": "Settings",
-    "logout": "Logout"
-  }
+   "nav": {
+     "posts": "Posts",
+     "faces": "Faces",
+     "settings": "Settings",
+     "logout": "Logout"
+   }
 }
