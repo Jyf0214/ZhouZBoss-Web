@@ -18,8 +18,7 @@ const nextConfig: NextConfig = {
   },
   output: 'standalone',
   transpilePackages: ['motion'],
-  // 禁用 Turbopack 以避免 NFT 警告
-  // 使用 webpack 而不是 turbopack
+  turbopack: {},
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   webpack: (config: any, {dev}: any) => {
     // 在 AI Studio 中通过 DISABLE_HMR 环境变量禁用 HMR
