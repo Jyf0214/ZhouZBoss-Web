@@ -6,8 +6,8 @@ import { type ContentFile, type ContentIndex } from '@/types/content';
 export type { ContentMeta, ContentFile, ContentIndex } from '@/types/content';
 
 const CONTENT_DIR = {
-  posts: path.join(process.cwd(), 'posts'),
-  faces: path.join(process.cwd(), 'faces'),
+  posts: path.join(/*turbopackIgnore: true*/ process.cwd(), 'posts'),
+  faces: path.join(/*turbopackIgnore: true*/ process.cwd(), 'faces'),
 };
 
 /**
