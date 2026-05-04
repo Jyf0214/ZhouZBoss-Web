@@ -47,12 +47,18 @@ export interface AuthConfig {
   allowRegistration: boolean;
 }
 
+/** 用户配置（头像等） */
+export interface UserConfig {
+  avatar?: string;
+}
+
 /** 完整应用配置 */
 export interface AppConfig {
   site: SiteConfig;
   appearance: AppearanceConfig;
   access: AccessConfig;
   auth: AuthConfig;
+  users?: Record<string, UserConfig>;
 }
 
 /** 默认配置（config.json 不存在时使用） */
@@ -103,6 +109,7 @@ export function loadConfig(): AppConfig {
         auth: {
           allowRegistration: parsed.auth?.allowRegistration ?? defaultConfig.auth.allowRegistration,
         },
+        users: parsed.users ?? {},
       };
     } else {
       cachedConfig = { ...defaultConfig };
@@ -242,4 +249,28 @@ export function filterAccessibleSlugs(
   hasDatabase: boolean = false,
 ): string[] {
   return slugs.filter((slug) => canAccess(section, slug, false, hasDatabase));
+}
+
+/**
+ * 从 config.json 获取指定用户的头像
+ */
+export function getUserAvatar(uid: string): string | null {
+  const config = loadConfig();
+  return config.users?.[uid]?.avatar || null;
+}
+
+/**
+ * 保存用户头像到 config.json
+ */
+export async function saveUserAvatar(uid: string, avatar: string): Promise<void> {
+  const configPath = path.join(process.cwd(), 'config.json');
+  const raw = fs.readFileSync(configPath, 'utf-8');
+  const config = JSON.parse(raw);
+
+  if (!config.users) config.users = {};
+  if (!config.users[uid]) config.users[uid] = {};
+  config.users[uid].avatar = avatar;
+
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+  cachedConfig = null;
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+import { getUserAvatar } from '@/lib/config';
 
 /**
  * Get current user info from session
@@ -21,6 +22,7 @@ export async function GET() {
     }
 
     const user = JSON.parse(userStr);
+    const avatar = getUserAvatar(session.uid);
     
     return NextResponse.json({
       authenticated: true,
@@ -30,7 +32,7 @@ export async function GET() {
         name: user.name,
         role: user.role,
         userGroup: user.userGroup,
-        avatar: user.avatar || user.photoURL,
+        avatar: avatar || undefined,
       }
     });
   } catch (error) {
