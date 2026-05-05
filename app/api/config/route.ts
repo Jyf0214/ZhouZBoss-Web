@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
         ? {
           posts: { ...currentConfig.access.posts, ...newConfig.access.posts },
           faces: { ...currentConfig.access.faces, ...newConfig.access.faces },
+          diary: { ...currentConfig.access.diary, ...newConfig.access.diary },
         }
         : currentConfig.access,
       auth: newConfig.auth
@@ -147,6 +148,7 @@ export async function PUT() {
         ? {
           posts: { ...currentConfig.access.posts, ...parsed.access.posts },
           faces: { ...currentConfig.access.faces, ...parsed.access.faces },
+          diary: { ...currentConfig.access.diary, ...parsed.access.diary },
         }
         : currentConfig.access,
       auth: parsed.auth

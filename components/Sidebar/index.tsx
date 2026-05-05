@@ -46,6 +46,7 @@ const menuItems: MenuItem[] = [
 ];
 
 const adminItems: MenuItem[] = [
+  { key: 'sidebar.diary', icon: FileText, href: '/diary', adminOnly: true, group: 'admin' },
   { key: 'sidebar.systemConfig', icon: Settings, href: '/admin/config', adminOnly: true, group: 'admin' },
   { key: 'sidebar.envVariables', icon: Activity, href: '/admin/env', adminOnly: true, group: 'admin' },
   { key: 'sidebar.tickets', icon: FileText, href: '/admin/tickets', adminOnly: true, group: 'admin' },

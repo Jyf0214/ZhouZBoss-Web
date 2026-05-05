@@ -40,7 +40,7 @@ export default async function HomePage() {
     description: f.meta.description,
   }));
 
-  // facesCount
+  // facesCount - 游客无法看到通讯录
   const facesCount = (() => {
     try {
       const faceFiles = getContentFiles('faces');
@@ -59,13 +59,17 @@ export default async function HomePage() {
     }
   })();
 
+  // 仅管理员可以看到 facesCount
+  const displayFacesCount = isAdmin ? facesCount : 0;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f8f8f8]">
       <Navbar />
-      <HomePostGrid 
-        posts={posts} 
-        postCount={posts.length} 
-        facesCount={facesCount} 
+      <HomePostGrid
+        posts={posts}
+        postCount={posts.length}
+        facesCount={displayFacesCount}
+        isAdmin={isAdmin}
         heroTitleLine1={config.site.heroTitleLine1}
         heroTitleLine2={config.site.heroTitleLine2}
       />

@@ -22,6 +22,7 @@ interface HomePostGridProps {
   posts: PostItem[];
   postCount: number;
   facesCount: number;
+  isAdmin?: boolean;
   heroTitleLine1?: string;
   heroTitleLine2?: string;
 }
@@ -29,11 +30,20 @@ interface HomePostGridProps {
 /**
  * 首页帖子网格 — 客户端组件，负责搜索/筛选交互
  */
-export function HomePostGrid({ posts, postCount, facesCount, heroTitleLine1, heroTitleLine2 }: HomePostGridProps) {
+export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, heroTitleLine1, heroTitleLine2 }: HomePostGridProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const { t, locale } = useI18n();
 
+  // 获取所有标签
+  const allTags = Array.from(new Set(posts.flatMap(p => p.tags || []))).sort();
+
   const filteredPosts = posts.filter((p) => {
+    // 标签筛选
+    if (selectedTag && !p.tags?.includes(selectedTag)) {
+      return false;
+    }
+    // 搜索筛选
     if (!searchTerm) return true;
     const q = searchTerm.toLowerCase();
     return (
@@ -90,6 +100,37 @@ export function HomePostGrid({ posts, postCount, facesCount, heroTitleLine1, her
         </motion.div>
       </section>
 
+      {/* 标签筛选 */}
+      {allTags.length > 0 && (
+        <section className="mb-8">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedTag(null)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                selectedTag === null
+                  ? 'bg-zinc-900 text-white'
+                  : 'bg-white text-zinc-600 hover:bg-zinc-100'
+              }`}
+            >
+              全部
+            </button>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(tag)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedTag === tag
+                    ? 'bg-zinc-900 text-white'
+                    : 'bg-white text-zinc-600 hover:bg-zinc-100'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 快捷入口 */}
       <section className="mb-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -107,20 +148,22 @@ export function HomePostGrid({ posts, postCount, facesCount, heroTitleLine1, her
               </p>
             </div>
           </Link>
-          <Link href="/faces" className="group">
-            <div className="bg-white rounded-3xl border border-zinc-100 p-8 hover:border-zinc-300 hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-zinc-50 rounded-2xl flex items-center justify-center group-hover:bg-zinc-900 group-hover:text-white transition-colors duration-300">
-                  <Users size={24} className="text-zinc-400 group-hover:text-white transition-colors" />
+          {isAdmin && (
+            <Link href="/faces" className="group">
+              <div className="bg-white rounded-3xl border border-zinc-100 p-8 hover:border-zinc-300 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-zinc-50 rounded-2xl flex items-center justify-center group-hover:bg-zinc-900 group-hover:text-white transition-colors duration-300">
+                    <Users size={24} className="text-zinc-400 group-hover:text-white transition-colors" />
+                  </div>
+                  <ArrowRight size={20} className="text-zinc-300 group-hover:text-zinc-900 group-hover:translate-x-1 transition-all" />
                 </div>
-                <ArrowRight size={20} className="text-zinc-300 group-hover:text-zinc-900 group-hover:translate-x-1 transition-all" />
+                <h2 className="text-xl font-bold text-zinc-900 mb-1">{t('nav.faces')}</h2>
+                <p className="text-zinc-400 text-sm">
+                  {t('home.facesDesc', { count: facesCount })}
+                </p>
               </div>
-              <h2 className="text-xl font-bold text-zinc-900 mb-1">{t('nav.faces')}</h2>
-              <p className="text-zinc-400 text-sm">
-                {t('home.facesDesc', { count: facesCount })}
-              </p>
-            </div>
-          </Link>
+            </Link>
+          )}
         </div>
       </section>
 

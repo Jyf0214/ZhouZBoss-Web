@@ -39,6 +39,10 @@ export interface AccessConfig {
     public: string[];
     private: string[];
   };
+  diary: {
+    public: string[];
+    private: string[];
+  };
 }
 
 /** 认证配置 */
@@ -78,6 +82,7 @@ const defaultConfig: AppConfig = {
   access: {
     posts: { public: ['*'], private: [] },
     faces: { public: [], private: ['*'] },
+    diary: { public: [], private: ['*'] },
   },
   auth: {
     allowRegistration: true,
@@ -208,14 +213,14 @@ export function matchPath(pattern: string, target: string): boolean {
 
 /**
  * 判断指定路径的内容是否可被某角色访问
- * @param section 内容分区：posts 或 faces
+ * @param section 内容分区：posts、faces 或 diary
  * @param slug 内容路径（如 /daily/2024-01）
  * @param isAuthenticated 用户是否已登录
  * @param hasDatabase 是否有数据库（无数据库时私有内容直接省略）
  * @param config 可选的配置对象，不传则使用 loadConfig()
  */
 export function canAccess(
-  section: 'posts' | 'faces',
+  section: 'posts' | 'faces' | 'diary',
   slug: string,
   isAuthenticated: boolean,
   hasDatabase: boolean = false,
@@ -224,9 +229,9 @@ export function canAccess(
   const rules = (config || loadConfig()).access[section];
 
   // 检查是否命中私有规则
-  const isPrivate = rules.private.some((p) => matchPath(p, slug));
+  const isPrivate = rules.private.some((p: string) => matchPath(p, slug));
   // 检查是否命中公开规则
-  const isPublic = rules.public.some((p) => matchPath(p, slug));
+  const isPublic = rules.public.some((p: string) => matchPath(p, slug));
 
   // 无数据库时，私有内容直接省略（无认证方式）
   if (isPrivate && !hasDatabase) return false;
@@ -244,7 +249,7 @@ export function canAccess(
  * 无数据库时，私有内容直接从列表中省略
  */
 export function filterAccessibleSlugs(
-  section: 'posts' | 'faces',
+  section: 'posts' | 'faces' | 'diary',
   slugs: string[],
   hasDatabase: boolean = false,
 ): string[] {

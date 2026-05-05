@@ -8,6 +8,7 @@ export type { ContentMeta, ContentFile, ContentIndex } from '@/types/content';
 const CONTENT_DIR = {
   posts: path.join(/*turbopackIgnore: true*/ process.cwd(), 'posts'),
   faces: path.join(/*turbopackIgnore: true*/ process.cwd(), 'faces'),
+  diary: path.join(/*turbopackIgnore: true*/ process.cwd(), 'diary'),
 };
 
 /**
@@ -122,10 +123,10 @@ function readIndexFile(dir: string): ContentIndex | null {
 
 /**
  * 获取指定分区的所有内容文件
- * @param section 内容分区：posts 或 faces
+ * @param section 内容分区：posts、faces 或 diary
  * @param includeIndex 是否包含目录索引信息
  */
-export function getContentFiles(section: 'posts' | 'faces'): ContentFile[] {
+export function getContentFiles(section: 'posts' | 'faces' | 'diary'): ContentFile[] {
   const rootDir = CONTENT_DIR[section];
   if (!fs.existsSync(rootDir)) return [];
 
@@ -153,7 +154,7 @@ export function getContentFiles(section: 'posts' | 'faces'): ContentFile[] {
  * 获取指定分区下的目录索引列表
  * 用于展示分组/分类视图
  */
-export function getContentIndexes(section: 'posts' | 'faces'): ContentIndex[] {
+export function getContentIndexes(section: 'posts' | 'faces' | 'diary'): ContentIndex[] {
   const rootDir = CONTENT_DIR[section];
   if (!fs.existsSync(rootDir)) return [];
 
@@ -189,7 +190,7 @@ export function getContentIndexes(section: 'posts' | 'faces'): ContentIndex[] {
  * @param section 内容分区
  * @param slug 内容路径（如 /daily/2024-01）
  */
-export function getContentFile(section: 'posts' | 'faces', slug: string): ContentFile | null {
+export function getContentFile(section: 'posts' | 'faces' | 'diary', slug: string): ContentFile | null {
   const rootDir = CONTENT_DIR[section];
   const filePath = path.join(rootDir, slug.slice(1) + '.md');
 
@@ -201,7 +202,7 @@ export function getContentFile(section: 'posts' | 'faces', slug: string): Conten
  * 获取指定分区下所有可用的 slug 列表
  * 用于 generateStaticParams 生成静态页面
  */
-export function getAllSlugs(section: 'posts' | 'faces'): string[] {
+export function getAllSlugs(section: 'posts' | 'faces' | 'diary'): string[] {
   const rootDir = CONTENT_DIR[section];
   if (!fs.existsSync(rootDir)) return [];
   return scanMarkdownFiles(rootDir, rootDir);
@@ -210,7 +211,7 @@ export function getAllSlugs(section: 'posts' | 'faces'): string[] {
 /**
  * 获取目录树结构（用于导航和面包屑）
  */
-export function getContentTree(section: 'posts' | 'faces'): ContentIndex[] {
+export function getContentTree(section: 'posts' | 'faces' | 'diary'): ContentIndex[] {
   const rootDir = CONTENT_DIR[section];
   if (!fs.existsSync(rootDir)) return [];
 

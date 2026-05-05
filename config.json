@@ -20,8 +20,12 @@
       "private": []
     },
     "faces": {
-      "public": ["*"],
-      "private": []
+      "public": [],
+      "private": ["*"]
+    },
+    "diary": {
+      "public": [],
+      "private": ["*"]
     }
   },
   "auth": {
