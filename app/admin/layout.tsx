@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Spin } from 'antd';
-import { Sidebar } from '@/components/Sidebar';
+import Sidebar from '@/components/Sidebar/index';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isSudo, loading } = useAuth();
@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 md:ml-[280px] min-h-screen bg-zinc-50 pt-20 md:pt-0">
+      <main className="flex-1 md:ml-[260px] min-h-screen bg-zinc-50 pt-20 md:pt-0">
         {children}
       </main>
     </div>
