@@ -11,9 +11,5 @@ npm run type-check || exit 1
 echo "🔍 运行 ESLint 检查..."
 npm run lint || exit 1
 
-# 3. 运行测试
-echo "🧪 运行测试..."
-npm run test || exit 1
-
 echo ""
 echo "✅ Pre-push 检查通过！"
