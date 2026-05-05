@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
-import { Save, Send, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { Save, Send, ArrowLeft, Image as ImageIcon, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 function EditorContent() {
@@ -22,6 +22,7 @@ function EditorContent() {
   const [slug, setSlug] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!articleId);
+  const [githubConfigured, setGithubConfigured] = useState(false);
 
   useEffect(() => {
     if (articleId) {
@@ -46,6 +47,23 @@ function EditorContent() {
       };
       fetchArticle();
     }
+
+    // 检查 GitHub 是否配置
+    const checkGithubConfig = async () => {
+      try {
+        const res = await fetch('/api/env-status');
+        if (res.ok) {
+          const data = await res.json();
+          const githubVars = data.groups?.github?.variables || [];
+          const repoSet = githubVars.find(v => v.name === 'GITHUB_REPO')?.isSet;
+          const tokenSet = githubVars.find(v => v.name === 'GITHUB_TOKEN')?.isSet;
+          setGithubConfigured(!!(repoSet && tokenSet));
+        }
+      } catch (error) {
+        console.error('检查 GitHub 配置失败:', error);
+      }
+    };
+    checkGithubConfig();
   }, [articleId, t]);
 
   /**
@@ -157,14 +175,21 @@ function EditorContent() {
             <Save size={18} />
             <span>{t('editor.saveDraft')}</span>
           </button>
-          <button
-            onClick={handlePublish}
-            disabled={loading}
-            className="bg-zinc-900 text-white hover:bg-zinc-800 flex items-center gap-2 px-4 py-2 rounded-lg"
-          >
-            <Send size={18} />
-            <span>{t('editor.publish')}</span>
-          </button>
+          {githubConfigured ? (
+            <button
+              onClick={handlePublish}
+              disabled={loading}
+              className="bg-zinc-900 text-white hover:bg-zinc-800 flex items-center gap-2 px-4 py-2 rounded-lg"
+            >
+              <Send size={18} />
+              <span>{t('editor.publish')}</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">
+              <XCircle size={18} />
+              <span className="text-sm">请先配置 GitHub</span>
+            </div>
+          )}
         </div>
       </div>
 

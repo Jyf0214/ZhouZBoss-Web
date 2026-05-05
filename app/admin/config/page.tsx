@@ -37,6 +37,7 @@ export default function ConfigPage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [githubConfigured, setGithubConfigured] = useState(false);
 
   useEffect(() => {
     if (userRole !== 'sudo' && userRole !== 'admin') {
@@ -61,6 +62,8 @@ export default function ConfigPage() {
             githubToken: data.githubToken ? '********' : '',
             allowRegistration: data.auth?.allowRegistration !== false,
           });
+          // 检查 GitHub 是否配置
+          setGithubConfigured(!!(data.githubRepo && data.githubToken));
         }
       } catch (error) {
         console.error('获取配置失败:', error);
@@ -275,15 +278,22 @@ export default function ConfigPage() {
 
       {/* 保存按钮 */}
       <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          icon={<Settings size={14} />}
-          type="primary"
-          className="bg-zinc-900 hover:bg-zinc-800 rounded-xl h-10 px-8"
-        >
-          {saving ? t('config.saving') : t('config.save')}
-        </Button>
+        {githubConfigured ? (
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            icon={<Settings size={14} />}
+            type="primary"
+            className="bg-zinc-900 hover:bg-zinc-800 rounded-xl h-10 px-8"
+          >
+            {saving ? t('config.saving') : t('config.save')}
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-xl">
+            <XCircle size={18} />
+            <span className="text-sm">请先配置 GitHub（GITHUB_REPO 和 GITHUB_TOKEN）</span>
+          </div>
+        )}
       </div>
     </div>
   );
