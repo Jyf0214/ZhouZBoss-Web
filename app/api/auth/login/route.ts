@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
     }
 
     const db = getDb();
-    console.warn('[登录] 登录尝试:', { login, hasPassword: !!password });
+    console.warn('[登录] 登录尝试:', { login, hasPassword: !!password, passwordLength: password?.length });
+    console.warn('[登录] 原始密码值:', password);
     
     // 支持邮箱或用户名登录
     let uid: string | null = null;
@@ -66,6 +67,8 @@ export async function POST(req: NextRequest) {
       : verifyLegacyPassword(password, user.password);
     
     console.warn('[登录] 密码验证:', { passwordMatch, isNewHash });
+    console.warn('[登录] 数据库存储的哈希:', user.password);
+    console.warn('[登录] 输入密码:', password, '长度:', password?.length);
 
   if (!passwordMatch) {
     return NextResponse.json({ error: '账号或密码错误' }, { status: 401 });
