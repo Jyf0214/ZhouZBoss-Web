@@ -44,10 +44,9 @@ export async function POST(req: NextRequest) {
 
     // 构建文件内容
     let fileContent = content || '';
-    if (frontMatter && body !== undefined) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const yaml = require('js-yaml');
-      fileContent = `---\n${yaml.dump(frontMatter)}---\n\n${body}`;
+if (frontMatter && body !== undefined) {
+      const yaml = await import('js-yaml');
+      fileContent = `---\n${yaml.default.dump(frontMatter)}---\n\n${body}`;
     }
 
     if (action === 'delete') {
@@ -104,12 +103,11 @@ export async function GET(req: NextRequest) {
       })));
     }
 
-    // Handle file content
+// Handle file content
     if ('content' in data) {
       const raw = Buffer.from(data.content, 'base64').toString('utf-8');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const matter = require('gray-matter');
-      const { data: frontMatter, content: body } = matter(raw);
+      const matter = await import('gray-matter');
+      const { data: frontMatter, content: body } = matter.default(raw);
 
       return NextResponse.json({ raw, frontMatter, body, sha: data.sha });
     }
