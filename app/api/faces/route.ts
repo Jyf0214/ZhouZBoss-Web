@@ -279,9 +279,9 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: '联系人不存在' }, { status: 404 });
     }
 
-    const { sha, email: faceEmail } = fileData;
+    const { sha } = fileData;
 
-    if (!canManageFace(session, faceEmail, slug)) {
+    if (!canManageFace(session)) {
       return NextResponse.json({ error: '无权删除此联系人' }, { status: 403 });
     }
 

@@ -108,7 +108,6 @@ async function main() {
               console.log(`[数据库初始化] ✓ 已更新用户密码: ${user.email || user.username || user.uid}`)
             }
           }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (e) {
 			console.error('用户数据解析失败:', record.key, e.message);
 		}
