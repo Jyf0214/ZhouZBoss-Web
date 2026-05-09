@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { getUserAvatarAsync } from '@/lib/config';
 import { verifyPassword, verifyLegacyPassword, hashPassword } from '@/lib/hash';
+import { ensureAdminUser } from '@/lib/db-init';
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +26,23 @@ export async function POST(req: NextRequest) {
     // 如果没找到，尝试作为用户名查找
     if (!uid) {
       uid = await db.get(`user:username:${login}`);
+    }
+
+    if (!uid) {
+      // 运行时初始化：首次登录时若数据库为空则自动创建管理员
+      const initResult = await ensureAdminUser();
+      if (initResult.error) {
+        return NextResponse.json({ error: initResult.error }, { status: 503 });
+      }
+      if (initResult.created) {
+        // 管理员刚被创建，重试查找
+        if (login.includes('@')) {
+          uid = await db.get(`user:email:${login}`);
+        }
+        if (!uid) {
+          uid = await db.get(`user:username:${login}`);
+        }
+      }
     }
 
     if (!uid) {
@@ -75,9 +93,9 @@ export async function POST(req: NextRequest) {
         avatar: avatar || undefined
       }
     });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error(JSON.stringify({ type: 'login_error', message: error.message }));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(JSON.stringify({ type: 'login_error', message }));
     return NextResponse.json({ error: '登录失败' }, { status: 500 });
   }
 }
