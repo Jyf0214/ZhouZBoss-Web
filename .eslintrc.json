@@ -3,12 +3,5 @@
     "next/core-web-vitals",
     "next/typescript"
   ],
-  "overrides": [
-    {
-      "files": ["*.cjs"],
-      "rules": {
-        "@typescript-eslint/no-require-imports": "off"
-      }
-    }
-  ]
+  "ignorePatterns": ["scripts/", "node_modules/", ".next/", "dist/"]
 }

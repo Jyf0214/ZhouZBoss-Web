@@ -2,7 +2,7 @@
 process.env.PRISMA_HIDE_PREVIEW_FLAG_WARNINGS = 'true'
 process.env.PRISMA_HIDE_UPDATE_MESSAGE = 'true'
 
-const crypto = require('crypto');
+import crypto from 'crypto';
 const ITERATIONS = 100000;
 const SALT_LENGTH = 16;
 const KEY_LENGTH = 64;
@@ -45,9 +45,8 @@ async function main() {
   
   // eslint-disable-next-line no-console
   console.log('[数据库初始化] 开始初始化...')
-  
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { execSync } = require('child_process')
+
+  const { execSync } = await import('child_process')
   
   try {
     // 尝试推送 schema，如果失败则跳过
@@ -75,8 +74,7 @@ async function main() {
     }
     
     try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { PrismaClient } = require('@prisma/client')
+      const { PrismaClient } = await import('@prisma/client')
       const prisma = new PrismaClient()
       
       const users = await prisma.originiumKV.findMany({
@@ -200,8 +198,8 @@ async function main() {
   }
 }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-main().catch((error) => {
+  
+main().catch(() => {
   // eslint-disable-next-line no-console
   console.log('[数据库初始化] ⚠️ 错误跳过')
 })
