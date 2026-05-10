@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Spin } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 
 interface LoadingProps {
   size?: 'small' | 'default' | 'large';
@@ -140,7 +141,12 @@ export function LoadingWaves({ tip = 'Loading...' }: { tip?: string }) {
   );
 }
 
-type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves';
+export function LoadingAntIcon({ size = 'large', tip }: LoadingProps) {
+  const antIcon = <LoadingOutlined style={{ fontSize: size === 'small' ? 14 : size === 'large' ? 24 : 18 }} spin />;
+  return <Spin indicator={antIcon} size={size} tip={tip} />;
+}
+
+type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
 
 interface GlobalLoadingProps extends LoadingProps {
   type?: LoadingType;
@@ -158,6 +164,8 @@ export function GlobalLoading({ type = 'spinner', size, tip }: GlobalLoadingProp
       return <LoadingGlow tip={tip} />;
     case 'waves':
       return <LoadingWaves tip={tip} />;
+    case 'antd':
+      return <LoadingAntIcon size={size} tip={tip} />;
     default:
       return <LoadingSpinner size={size} tip={tip} />;
   }

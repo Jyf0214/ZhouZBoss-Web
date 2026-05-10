@@ -7,7 +7,7 @@ import { Card } from 'antd';
 import { Loader2, Sparkles, CircleDot, Waves, Orbit } from 'lucide-react';
 
 interface LoadingType {
-  type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves';
+  type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
   label: string;
   labelZh: string;
   description: string;
@@ -21,6 +21,13 @@ const loadingTypes: LoadingType[] = [
     labelZh: '环形加载',
     description: '经典环形进度条（主流 UI 框架默认）',
     icon: CircleDot,
+  },
+  {
+    type: 'antd',
+    label: 'Ant Icon',
+    labelZh: 'Ant Design 图标',
+    description: 'Ant Design LoadingOutlined 图标旋转',
+    icon: Loader2,
   },
   {
     type: 'text',
@@ -54,6 +61,7 @@ const loadingTypes: LoadingType[] = [
 
 const loadingComponents: Record<string, React.ComponentType<{ tip?: string; size?: 'small' | 'default' | 'large' }>> = {
   spinner: ({ tip, size }) => <div className="flex items-center justify-center"><GlobalLoading type="spinner" tip={tip} size={size} /></div>,
+  antd: ({ tip, size }) => <div className="flex items-center justify-center"><GlobalLoading type="antd" tip={tip} size={size} /></div>,
   text: ({ tip }) => <div className="flex items-center justify-center"><GlobalLoading type="text" tip={tip} /></div>,
   dots: ({ tip }) => <div className="flex items-center justify-center"><GlobalLoading type="dots" tip={tip} /></div>,
   glow: ({ tip }) => <div className="flex items-center justify-center"><GlobalLoading type="glow" tip={tip} /></div>,
