@@ -84,3 +84,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '绑定失败' }, { status: 500 });
   }
 }
+
+/**
+ * 解绑 Clerk 账户
+ */
+export async function DELETE() {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: '请先通过 Clerk 登录' }, { status: 401 });
+    }
+
+    const db = getDb();
+
+    // 查找绑定关系
+    const boundUid = await db.get(`clerk:user:${userId}`);
+    if (!boundUid) {
+      return NextResponse.json({ error: '未绑定任何账户' }, { status: 404 });
+    }
+
+    // 删除绑定关系（双向）
+    await db.del(`clerk:user:${userId}`);
+    await db.del(`user:clerk:${boundUid}`);
+
+    // 删除 Clerk session
+    const { deleteSession } = await import('@/lib/auth');
+    await deleteSession();
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Bind unbind error:', error);
+    return NextResponse.json({ error: '解绑失败' }, { status: 500 });
+  }
+}

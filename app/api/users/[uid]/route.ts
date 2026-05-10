@@ -3,18 +3,6 @@ import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import type { UserRole } from '@/lib/user';
 
-const defaultGroupIds = ['sudo', 'admin', 'default'];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function groupExists(db: any, groupId: string): Promise<boolean> {
-  if (defaultGroupIds.includes(groupId)) return true;
-  const groupsStr = await db.get('user-groups:list');
-  if (!groupsStr) return false;
-  const groups = JSON.parse(groupsStr);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return groups.some((g: any) => g.id === groupId);
-}
-
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> }
@@ -71,7 +59,6 @@ export async function PATCH(
     const body = await req.json();
     const { role, userGroup } = body;
 
-    // Validate and update role
     if (role !== undefined) {
       const validRoles: UserRole[] = ['user', 'admin', 'sudo'];
       if (!validRoles.includes(role)) {
@@ -80,11 +67,7 @@ export async function PATCH(
       user.role = role;
     }
 
-    // Validate and update userGroup
     if (userGroup !== undefined) {
-      if (userGroup && !(await groupExists(db, userGroup))) {
-        return NextResponse.json({ error: 'User group not found' }, { status: 404 });
-      }
       user.userGroup = userGroup || undefined;
     }
 

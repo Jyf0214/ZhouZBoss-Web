@@ -18,15 +18,6 @@ export interface UserProfile {
   deletionRequestedAt?: string;
 }
 
-export interface UserGroup {
-  id: string;
-  name: string;
-  description?: string;
-  createdAt: string;
-  createdBy: string;
-  memberCount: number;
-}
-
 /**
  * 根据 UID 获取用户资料
  */
@@ -62,32 +53,6 @@ export async function getAllUsers(): Promise<UserProfile[]> {
 }
 
 /**
- * 创建用户组（仅超级管理员）
- */
-export async function createUserGroup(
-  name: string,
-  description: string,
-  createdBy: string
-): Promise<UserGroup> {
-  const res = await fetch('/api/user-groups', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, description, createdBy }),
-  });
-  if (!res.ok) throw new Error('创建用户组失败');
-  return res.json();
-}
-
-/**
- * 获取所有用户组
- */
-export async function getAllUserGroups(): Promise<UserGroup[]> {
-  const res = await fetch('/api/groups');
-  if (!res.ok) return [];
-  return res.json();
-}
-
-/**
  * 分配用户到用户组（仅超级管理员）
  */
 export async function assignUserToGroup(
@@ -100,30 +65,4 @@ export async function assignUserToGroup(
     body: JSON.stringify({ userGroup: groupId }),
   });
   if (!res.ok) throw new Error('分配用户组失败');
-}
-
-/**
- * 更新用户组（仅超级管理员）
- */
-export async function updateUserGroup(
-  id: string,
-  data: { name?: string; description?: string }
-): Promise<UserGroup> {
-  const res = await fetch(`/api/groups/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('更新用户组失败');
-  return res.json();
-}
-
-/**
- * 删除用户组（仅超级管理员）
- */
-export async function deleteUserGroup(id: string): Promise<void> {
-  const res = await fetch(`/api/groups/${id}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) throw new Error('删除用户组失败');
 }
