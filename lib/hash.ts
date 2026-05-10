@@ -62,37 +62,7 @@ export async function verifyPassword(password: string, storedHash: string): Prom
     KEY_LENGTH * 8
   );
   const actualHashHex = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
-  console.warn('[哈希] 实际计算哈希:', actualHashHex);
-  console.warn('[哈希] 期望的哈希:', expectedHashHex);
-  console.warn('[哈希] 匹配结果:', actualHashHex === expectedHashHex);
   return actualHashHex === expectedHashHex;
-}
-
-/**
- * 调试：用指定 salt 计算哈希
- */
-export async function debugHashPassword(password: string, saltHex: string): Promise<string> {
-  const salt = new Uint8Array(saltHex.match(/.{2}/g)!.map(byte => parseInt(byte, 16)));
-  const encoder = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  );
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt,
-      iterations: ITERATIONS,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    KEY_LENGTH * 8
-  );
-  const hashHex = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return `${saltHex}:${hashHex}`;
 }
 
 /**

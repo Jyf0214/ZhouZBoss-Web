@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { getUserAvatarAsync } from '@/lib/config';
-import { verifyPassword, verifyLegacyPassword, hashPassword, debugHashPassword } from '@/lib/hash';
+import { verifyPassword, verifyLegacyPassword, hashPassword } from '@/lib/hash';
 import { ensureAdminUser } from '@/lib/db-init';
 
 export async function POST(req: NextRequest) {
@@ -16,6 +16,8 @@ export async function POST(req: NextRequest) {
     const db = getDb();
     console.warn('[登录] 登录尝试:', { login, hasPassword: !!password, passwordLength: password?.length });
     console.warn('[登录] 原始密码值:', password);
+    console.warn('[登录] ADMIN_PASSWORD 环境变量:', process.env.ADMIN_PASSWORD ? '已设置(长度:' + process.env.ADMIN_PASSWORD.length + ')' : '未设置');
+    console.warn('[登录] ADMIN_PASSWORD 值:', process.env.ADMIN_PASSWORD);
     
     // 支持邮箱或用户名登录
     let uid: string | null = null;
@@ -33,13 +35,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (!uid) {
-      // 运行时初始化：首次登录时若数据库为空则自动创建管理员
       const initResult = await ensureAdminUser();
       if (initResult.error) {
         return NextResponse.json({ error: initResult.error }, { status: 503 });
       }
       if (initResult.created) {
-        // 管理员刚被创建，重试查找
         if (login.includes('@')) {
           uid = await db.get(`user:email:${login}`);
         }
@@ -47,6 +47,8 @@ export async function POST(req: NextRequest) {
           uid = await db.get(`user:username:${login}`);
         }
       }
+    } else {
+      console.warn('[登录] 用户已存在，跳过自动初始化');
     }
 
     if (!uid) {
@@ -61,9 +63,7 @@ export async function POST(req: NextRequest) {
     const user = JSON.parse(userStr);
     console.warn('[登录] 用户找到:', { uid: user.uid, email: user.email, hasPassword: !!user.password, isNewHash: user.password.includes(':') });
     
-const isNewHash = user.password.includes(':');
-    const [saltHex, expectedHashHex] = user.password.split(':');
-    
+    const isNewHash = user.password.includes(':');
     const passwordMatch = isNewHash
       ? await verifyPassword(password, user.password)
       : verifyLegacyPassword(password, user.password);
@@ -71,12 +71,6 @@ const isNewHash = user.password.includes(':');
     console.warn('[登录] 密码验证结果:', { passwordMatch, isNewHash });
     console.warn('[登录] 数据库存储的哈希:', user.password);
     console.warn('[登录] 输入密码:', password, '长度:', password?.length);
-    console.warn('[登录] Salt:', saltHex);
-    console.warn('[登录] 期望哈希:', expectedHashHex);
-    
-    const debugComputed = await debugHashPassword(password, saltHex);
-    console.warn('[登录] 用数据库 salt 重新计算的哈希:', debugComputed);
-    console.warn('[登录] 是否匹配:', debugComputed === user.password);
 
   if (!passwordMatch) {
     return NextResponse.json({ error: '账号或密码错误' }, { status: 401 });
