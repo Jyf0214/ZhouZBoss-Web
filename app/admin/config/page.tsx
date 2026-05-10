@@ -7,7 +7,8 @@ import { Settings, Github, CheckCircle, XCircle, Image as ImageIcon, Shield, Loa
 import { Slider, Button, Switch, message, Select, ColorPicker } from 'antd';
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
-import { updateFileInGithub } from '@/lib/github';
+import { updateFileInGithub, getFileFromGithub } from '@/lib/github';
+import { useGitHubDiff } from '@/hooks/use-github-diff';
 import type { Color } from 'antd/es/color-picker';
 
 type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
@@ -100,6 +101,15 @@ export default function ConfigPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [githubConfigured, setGithubConfigured] = useState(false);
+  const [remoteConfig, setRemoteConfig] = useState<string>('');
+
+  const githubRepo = process.env.NEXT_PUBLIC_GITHUB_REPO || '';
+  const githubToken = process.env.GITHUB_TOKEN || '';
+  const { showDiff, DiffModal } = useGitHubDiff({
+    repo: githubRepo,
+    onSuccess: () => message.success(t('config.saveSuccess')),
+    onError: (error) => showError(`${t('config.saveFailed')}: ${error.message}`),
+  });
 
   useEffect(() => {
     if (userRole !== 'sudo' && userRole !== 'admin') {
@@ -137,6 +147,11 @@ export default function ConfigPage() {
             auth: data.auth || { allowRegistration: true },
           });
           setGithubConfigured(!!(data._githubRepo && data._githubToken));
+
+          if (githubRepo && githubToken) {
+            const remote = await getFileFromGithub(githubRepo, githubToken, 'config.json');
+            setRemoteConfig(remote?.content || '');
+          }
         }
       } catch (error) {
         console.error('获取配置失败:', error);
@@ -145,33 +160,37 @@ export default function ConfigPage() {
       }
     };
     fetchConfig();
-  }, [userRole]);
+  }, [userRole, githubRepo, githubToken]);
 
-  const handleSave = async () => {
-    const githubRepo = process.env.NEXT_PUBLIC_GITHUB_REPO;
-    const githubToken = process.env.GITHUB_TOKEN;
-
+  const handleSave = () => {
     if (!githubRepo || !githubToken) {
       message.error('GitHub 未配置');
       return;
     }
 
-    setSaving(true);
-    try {
-      await updateFileInGithub({
-        repo: githubRepo,
-        token: githubToken,
-        path: 'config.json',
-        content: JSON.stringify(config, null, 2),
-        message: 'chore: update config from admin panel',
-      });
-      message.success(t('config.saveSuccess'));
-    } catch (error) {
-      console.error('保存配置失败:', error);
-      showError(`${t('config.saveFailed')}: ${error instanceof Error ? error.message : ''}`);
-    } finally {
-      setSaving(false);
-    }
+    const newContent = JSON.stringify(config, null, 2);
+    showDiff({
+      filePath: 'config.json',
+      oldContent: remoteConfig,
+      newContent,
+      onSubmit: async () => {
+        setSaving(true);
+        try {
+          await updateFileInGithub({
+            repo: githubRepo,
+            token: githubToken,
+            path: 'config.json',
+            content: newContent,
+            message: 'chore: update config from admin panel',
+          });
+          setRemoteConfig(newContent);
+        } catch (error) {
+          throw error;
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -483,6 +502,7 @@ export default function ConfigPage() {
           {saving ? t('config.saving') : t('config.save')}
         </Button>
       </div>
+      {DiffModal}
     </div>
   );
 }
