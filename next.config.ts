@@ -15,6 +15,9 @@ interface AppearanceConfig {
   };
   customCSS: string;
   customHead: string;
+  loading?: {
+    type: 'spinner' | 'text' | 'dots' | 'glow';
+  };
 }
 
 interface AccessConfig {
@@ -63,6 +66,7 @@ const appConfig: AppConfig = {
     background: { url: '', opacity: 0.8 },
     customCSS: '',
     customHead: '',
+    loading: { type: 'spinner' },
   },
   access: {
     posts: { public: ['*'], private: [] },
