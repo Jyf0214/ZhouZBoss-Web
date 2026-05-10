@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
@@ -51,15 +51,16 @@ const groupIcons: Record<string, React.ElementType> = {
 };
 
 export default function EnvStatusPage() {
-  const { isSudo } = useAuth();
+  const { isSudo, loading: authLoading } = useAuth();
   const router = useRouter();
   const { t } = useI18n();
   const [envStatus, setEnvStatus] = useState<EnvStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const hasRedirected = useRef(false);
+  const hasFetched = useRef(false);
 
   const fetchEnvStatus = async () => {
-    setLoading(true);
     try {
       const res = await fetch('/api/env-status');
       if (res.ok) {
@@ -70,15 +71,29 @@ export default function EnvStatusPage() {
       console.error('Failed to fetch env status:', error);
     } finally {
       setLoading(false);
+      hasFetched.current = true;
     }
   };
 
   useEffect(() => {
-    if (!isSudo) {
+    if (authLoading) return;
+    if (!isSudo && !hasRedirected.current) {
+      hasRedirected.current = true;
       router.push('/');
       return;
     }
-  }, [isSudo, router]);
+    if (isSudo && !hasFetched.current) {
+      fetchEnvStatus();
+    }
+  }, [authLoading, isSudo, router]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900" />
+      </div>
+    );
+  }
 
   if (!isSudo) return null;
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext, useCallback, ReactNode } from 'react';
-import { message, Spin } from 'antd';
+import { useState, useEffect, createContext, useContext, useCallback, ReactNode, useRef } from 'react';
+import { message } from 'antd';
 import { useI18n } from './use-i18n';
 
 export type UserRole = 'user' | 'admin' | 'sudo';
@@ -30,23 +30,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function AuthLoadingScreen() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <Spin size="large" />
-    </div>
-  );
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { t } = useI18n();
   const clerkAvailable = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (timeoutMs = 10000) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
-      const res = await fetch('/api/auth/me');
+      setLoading(true);
+      const res = await fetch('/api/auth/me', { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (res.ok) {
         const data = await res.json();
         if (data.authenticated) {
@@ -57,7 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
       }
-    } catch {
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === 'AbortError') {
+        console.warn('Auth refresh timed out');
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -140,10 +147,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('登出错误:', err);
     }
   };
-
-  if (loading && user === null) {
-    return <AuthLoadingScreen />;
-  }
 
   return (
     <AuthContext.Provider
