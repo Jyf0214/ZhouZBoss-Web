@@ -266,7 +266,7 @@ if (res.ok) {
 function EditorLoading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <GlobalLoading type="antd" size="large" />
+      <GlobalLoading size="large" />
     </div>
   );
 }

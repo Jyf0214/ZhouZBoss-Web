@@ -107,7 +107,7 @@ export default function ConfigPage() {
   if (loading) {
     return (
       <div className="p-8 text-center">
-        <GlobalLoading type="text" tip={t('common.loading')} />
+        <GlobalLoading tip={t('common.loading')} />
       </div>
     );
   }

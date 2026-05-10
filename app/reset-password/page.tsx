@@ -148,7 +148,7 @@ function ResetPasswordForm() {
 function ResetPasswordLoading() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <GlobalLoading type="antd" size="large" />
+      <GlobalLoading size="large" />
     </div>
   );
 }

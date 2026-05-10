@@ -182,7 +182,7 @@ function LoginForm() {
 export default function LoginPage() {
   const { t } = useI18n();
   return (
-    <Suspense fallback={<GlobalLoading type="text" tip={t('common.loading')} />}>
+    <Suspense fallback={<GlobalLoading tip={t('common.loading')} />}>
       <LoginForm />
     </Suspense>
   );
