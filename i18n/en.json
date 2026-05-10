@@ -473,6 +473,7 @@
     "demo": "Page Demo",
     "select": "Select Animation",
     "color": "Custom Color",
+    "position": "Loading Position",
     "preview": "Effect Preview"
   },
   "configPreview": {

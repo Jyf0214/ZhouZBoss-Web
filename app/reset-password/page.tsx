@@ -146,8 +146,11 @@ function ResetPasswordForm() {
 }
 
 function ResetPasswordLoading() {
-  const { t } = useI18n();
-  return <GlobalLoading type="text" tip={t('common.loading')} />;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <GlobalLoading type="antd" size="large" />
+    </div>
+  );
 }
 
 export default function ResetPasswordPage() {

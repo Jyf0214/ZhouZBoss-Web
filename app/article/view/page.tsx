@@ -7,6 +7,7 @@ import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { ArrowLeft, User, Calendar, Tag } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 
 /**
@@ -41,10 +42,7 @@ function ArticleViewContent() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="flex flex-col items-center gap-4 animate-pulse">
-        <div className="w-12 h-12 bg-zinc-100 rounded-full"></div>
-        <div className="h-4 w-32 bg-zinc-100 rounded"></div>
-      </div>
+      <GlobalLoading type="antd" size="large" />
     </div>
   );
 

@@ -7,6 +7,7 @@ import { ArticleCard } from '@/components/ArticleCard';
 import { UserProfile } from '@/lib/user';
 import { type Article } from '@/types/content';
 import { useI18n } from '@/hooks/use-i18n';
+import { GlobalLoading } from '@/components/Loading';
 import { Avatar } from '@/components/Avatar';
 import { Calendar, Mail } from 'lucide-react';
 import Link from 'next/link';
@@ -48,10 +49,7 @@ function UserProfileContent() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="flex flex-col items-center gap-4 animate-pulse">
-        <div className="w-16 h-16 bg-zinc-100 rounded-full"></div>
-        <div className="h-6 w-48 bg-zinc-100 rounded"></div>
-      </div>
+      <GlobalLoading type="antd" size="large" />
     </div>
   );
 

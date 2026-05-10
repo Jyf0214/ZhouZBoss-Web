@@ -473,6 +473,7 @@
     "demo": "页面演示",
     "select": "选择动画",
     "color": "自定义颜色",
+    "position": "加载位置",
     "preview": "效果预览"
   },
   "configPreview": {

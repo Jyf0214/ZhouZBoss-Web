@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import { useI18n } from '@/hooks/use-i18n';
 import { GlobalLoading } from '@/components/Loading';
-import { Card, ColorPicker } from 'antd';
+import { Card, ColorPicker, Select } from 'antd';
 import { Loader2, CircleDot, Sparkles, Orbit, Waves, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { Color } from 'antd/es/color-picker';
+
+type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 interface LoadingType {
   type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
@@ -15,6 +17,14 @@ interface LoadingType {
   description: string;
   icon: React.ElementType;
 }
+
+const positionOptions = [
+  { value: 'center', label: '居中 (center)' },
+  { value: 'top-left', label: '左上角 (top-left)' },
+  { value: 'top-right', label: '右上角 (top-right)' },
+  { value: 'bottom-left', label: '左下角 (bottom-left)' },
+  { value: 'bottom-right', label: '右下角 (bottom-right)' },
+];
 
 const loadingTypes: LoadingType[] = [
   {
@@ -131,7 +141,8 @@ function LoadingDotsWithColor({ color, tip }: { color: string; tip?: string }) {
 export default function LoadingPreviewPage() {
   const { t } = useI18n();
   const [selectedType, setSelectedType] = useState<string>('spinner');
-  const [loadingColor, setLoadingColor] = useState<string>('#18181b');
+  const [loadingColor, setLoadingColor] = useState<string>('#c084fc');
+  const [loadingPosition, setLoadingPosition] = useState<LoadingPosition>('center');
 
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
@@ -213,23 +224,36 @@ export default function LoadingPreviewPage() {
             <div className="text-sm text-zinc-400">
               当前颜色: <code className="bg-zinc-100 px-2 py-1 rounded ml-1">{loadingColor}</code>
             </div>
+          </div>
+        </Card>
+
+        {/* 位置选择 */}
+        <Card title={t('loadingPreview.position') || '加载位置'} className="rounded-2xl border border-zinc-100">
+          <div className="flex flex-wrap items-center gap-6">
+            <Select
+              value={loadingPosition}
+              onChange={(value: LoadingPosition) => setLoadingPosition(value)}
+              options={positionOptions}
+              style={{ width: 200 }}
+              size="large"
+            />
             <div className="text-sm text-zinc-400">
-              配置: <code className="bg-zinc-100 px-2 py-1 rounded ml-1">appearance.loading.color = &quot;{loadingColor}&quot;</code>
+              配置: <code className="bg-zinc-100 px-2 py-1 rounded ml-1">appearance.loading.position = &quot;{loadingPosition}&quot;</code>
             </div>
           </div>
         </Card>
 
         {/* 预览区域 */}
         <Card title={t('loadingPreview.preview') || '效果预览'} className="rounded-2xl border border-zinc-100">
-          <div className="bg-zinc-50 rounded-xl p-16 flex items-center justify-center min-h-[200px]">
+          <div className="bg-zinc-50 rounded-xl p-16 min-h-[200px]" style={{ display: 'flex', alignItems: loadingPosition === 'top-left' || loadingPosition === 'top-right' ? 'flex-start' : loadingPosition.includes('bottom') ? 'flex-end' : 'center', justifyContent: loadingPosition === 'center' ? 'center' : loadingPosition.includes('left') ? 'flex-start' : 'flex-end', padding: loadingPosition === 'center' ? '4rem' : '2rem' }}>
             {selectedType === 'spinner' && (
-              <GlobalLoading type="spinner" tip="加载中" />
+              <GlobalLoading type="spinner" tip="加载中" position={loadingPosition} />
             )}
             {selectedType === 'antd' && (
-              <GlobalLoading type="antd" tip="加载中" />
+              <GlobalLoading type="antd" tip="加载中" position={loadingPosition} />
             )}
             {selectedType === 'text' && (
-              <GlobalLoading type="text" tip="加载中" />
+              <GlobalLoading type="text" tip="加载中" position={loadingPosition} />
             )}
             {selectedType === 'dots' && (
               <LoadingDotsWithColor color={loadingColor} tip="加载中" />

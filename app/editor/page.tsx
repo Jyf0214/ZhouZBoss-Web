@@ -7,6 +7,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { Save, Send, ArrowLeft, Image as ImageIcon, XCircle } from 'lucide-react';
 import { message } from 'antd';
 import { showError } from '@/lib/error';
+import { GlobalLoading } from '@/components/Loading';
 import Link from 'next/link';
 
 function EditorContent() {
@@ -263,8 +264,11 @@ if (res.ok) {
 }
 
 function EditorLoading() {
-  const { t } = useI18n();
-  return <div className="p-8 text-center text-zinc-500">{t('editor.loading')}</div>;
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <GlobalLoading type="antd" size="large" />
+    </div>
+  );
 }
 
 export default function EditorPage() {

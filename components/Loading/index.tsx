@@ -59,7 +59,7 @@ export function LoadingText({ tip = 'Loading...' }: { tip?: string }) {
   );
 }
 
-export function LoadingDots({ tip = 'Loading', color = '#18181b' }: LoadingProps) {
+export function LoadingDots({ tip = 'Loading', color = '#c084fc' }: LoadingProps) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="loading-dots-animated">
@@ -131,7 +131,7 @@ export function LoadingGlow({ tip = 'Loading...' }: { tip?: string }) {
   );
 }
 
-export function LoadingWaves({ tip = 'Loading...', color = '#18181b' }: LoadingProps) {
+export function LoadingWaves({ tip = 'Loading...', color = '#c084fc' }: LoadingProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="flex items-end gap-1.5 h-10">
@@ -161,7 +161,7 @@ export function LoadingWaves({ tip = 'Loading...', color = '#18181b' }: LoadingP
   );
 }
 
-export function LoadingAntIcon({ size = 'large', tip, color = '#18181b', position = 'center' }: LoadingProps) {
+export function LoadingAntIcon({ size = 'large', tip, color = '#c084fc', position = 'center' }: LoadingProps) {
   const fontSize = size === 'small' ? 14 : size === 'large' ? 24 : 18;
   const antIcon = <LoadingOutlined style={{ fontSize, color }} spin />;
   const posClass = positionClasses[position] || positionClasses.center;

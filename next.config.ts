@@ -68,7 +68,7 @@ const appConfig: AppConfig = {
     background: { url: '', opacity: 0.8 },
     customCSS: '',
     customHead: '',
-    loading: { type: 'spinner' },
+    loading: { type: 'waves', color: '#c084fc', position: 'center' },
   },
   access: {
     posts: { public: ['*'], private: [] },
