@@ -1,7 +1,5 @@
 /**
  * 运行时数据库初始化
- * 在 Vercel 等环境中，DATABASE_URL 可能仅在运行时可用，
- * 构建时的 db:init 脚本无法执行，因此需要在首次使用时初始化管理员账户。
  */
 import { getDb } from '@/lib/db';
 import { hashPassword } from '@/lib/hash';
@@ -24,13 +22,11 @@ export async function ensureAdminUser(): Promise<{ created: boolean; error?: str
     return initResult;
   }
 
-const db = getDb();
-    console.warn('[运行时初始化] 检查管理员是否存在:', { adminEmail, hasPassword: !!adminPassword });
+  const db = getDb();
 
-    try {
-      const uid = await db.get(`user:email:${adminEmail}`);
-      console.warn('[运行时初始化] 查找结果:', { uid });
-      if (uid) {
+  try {
+    const uid = await db.get(`user:email:${adminEmail}`);
+    if (uid) {
       initResult = { created: false };
       return initResult;
     }
@@ -55,14 +51,9 @@ const db = getDb();
       updatedAt: now,
     };
 
-    console.warn('[运行时初始化] 创建管理员:', { newUid, username });
-    
     await db.set(`user:uid:${newUid}`, JSON.stringify(newAdmin));
-    console.warn('[运行时初始化] user:uid 设置成功');
     await db.set(`user:email:${adminEmail}`, newUid);
-    console.warn('[运行时初始化] user:email 设置成功');
     await db.set(`user:username:${username}`, newUid);
-    console.warn('[运行时初始化] user:username 设置成功');
 
     console.error(`[数据库初始化] ✓ 运行时创建管理员: ${adminEmail}`);
     initResult = { created: true };

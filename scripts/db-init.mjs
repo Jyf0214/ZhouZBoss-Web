@@ -3,14 +3,10 @@ process.env.PRISMA_HIDE_PREVIEW_FLAG_WARNINGS = 'true'
 process.env.PRISMA_HIDE_UPDATE_MESSAGE = 'true'
 
 import crypto from 'crypto';
-const ITERATIONS = 100000;
-const SALT_LENGTH = 16;
-const KEY_LENGTH = 64;
 
-function hashPassword(password) {
-  const salt = crypto.randomBytes(SALT_LENGTH).toString('hex');
-  const hash = crypto.pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, 'sha256').toString('hex');
-  return `${salt}:${hash}`;
+function hashPassword(password, secret) {
+  const hmac = crypto.createHmac('sha256', secret);
+  return hmac.update(password).digest('hex');
 }
 
 async function main() {
@@ -95,7 +91,8 @@ async function main() {
             
             // 检查 ADMIN_PASSWORD 环境变量并更新
             if (process.env.ADMIN_PASSWORD) {
-              const hashedPassword = hashPassword(process.env.ADMIN_PASSWORD)
+              const authSecret = process.env.AUTH_SECRET || 'fallback-secret-at-least-32-chars-long';
+              const hashedPassword = hashPassword(process.env.ADMIN_PASSWORD, authSecret);
               user.password = hashedPassword
               await prisma.originiumKV.update({
                 where: { key: record.key },
@@ -127,7 +124,8 @@ async function main() {
         
   // eslint-disable-next-line no-console
         console.log(`[数据库初始化] 正在根据环境变量创建初始管理员: ${adminEmail}...`);
-        const hashedPassword = hashPassword(adminPassword);
+        const authSecret = process.env.AUTH_SECRET || 'fallback-secret-at-least-32-chars-long';
+        const hashedPassword = hashPassword(adminPassword, authSecret);
         const uid = crypto.randomUUID();
         const now = new Date().toISOString();
         const newAdmin = {

@@ -7,7 +7,7 @@ import { SESSION_EXPIRY_MS, SESSION_EXPIRY } from '@/lib/constants';
  * Originium Kernel 认证逻辑（Serverless/Edge）
  */
 
-function getSecret(): string {
+export function getSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV === 'production') {
