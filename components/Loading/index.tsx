@@ -111,7 +111,36 @@ export function LoadingGlow({ tip = 'Loading...' }: { tip?: string }) {
   );
 }
 
-type LoadingType = 'spinner' | 'text' | 'dots' | 'glow';
+export function LoadingWaves({ tip = 'Loading...' }: { tip?: string }) {
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-end gap-1.5 h-10">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="w-2 bg-zinc-900 rounded-full animate-wave"
+            style={{
+              height: '40%',
+              animationDelay: `${i * 0.1}s`,
+            }}
+          />
+        ))}
+      </div>
+      {tip && <span className="text-sm text-zinc-400">{tip}</span>}
+      <style jsx>{`
+        .animate-wave {
+          animation: wave 1s ease-in-out infinite;
+        }
+        @keyframes wave {
+          0%, 100% { height: 40%; }
+          50% { height: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves';
 
 interface GlobalLoadingProps extends LoadingProps {
   type?: LoadingType;
@@ -127,6 +156,8 @@ export function GlobalLoading({ type = 'spinner', size, tip }: GlobalLoadingProp
       return <LoadingDots tip={tip} />;
     case 'glow':
       return <LoadingGlow tip={tip} />;
+    case 'waves':
+      return <LoadingWaves tip={tip} />;
     default:
       return <LoadingSpinner size={size} tip={tip} />;
   }

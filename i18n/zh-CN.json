@@ -458,10 +458,18 @@
     "groupName": "分组",
     "contacts": "位联系人"
   },
-   "nav": {
-     "posts": "帖子",
-     "faces": "通讯录",
-     "settings": "设置",
-     "logout": "退出登录"
-   }
+  "nav": {
+    "posts": "帖子",
+    "faces": "通讯录",
+    "settings": "设置",
+    "logout": "退出登录"
+  },
+  "loadingPreview": {
+    "title": "加载动画预览",
+    "subtitle": "预览所有可用的加载动画样式",
+    "category": "进度条/加载动画",
+    "selectTip": "在 next.config.ts 中配置 appearance.loading.type",
+    "sizeComparison": "尺寸对比",
+    "demo": "页面演示"
+  }
 }

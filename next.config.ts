@@ -16,7 +16,7 @@ interface AppearanceConfig {
   customCSS: string;
   customHead: string;
   loading?: {
-    type: 'spinner' | 'text' | 'dots' | 'glow';
+    type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves';
   };
 }
 

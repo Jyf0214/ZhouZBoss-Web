@@ -458,10 +458,18 @@
     "groupName": "Group",
     "contacts": "contacts"
   },
-   "nav": {
-     "posts": "Posts",
-     "faces": "Faces",
-     "settings": "Settings",
-     "logout": "Logout"
-   }
+  "nav": {
+    "posts": "Posts",
+    "faces": "Faces",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "loadingPreview": {
+    "title": "Loading Animations",
+    "subtitle": "Preview all available loading animation styles",
+    "category": "Progress / Loading",
+    "selectTip": "Configure in next.config.ts as appearance.loading.type",
+    "sizeComparison": "Size Comparison",
+    "demo": "Page Demo"
+  }
 }
