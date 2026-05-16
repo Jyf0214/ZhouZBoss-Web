@@ -5,23 +5,27 @@ import { useParams } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { Avatar } from '@/components/Avatar';
-import { ArrowLeft, Calendar, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, Tag, Code, Eye } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { GlobalLoading } from '@/components/Loading';
 import { useI18n } from '@/hooks/use-i18n';
+import { useAuth } from '@/hooks/use-auth';
 
 function UserArticleContent() {
   const params = useParams();
   const username = params?.user as string;
   const article = params?.article as string;
   const { t } = useI18n();
+  const { isSudo } = useAuth();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [articleData, setArticleData] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showRaw, setShowRaw] = useState(false);
+  const [rawContent, setRawContent] = useState('');
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -31,6 +35,9 @@ function UserArticleContent() {
           const data = await res.json();
           setArticleData(data.article);
           setUserData(data.user);
+          if (data.rawContent) {
+            setRawContent(data.rawContent);
+          }
         }
       } catch (error) {
         console.error('Fetch article error:', error);
@@ -103,6 +110,19 @@ function UserArticleContent() {
                   {new Date(articleData.createdAt).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </time>
               </div>
+
+              {isSudo && rawContent && (
+                <>
+                  <div className="h-8 w-px bg-zinc-100 hidden sm:block"></div>
+                  <button
+                    onClick={() => setShowRaw(!showRaw)}
+                    className="flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors"
+                  >
+                    {showRaw ? <Eye size={18} /> : <Code size={18} />}
+                    <span className="text-sm font-bold">{showRaw ? '预览渲染' : '查看原始文件'}</span>
+                  </button>
+                </>
+              )}
             </div>
           </header>
 
@@ -120,7 +140,13 @@ function UserArticleContent() {
           )}
 
           <div className="max-w-3xl mx-auto">
-             <MarkdownRenderer content={articleData.content} />
+            {showRaw && rawContent ? (
+              <pre className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 overflow-x-auto font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                {rawContent}
+              </pre>
+            ) : (
+              <MarkdownRenderer content={articleData.content} />
+            )}
           </div>
         </article>
       </main>

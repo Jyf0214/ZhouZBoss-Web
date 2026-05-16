@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getDb, storage } from '@/lib/db';
 import { loadConfig } from '@/lib/config';
 
 /**
@@ -50,11 +50,24 @@ export async function GET(
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
+    // 读取原始 Markdown 文件（包含 Front Matter）
+    let rawContent = '';
+    try {
+      const raw = await storage.getFile(`articles/${articleId}.md`);
+      if (raw) {
+        rawContent = raw;
+      }
+    } catch {
+      // 读取原始文件失败时设为空字符串，不影响主流程
+      rawContent = '';
+    }
+
     return NextResponse.json({
       id: article.id,
       title: article.title,
       authorName: article.authorName,
       content: article.content,
+      rawContent,
       tags: article.tags || [],
       coverImage: article.coverImage || '',
       createdAt: article.createdAt,

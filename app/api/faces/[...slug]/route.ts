@@ -34,5 +34,10 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  return NextResponse.json(file);
+  // 返回联系人数据，包含原始 Markdown 内容
+  return NextResponse.json({
+    ...file,
+    // 原始 Markdown 内容（Front Matter + 正文），读取失败时为空字符串
+    rawContent: file.raw ?? '',
+  });
 }

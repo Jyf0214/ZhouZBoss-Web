@@ -5,9 +5,10 @@ import { type ContentFile } from '@/types/content';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Code, Eye } from 'lucide-react';
 import { notFound, useParams } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
+import { useAuth } from '@/hooks/use-auth';
 import { showError } from '@/lib/error';
 
 export default function FaceDetailPage() {
@@ -15,9 +16,12 @@ export default function FaceDetailPage() {
   const slugArray = params?.slug as string[] || [];
   const fullPath = '/' + slugArray.join('/');
   const { t } = useI18n();
+  const { isSudo } = useAuth();
 
   const [file, setFile] = React.useState<ContentFile | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [showRaw, setShowRaw] = React.useState(false);
+  const [rawContent, setRawContent] = React.useState('');
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +30,9 @@ export default function FaceDetailPage() {
         if (res.ok) {
           const contentFile = await res.json();
           setFile(contentFile);
+          if (contentFile.rawContent) {
+            setRawContent(contentFile.rawContent);
+          }
         } else if (res.status === 404) {
           setFile(null);
         }
@@ -98,11 +105,28 @@ export default function FaceDetailPage() {
                 ))}
               </div>
             )}
+            {isSudo && rawContent && (
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowRaw(!showRaw)}
+                  className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors"
+                >
+                  {showRaw ? <Eye size={18} /> : <Code size={18} />}
+                  <span className="text-sm font-bold">{showRaw ? '预览渲染' : '查看原始文件'}</span>
+                </button>
+              </div>
+            )}
           </header>
 
           {/* 详细内容 */}
           <div className="max-w-3xl mx-auto">
-            <MarkdownRenderer content={file.content} />
+            {showRaw && rawContent ? (
+              <pre className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 overflow-x-auto font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                {rawContent}
+              </pre>
+            ) : (
+              <MarkdownRenderer content={file.content} />
+            )}
           </div>
         </article>
       </main>
