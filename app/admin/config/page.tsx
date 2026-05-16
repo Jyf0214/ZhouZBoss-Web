@@ -21,6 +21,10 @@ import yaml from 'js-yaml';
 type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
 type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
+interface UserConfig {
+  avatar?: string;
+}
+
 interface ConfigState {
   site: {
     title: string;
@@ -57,6 +61,7 @@ interface ConfigState {
     allowRegistration: boolean;
     admin?: { avatar?: string };
   };
+  users?: Record<string, UserConfig>;
 }
 
 export default function ConfigPage() {
@@ -87,6 +92,7 @@ export default function ConfigPage() {
     auth: {
       allowRegistration: true,
     },
+    users: {},
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -135,6 +141,7 @@ export default function ConfigPage() {
               diary: { public: [], private: ['*'] },
             },
             auth: data.auth || { allowRegistration: true },
+            users: data.users || {},
           });
           const repo = data._githubRepo || process.env.NEXT_PUBLIC_GITHUB_REPO || '';
           setGithubConfigured(!!repo);
