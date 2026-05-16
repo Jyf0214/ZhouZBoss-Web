@@ -3,33 +3,23 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
-import { Settings, Github, CheckCircle, XCircle, Image as ImageIcon, Shield, Loader2 } from 'lucide-react';
-import { Slider, Button, Switch, message, Select, ColorPicker, Input } from 'antd';
+import { message, Button } from 'antd';
+import { Settings, Shield, Loader2 } from 'lucide-react';
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
 import { updateFileInGithub, getFileFromGithub } from '@/lib/github';
 import { useGitHubDiff } from '@/hooks/use-github-diff';
-import type { Color } from 'antd/es/color-picker';
+import ConfigSection from '@/components/ui/ConfigSection';
+import FormField from '@/components/ui/FormField';
+import ToggleField from '@/components/ui/ToggleField';
+import SiteConfigForm from '@/components/ui/SiteConfigForm';
+import LoadingAnimationConfig from '@/components/ui/LoadingAnimationConfig';
+import AccessControlSection from '@/components/ui/AccessControlSection';
+import BackgroundConfig from '@/components/ui/BackgroundConfig';
+import GitHubStatus from '@/components/ui/GitHubStatus';
 
 type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
 type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-
-const loadingTypeOptions = [
-  { value: 'spinner', label: '环形加载 (spinner)' },
-  { value: 'antd', label: 'Ant Design 图标 (antd)' },
-  { value: 'text', label: '文字动画 (text)' },
-  { value: 'dots', label: '三色弹跳 (dots)' },
-  { value: 'glow', label: '光晕渐变 (glow)' },
-  { value: 'waves', label: '波浪动画 (waves)' },
-];
-
-const positionOptions = [
-  { value: 'center', label: '居中' },
-  { value: 'top-left', label: '左上角' },
-  { value: 'top-right', label: '右上角' },
-  { value: 'bottom-left', label: '左下角' },
-  { value: 'bottom-right', label: '右下角' },
-];
 
 interface ConfigState {
   site: {
@@ -206,23 +196,8 @@ export default function ConfigPage() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="p-8 text-center">
-        <GlobalLoading />
-      </div>
-    );
-  }
-
-  if (userRole !== 'sudo' && userRole !== 'admin') {
-    return (
-      <div className="p-8 text-center">
-        <span className="text-red-500">{t('common.accessDenied')}</span>
-      </div>
-    );
-  }
-
-  const handlePageTypeChange = (v: LoadingType) => {
+  // 更新页面加载动画配置
+  const handlePageLoadingChange = (newConfig: { type: LoadingType; color: string; position?: LoadingPosition }) => {
     setConfig({
       ...config,
       appearance: {
@@ -230,50 +205,17 @@ export default function ConfigPage() {
         loading: {
           ...config.appearance.loading,
           page: {
-            type: v,
-            color: config.appearance.loading?.page?.color || '#c084fc',
-            position: config.appearance.loading?.page?.position || 'center',
+            type: newConfig.type,
+            color: newConfig.color,
+            position: (newConfig.position || 'center') as LoadingPosition,
           },
         },
       },
     });
   };
 
-  const handlePageColorChange = (c: Color) => {
-    setConfig({
-      ...config,
-      appearance: {
-        ...config.appearance,
-        loading: {
-          ...config.appearance.loading,
-          page: {
-            type: config.appearance.loading?.page?.type || 'waves',
-            color: c.toHexString(),
-            position: config.appearance.loading?.page?.position || 'center',
-          },
-        },
-      },
-    });
-  };
-
-  const handlePagePositionChange = (v: LoadingPosition) => {
-    setConfig({
-      ...config,
-      appearance: {
-        ...config.appearance,
-        loading: {
-          ...config.appearance.loading,
-          page: {
-            type: config.appearance.loading?.page?.type || 'waves',
-            color: config.appearance.loading?.page?.color || '#c084fc',
-            position: v,
-          },
-        },
-      },
-    });
-  };
-
-  const handleNavTypeChange = (v: LoadingType) => {
+  // 更新导航加载动画配置
+  const handleNavLoadingChange = (newConfig: { type: LoadingType; color: string }) => {
     setConfig({
       ...config,
       appearance: {
@@ -281,30 +223,15 @@ export default function ConfigPage() {
         loading: {
           ...config.appearance.loading,
           navigation: {
-            type: v,
-            color: config.appearance.loading?.navigation?.color || '#c084fc',
+            type: newConfig.type,
+            color: newConfig.color,
           },
         },
       },
     });
   };
 
-  const handleNavColorChange = (c: Color) => {
-    setConfig({
-      ...config,
-      appearance: {
-        ...config.appearance,
-        loading: {
-          ...config.appearance.loading,
-          navigation: {
-            type: config.appearance.loading?.navigation?.type || 'antd',
-            color: c.toHexString(),
-          },
-        },
-      },
-    });
-  };
-
+  // 访问控制切换
   const handleAccessToggle = (type: 'posts' | 'faces' | 'diary', checked: boolean) => {
     const isPublic = checked;
     setConfig({
@@ -321,10 +248,26 @@ export default function ConfigPage() {
   };
 
   const accessItems = [
-    { key: 'posts', label: t('config.accessPosts') || '文章' },
-    { key: 'faces', label: t('config.accessFaces') || '面孔' },
-    { key: 'diary', label: t('config.accessDiary') || '日记' },
-  ] as const;
+    { key: 'posts' as const, label: t('config.accessPosts') || '文章' },
+    { key: 'faces' as const, label: t('config.accessFaces') || '面孔' },
+    { key: 'diary' as const, label: t('config.accessDiary') || '日记' },
+  ];
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <GlobalLoading />
+      </div>
+    );
+  }
+
+  if (userRole !== 'sudo' && userRole !== 'admin') {
+    return (
+      <div className="p-8 text-center">
+        <span className="text-red-500">{t('common.accessDenied')}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-4">
@@ -340,263 +283,106 @@ export default function ConfigPage() {
       </div>
 
       {/* 站点设置 */}
-      <div className="bg-white rounded-2xl border border-zinc-100 p-6">
-        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          {t('config.general')}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('config.siteTitle')}</label>
-            <input
-              type="text"
-              value={config.site.title}
-              onChange={e => setConfig({ ...config, site: { ...config.site, title: e.target.value } })}
-              className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('config.siteDescription')}</label>
-            <input
-              type="text"
-              value={config.site.description}
-              onChange={e => setConfig({ ...config, site: { ...config.site, description: e.target.value } })}
-              className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('config.heroTitle1')}</label>
-            <input
-              type="text"
-              value={config.site.heroTitleLine1}
-              onChange={e => setConfig({ ...config, site: { ...config.site, heroTitleLine1: e.target.value } })}
-              className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('config.heroTitle2')}</label>
-            <input
-              type="text"
-              value={config.site.heroTitleLine2}
-              onChange={e => setConfig({ ...config, site: { ...config.site, heroTitleLine2: e.target.value } })}
-              className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('config.language')}</label>
-            <Select
-              value={config.site.lang}
-              onChange={value => setConfig({ ...config, site: { ...config.site, lang: value } })}
-              options={[
-                { value: 'zh-CN', label: '中文' },
-                { value: 'en-US', label: 'English' },
-                { value: 'ja-JP', label: '日本語' },
-              ]}
-              style={{ width: '100%' }}
-            />
-          </div>
-        </div>
-      </div>
+      <ConfigSection title={t('config.general')} color="bg-emerald-500">
+        <SiteConfigForm
+          config={config.site}
+          onChange={newSite => setConfig({ ...config, site: newSite })}
+        />
+      </ConfigSection>
 
       {/* 认证设置 */}
-      <div className="bg-white rounded-2xl border border-zinc-100 p-6">
-        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-amber-500" />
-          <Shield size={16} />
-          {t('config.auth')}
-        </h2>
-        <div className="flex items-center justify-between py-3 px-4 bg-zinc-50 rounded-xl">
-          <div>
-            <div className="text-sm font-medium text-zinc-900">{t('config.allowRegistration')}</div>
-            <div className="text-xs text-zinc-400 mt-0.5">{t('config.allowRegistrationHint')}</div>
-          </div>
-          <Switch
-            checked={config.auth.allowRegistration}
-            onChange={checked => setConfig({ ...config, auth: { ...config.auth, allowRegistration: checked } })}
-          />
-        </div>
-      </div>
+      <ConfigSection title={t('config.auth')} icon={Shield} color="bg-amber-500">
+        <ToggleField
+          label={t('config.allowRegistration')}
+          description={t('config.allowRegistrationHint')}
+          checked={config.auth.allowRegistration}
+          onChange={checked => setConfig({ ...config, auth: { ...config.auth, allowRegistration: checked } })}
+        />
+      </ConfigSection>
 
       {/* 访问控制 */}
-      <div className="bg-white rounded-2xl border border-zinc-100 p-6">
-        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-rose-500" />
-          <Shield size={16} />
-          {t('config.accessControl') || '访问控制'}
-        </h2>
-        <div className="space-y-3">
-          {accessItems.map(item => {
-            const isPublic = isAccessPublic(item.key);
-            return (
-              <div key={item.key} className="flex items-center justify-between py-3 px-4 bg-zinc-50 rounded-xl">
-                <div>
-                  <div className="text-sm font-medium text-zinc-900">{item.label}</div>
-                  <div className="text-xs text-zinc-400 mt-0.5">
-                    {isPublic ? t('config.accessPublic') || '公开' : t('config.accessPrivate') || '私有（默认全部）'}
-                  </div>
-                </div>
-                <Switch
-                  checked={isPublic}
-                  onChange={(checked: boolean) => handleAccessToggle(item.key, checked)}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <AccessControlSection
+        title={t('config.accessControl') || '访问控制'}
+        items={accessItems}
+        isPublic={isAccessPublic}
+        onToggle={handleAccessToggle}
+        publicLabel={t('config.accessPublic') || '公开'}
+        privateLabel={t('config.accessPrivate') || '私有（默认全部）'}
+      />
 
       {/* 背景设置 */}
-      <div className="bg-white rounded-2xl border border-zinc-100 p-6">
-        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-blue-500" />
-          <ImageIcon size={16} />
-          {t('config.background')}
-        </h2>
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">{t('config.backgroundUrl')}</label>
-          <input
-            type="text"
-            value={config.appearance.background.url}
-            onChange={e => setConfig({
-              ...config,
-              appearance: { ...config.appearance, background: { ...config.appearance.background, url: e.target.value } }
-            })}
-            className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            {t('config.overlayOpacity')}: {Math.round(config.appearance.background.opacity * 100)}%
-          </label>
-          <Slider
-            min={0} max={1} step={0.05}
-            value={config.appearance.background.opacity}
-            onChange={value => setConfig({
-              ...config,
-              appearance: { ...config.appearance, background: { ...config.appearance.background, opacity: value } }
-            })}
-            tooltip={{ formatter: (v) => `${Math.round((v || 0) * 100)}%` }}
-          />
-        </div>
-      </div>
+      <ConfigSection title={t('config.background')} color="bg-blue-500">
+        <BackgroundConfig
+          config={config.appearance.background}
+          onChange={newBg => setConfig({
+            ...config,
+            appearance: { ...config.appearance, background: newBg },
+          })}
+          urlLabel={t('config.backgroundUrl')}
+          opacityLabel={t('config.overlayOpacity')}
+        />
+      </ConfigSection>
 
       {/* 自定义 CSS */}
-      <div className="bg-white rounded-2xl border border-zinc-100 p-6">
-        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-orange-500" />
-          自定义 CSS
-        </h2>
-        <Input.TextArea
-          rows={6}
+      <ConfigSection title={t('config.customCSS') || '自定义 CSS'} color="bg-orange-500">
+        <FormField
+          label=""
           value={config.appearance.customCSS}
-          onChange={e => setConfig({
+          onChange={v => setConfig({
             ...config,
-            appearance: { ...config.appearance, customCSS: e.target.value }
+            appearance: { ...config.appearance, customCSS: v },
           })}
-          placeholder="输入自定义 CSS 代码..."
+          type="textarea"
+          rows={6}
+          placeholder={t('config.customCSSPlaceholder') || '/* 在此输入自定义样式 */'}
         />
-      </div>
+      </ConfigSection>
 
       {/* 自定义 Head 标签 */}
-      <div className="bg-white rounded-2xl border border-zinc-100 p-6">
-        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-500" />
-          自定义 Head 标签
-        </h2>
-        <Input.TextArea
-          rows={4}
+      <ConfigSection title={t('config.customHead') || '自定义 Head 标签'} color="bg-cyan-500">
+        <FormField
+          label=""
           value={config.appearance.customHead}
-          onChange={e => setConfig({
+          onChange={v => setConfig({
             ...config,
-            appearance: { ...config.appearance, customHead: e.target.value }
+            appearance: { ...config.appearance, customHead: v },
           })}
-          placeholder="如 <meta>、<link> 等"
+          type="textarea"
+          rows={4}
+          placeholder={t('config.customHeadPlaceholder') || '<meta name="example" content="value">'}
         />
-      </div>
+      </ConfigSection>
 
       {/* 加载动画设置 */}
-      <div className="bg-white rounded-2xl border border-zinc-100 p-6">
-        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-purple-500" />
-          <Loader2 size={16} />
-          加载动画
-        </h2>
-
-        {/* 轻加载设置 */}
-        <div className="mb-6 p-4 bg-zinc-50 rounded-xl">
-          <h3 className="text-sm font-bold text-zinc-700 mb-3">轻加载（页面内数据加载）</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium mb-2 text-zinc-500">动画类型</label>
-              <Select
-                value={config.appearance.loading?.page?.type || 'waves'}
-                onChange={handlePageTypeChange}
-                options={loadingTypeOptions}
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-2 text-zinc-500">颜色</label>
-              <ColorPicker
-                value={config.appearance.loading?.page?.color || '#c084fc'}
-                onChange={handlePageColorChange}
-                showText
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-2 text-zinc-500">位置</label>
-              <Select
-                value={config.appearance.loading?.page?.position || 'center'}
-                onChange={handlePagePositionChange}
-                options={positionOptions}
-                style={{ width: '100%' }}
-              />
-            </div>
-          </div>
+      <ConfigSection title="加载动画" icon={Loader2} color="bg-purple-500">
+        <div className="space-y-4">
+          <LoadingAnimationConfig
+            title="轻加载（页面内数据加载）"
+            config={{
+              type: config.appearance.loading?.page?.type || 'waves',
+              color: config.appearance.loading?.page?.color || '#c084fc',
+              position: config.appearance.loading?.page?.position || 'center',
+            }}
+            onChange={handlePageLoadingChange}
+            showPosition
+          />
+          <LoadingAnimationConfig
+            title="重加载（路由导航/F5刷新）"
+            config={{
+              type: config.appearance.loading?.navigation?.type || 'antd',
+              color: config.appearance.loading?.navigation?.color || '#c084fc',
+            }}
+            onChange={handleNavLoadingChange}
+          />
         </div>
-
-        {/* 重加载设置 */}
-        <div className="p-4 bg-zinc-50 rounded-xl">
-          <h3 className="text-sm font-bold text-zinc-700 mb-3">重加载（路由导航/F5刷新）</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium mb-2 text-zinc-500">动画类型</label>
-              <Select
-                value={config.appearance.loading?.navigation?.type || 'antd'}
-                onChange={handleNavTypeChange}
-                options={loadingTypeOptions}
-                style={{ width: '100%' }}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-2 text-zinc-500">颜色</label>
-              <ColorPicker
-                value={config.appearance.loading?.navigation?.color || '#c084fc'}
-                onChange={handleNavColorChange}
-                showText
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      </ConfigSection>
 
       {/* GitHub 状态 */}
-      <div className="bg-white rounded-2xl border border-zinc-100 p-6">
-        <h2 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2">
-          <Github size={16} />
-          GitHub 同步状态
-        </h2>
-        <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: githubConfigured ? '#f6ffed' : '#fff7e6' }}>
-          {githubConfigured ? (
-            <CheckCircle size={20} style={{ color: '#52c41a' }} />
-          ) : (
-            <XCircle size={20} style={{ color: '#faad14' }} />
-          )}
-          <span className="font-medium text-sm">
-            {githubConfigured ? '已配置，将保存到 GitHub' : '未配置（请设置 GITHUB_REPO 和 GITHUB_TOKEN）'}
-          </span>
-        </div>
-      </div>
+      <GitHubStatus
+        configured={githubConfigured}
+        configuredText="已配置，将保存到 GitHub"
+        notConfiguredText="未配置（请设置 GITHUB_REPO 和 GITHUB_TOKEN）"
+      />
 
       {/* 保存按钮 */}
       <div className="flex justify-end">

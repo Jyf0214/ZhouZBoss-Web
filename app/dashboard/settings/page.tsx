@@ -4,11 +4,58 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { Button, Input, Form, Avatar, message } from 'antd';
+import type { Rule } from 'antd/es/form';
 import { showError } from '@/lib/error';
 import { getFileFromGithub, updateFileInGithub } from '@/lib/github';
 import { useGitHubDiff } from '@/hooks/use-github-diff';
 import { User, AtSign, Image as ImageIcon, Save, ArrowLeft, Check, Github } from 'lucide-react';
 import Link from 'next/link';
+import ConfigSection from '@/components/ui/ConfigSection';
+
+// 表单字段组件，适配 Ant Design Form
+interface SettingsFormFieldProps {
+  name: string;
+  label: string;
+  icon: React.ReactNode;
+  placeholder?: string;
+  extra?: string;
+  rules?: Rule[];
+  children?: React.ReactNode;
+}
+
+function SettingsFormField({
+  name,
+  label,
+  icon,
+  placeholder,
+  extra,
+  rules,
+  children,
+}: SettingsFormFieldProps) {
+  return (
+    <Form.Item
+      name={name}
+      label={
+        <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
+          <div className="w-6 h-6 bg-zinc-100 rounded-lg flex items-center justify-center">
+            {icon}
+          </div>
+          {label}
+        </div>
+      }
+      extra={extra && <span className="text-xs text-zinc-400">{extra}</span>}
+      rules={rules}
+    >
+      {children || (
+        <Input
+          placeholder={placeholder}
+          className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
+          allowClear
+        />
+      )}
+    </Form.Item>
+  );
+}
 
 export default function SettingsPage() {
   const { user, refresh } = useAuth();
@@ -82,6 +129,48 @@ export default function SettingsPage() {
 
   const avatarUrl = Form.useWatch('avatarUrl', form);
 
+  // 同步头像到 GitHub
+  const handleSyncAvatarToGithub = async () => {
+    const avatarUrlValue = form.getFieldValue('avatarUrl') || '';
+
+    if (!user?.uid) {
+      showError('用户 ID 不存在');
+      return;
+    }
+
+    try {
+      const configResult = await getFileFromGithub(githubRepo!, githubToken!, 'config.json');
+      const configContent = configResult?.content || '{}';
+      const config = JSON.parse(configContent);
+
+      const newUsers = {
+        ...config.users,
+        [user.uid]: {
+          ...config.users?.[user.uid],
+          avatar: avatarUrlValue,
+        },
+      };
+      const newConfigContent = JSON.stringify({ ...config, users: newUsers }, null, 2);
+
+      showDiff({
+        filePath: 'config.json',
+        oldContent: configContent,
+        newContent: newConfigContent,
+        onSubmit: async () => {
+          await updateFileInGithub({
+            repo: githubRepo!,
+            token: githubToken!,
+            path: 'config.json',
+            content: newConfigContent,
+            message: `chore: update avatar for user ${user.name || user.uid}`,
+          });
+        },
+      });
+    } catch {
+      showError('同步失败');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#fafafa]">
       <div className="p-6 md:p-10 max-w-2xl mx-auto">
@@ -127,7 +216,7 @@ export default function SettingsPage() {
         </div>
 
         {/* 表单卡片 */}
-        <div className="bg-white rounded-2xl border border-zinc-100 p-8">
+        <ConfigSection title={t('settings.title')} color="bg-zinc-500" className="p-8">
           <Form
             form={form}
             layout="vertical"
@@ -135,17 +224,12 @@ export default function SettingsPage() {
             initialValues={{ avatarUrl: '', username: '', displayName: '' }}
             requiredMark={false}
           >
-            <Form.Item
+            <SettingsFormField
               name="avatarUrl"
-              label={
-                <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
-                  <div className="w-6 h-6 bg-zinc-100 rounded-lg flex items-center justify-center">
-                    <ImageIcon size={12} className="text-zinc-500" />
-                  </div>
-                  {t('settings.avatarUrl')}
-                </div>
-              }
-              extra={<span className="text-xs text-zinc-400">{t('settings.avatarUrlHint')}</span>}
+              label={t('settings.avatarUrl')}
+              icon={<ImageIcon size={12} className="text-zinc-500" />}
+              placeholder={t('settings.avatarUrlPlaceholder')}
+              extra={t('settings.avatarUrlHint')}
             >
               <div className="flex gap-2">
                 <Input
@@ -156,46 +240,7 @@ export default function SettingsPage() {
                 {githubRepo && githubToken && (
                   <Button
                     icon={<Github size={14} />}
-                    onClick={async () => {
-                      const avatarUrl = form.getFieldValue('avatarUrl') || '';
-                      
-                      if (!user?.uid) {
-                        showError('用户 ID 不存在');
-                        return;
-                      }
-
-                      try {
-                        const configResult = await getFileFromGithub(githubRepo, githubToken, 'config.json');
-                        const configContent = configResult?.content || '{}';
-                        const config = JSON.parse(configContent);
-                        
-                        const newUsers = {
-                          ...config.users,
-                          [user.uid]: {
-                            ...config.users?.[user.uid],
-                            avatar: avatarUrl,
-                          },
-                        };
-                        const newConfigContent = JSON.stringify({ ...config, users: newUsers }, null, 2);
-
-                        showDiff({
-                          filePath: 'config.json',
-                          oldContent: configContent,
-                          newContent: newConfigContent,
-                          onSubmit: async () => {
-                            await updateFileInGithub({
-                              repo: githubRepo,
-                              token: githubToken,
-                              path: 'config.json',
-                              content: newConfigContent,
-                              message: `chore: update avatar for user ${user.name || user.uid}`,
-                            });
-                          },
-                        });
-                      } catch {
-                        showError('同步失败');
-                      }
-                    }}
+                    onClick={handleSyncAvatarToGithub}
                     loading={loadingRemote}
                     className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300"
                   >
@@ -203,18 +248,13 @@ export default function SettingsPage() {
                   </Button>
                 )}
               </div>
-            </Form.Item>
+            </SettingsFormField>
 
-            <Form.Item
+            <SettingsFormField
               name="username"
-              label={
-                <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
-                  <div className="w-6 h-6 bg-zinc-100 rounded-lg flex items-center justify-center">
-                    <AtSign size={12} className="text-zinc-500" />
-                  </div>
-                  {t('settings.username')}
-                </div>
-              }
+              label={t('settings.username')}
+              icon={<AtSign size={12} className="text-zinc-500" />}
+              placeholder={t('settings.usernamePlaceholder')}
               rules={[
                 { required: true, message: t('validation.required') },
                 { min: 3, max: 20, message: t('validation.usernameFormat') },
@@ -225,25 +265,20 @@ export default function SettingsPage() {
                 placeholder={t('settings.usernamePlaceholder')}
                 className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
               />
-            </Form.Item>
+            </SettingsFormField>
 
-            <Form.Item
+            <SettingsFormField
               name="displayName"
-              label={
-                <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
-                  <div className="w-6 h-6 bg-zinc-100 rounded-lg flex items-center justify-center">
-                    <User size={12} className="text-zinc-500" />
-                  </div>
-                  {t('settings.displayName')}
-                </div>
-              }
-              extra={<span className="text-xs text-zinc-400">{t('settings.displayNameHint')}</span>}
+              label={t('settings.displayName')}
+              icon={<User size={12} className="text-zinc-500" />}
+              placeholder={t('settings.displayNamePlaceholder')}
+              extra={t('settings.displayNameHint')}
             >
               <Input
                 placeholder={t('settings.displayNamePlaceholder')}
                 className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
               />
-            </Form.Item>
+            </SettingsFormField>
 
             <Form.Item className="mb-0 pt-2">
               <Button
@@ -258,7 +293,7 @@ export default function SettingsPage() {
               </Button>
             </Form.Item>
           </Form>
-        </div>
+        </ConfigSection>
 
         {DiffModal}
       </div>
