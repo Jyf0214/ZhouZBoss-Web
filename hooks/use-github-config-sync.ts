@@ -45,10 +45,12 @@ export function useGitHubConfigSync({
    * @param initialConfig 初始配置（用于变更检测）
    * @param remoteConfigOverride 可选：运行时覆盖 remoteConfig，用于需要动态获取远程配置的场景
    * @param commitMessage 可选：自定义 Git 提交信息
+   * @param repoOverride 可选：运行时覆盖 repo，用于 settings 页等场景
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSave = useCallback((initialConfig: any, remoteConfigOverride?: string, commitMessage?: string) => {
-    if (!repo) {
+  const handleSave = useCallback((initialConfig: any, remoteConfigOverride?: string, commitMessage?: string, repoOverride?: string) => {
+    const effectiveRepo = repoOverride || repo;
+    if (!effectiveRepo) {
       message.error('GitHub 未配置');
       return;
     }

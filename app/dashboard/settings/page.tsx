@@ -62,10 +62,27 @@ export default function SettingsPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [originalAvatar, setOriginalAvatar] = useState('');
-
-  const githubRepo = process.env.NEXT_PUBLIC_GITHUB_REPO;
+  const [githubRepo, setGithubRepo] = useState('');
 
   const watchedAvatarUrl = Form.useWatch('avatarUrl', form);
+
+  // 页面加载时从 /api/config 获取 GitHub 仓库地址
+  useEffect(() => {
+    const fetchGithubInfo = async () => {
+      try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data._githubRepo) {
+            setGithubRepo(data._githubRepo);
+          }
+        }
+      } catch {
+        // 静默失败，仓库地址保持为空
+      }
+    };
+    fetchGithubInfo();
+  }, []);
 
   // 头像自定义转换函数：修改 users[uid].avatar 字段
   const avatarCustomTransform = useCallback(
@@ -156,23 +173,30 @@ export default function SettingsPage() {
       const newAvatar = values.avatarUrl || '';
       const avatarChanged = newAvatar !== originalAvatar;
 
-      if (avatarChanged && uid && githubRepo) {
-        // 获取远程 config.yaml
+      if (avatarChanged && uid) {
+        // 获取远程 config.yaml（含 _githubRepo）
         const configRes = await fetch('/api/config');
         if (!configRes.ok) throw new Error('读取配置失败');
         const configData = await configRes.json();
+
+        const effectiveRepo = githubRepo || configData._githubRepo || '';
+        if (!effectiveRepo) {
+          message.error('GitHub 未配置，无法同步头像');
+          return;
+        }
+
         const remoteRaw = configData._remoteConfig || '';
         if (!remoteRaw) throw new Error('远程配置为空');
 
         // 释放 loading——用户需要通过 Diff Modal 确认
         setLoading(false);
 
-        // 使用 useGitHubConfigSync 的 handleSave（含变更检测、diff 展示、提交）
-        // _ts 确保 initialConfig !== currentConfig，绕过钩子内置变更检测（已在外部完成）
+        // 使用 useGitHubConfigSync 的 handleSave（含 diff 展示、提交）
         syncAvatar(
           { avatarUrl: originalAvatar, _uid: uid, _ts: Date.now() },
           remoteRaw,
           `chore: update avatar for user ${user?.name || uid}`,
+          effectiveRepo,
         );
       } else {
         message.success(t('settings.saveSuccess'));
