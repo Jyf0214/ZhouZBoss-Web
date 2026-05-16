@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Users, UserCircle } from 'lucide-react';
@@ -33,81 +33,104 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const { t } = useI18n();
 
-  const filteredFaces = faces.filter((f) => {
-    const matchesSearch = !searchTerm ||
-      f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesGroup = !activeGroup ||
-      f.slug.startsWith(activeGroup === '/' ? '/' : activeGroup + '/');
-    return matchesSearch && matchesGroup;
-  });
+  const groupNames = useMemo(
+    () => (Array.isArray(groups) ? [...new Set(groups.map((g) => g.groupName).filter(Boolean))] as string[] : []),
+    [groups]
+  );
 
-  const groupNames = Array.isArray(groups) ? [...new Set(groups.map((g) => g.groupName).filter(Boolean))] as string[] : [];
+  const filteredFaces = useMemo(() => {
+    return faces.filter((f) => {
+      const matchesSearch =
+        !searchTerm ||
+        f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        f.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      let matchesGroup = true;
+      if (activeGroup) {
+        const faceGroup = f.slug.split('/').filter(Boolean)[0] || null;
+        matchesGroup = faceGroup === activeGroup;
+      }
+
+      return matchesSearch && matchesGroup;
+    });
+  }, [faces, searchTerm, activeGroup]);
 
   return (
     <div>
-      {/* 搜索 */}
-      <div className="flex flex-wrap gap-4 mb-10">
+      {/* 搜索框 */}
+      <div className="flex flex-wrap gap-4 mb-8">
         <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none transition-colors" size={20} />
           <Input
             placeholder={t('faces.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-12 h-12 text-base w-full rounded-2xl bg-white border-zinc-200"
+            className="pl-12 h-12 text-base w-full rounded-3xl bg-white border-zinc-200 hover:border-zinc-300 focus:border-zinc-400 transition-colors"
             size="large"
             variant="outlined"
+            prefix={<span className="w-3" />}
           />
         </div>
       </div>
 
-      {/* 分组标签 */}
+      {/* 分组标签 + 数量统计 */}
       {groupNames.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-8">
-          <button
+        <div className="flex flex-wrap items-center gap-2 mb-8">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setActiveGroup(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
               activeGroup === null
-                ? 'bg-zinc-900 text-white'
-                : 'bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300'
+                ? 'bg-zinc-900 text-white shadow-md shadow-zinc-900/20'
+                : 'bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300 hover:shadow-sm'
             }`}
           >
             {t('faces.allFaces')}
-          </button>
+          </motion.button>
           {groupNames.map((name) => (
-            <button
+            <motion.button
               key={name}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setActiveGroup(name)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 activeGroup === name
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300'
+                  ? 'bg-zinc-900 text-white shadow-md shadow-zinc-900/20'
+                  : 'bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300 hover:shadow-sm'
               }`}
             >
               {name}
-            </button>
+            </motion.button>
           ))}
         </div>
       )}
 
+      {/* 联系人数量统计 */}
+      <div className="mb-6 text-sm text-zinc-500">
+        {filteredFaces.length} {t('faces.contacts')}
+      </div>
+
       {/* 联系人卡片列表 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <AnimatePresence>
+        <AnimatePresence mode="popLayout">
           {filteredFaces.map((face) => (
             <motion.div
               key={face.slug}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="group bg-white rounded-3xl border border-zinc-100 overflow-hidden hover:border-zinc-300 hover:shadow-lg transition-all duration-300"
+              transition={{ duration: 0.2 }}
+              className="group bg-white rounded-3xl border border-zinc-100 overflow-hidden hover:shadow-xl hover:shadow-zinc-200/50 hover:-translate-y-1 transition-all duration-300"
             >
               <Link href={`/faces${face.slug}`} className="block p-6">
                 {/* 头像 */}
-                <div className="w-20 h-20 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-zinc-100 group-hover:border-zinc-300 transition-colors">
-                  <UserCircle size={40} className="text-zinc-300 group-hover:text-zinc-400 transition-colors" />
+                <div className="w-20 h-20 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-zinc-100 group-hover:border-zinc-200 group-hover:from-zinc-200 group-hover:to-zinc-100 transition-all duration-300">
+                  <UserCircle size={40} className="text-zinc-300 group-hover:text-zinc-500 transition-colors duration-300" />
                 </div>
                 {/* 姓名 */}
-                <h3 className="text-xl font-bold text-zinc-900 text-center mb-2 group-hover:text-zinc-600 transition-colors">
+                <h3 className="text-lg font-bold text-zinc-900 text-center mb-2 group-hover:text-zinc-600 transition-colors duration-300">
                   {face.title}
                 </h3>
                 {/* 描述 */}
@@ -122,7 +145,7 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
                     {face.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
-                        className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 bg-zinc-50 px-2 py-0.5 rounded-full"
+                        className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 bg-zinc-50 px-2.5 py-1 rounded-3xl group-hover:bg-zinc-100 transition-colors duration-300"
                       >
                         {tag}
                       </span>
@@ -135,15 +158,24 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
         </AnimatePresence>
       </div>
 
-      {filteredFaces.length === 0 && (
-        <div className="py-32 text-center bg-white rounded-[3rem] border border-zinc-100 shadow-sm">
-          <div className="w-24 h-24 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-6 text-zinc-300">
-            <Users size={40} />
-          </div>
-          <h3 className="text-2xl font-black text-zinc-900 mb-2">{t('faces.noFaces')}</h3>
-          <p className="text-zinc-400 font-medium">{t('faces.noFacesHint')}</p>
-        </div>
-      )}
+      {/* 空状态 */}
+      <AnimatePresence>
+        {filteredFaces.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="py-20 text-center bg-white rounded-3xl border border-zinc-100"
+          >
+            <div className="w-24 h-24 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-300">
+              <Users size={40} />
+            </div>
+            <h3 className="text-xl font-bold text-zinc-900 mb-2">{t('faces.noFaces')}</h3>
+            <p className="text-zinc-400">{t('faces.noFacesHint')}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
