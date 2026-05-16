@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { getUserAvatarAsync } from '@/lib/config';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/auth/me');
 
 /**
  * Get current user info from session
@@ -11,19 +14,23 @@ export async function GET() {
   const session = await getSession();
   
   if (!session) {
+    logger.warn('GET', '未认证');
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
   try {
+    logger.info('GET', '获取当前用户信息');
     const db = getDb();
     const userStr = await db.get(`user:uid:${session.uid}`);
     if (!userStr) {
+      logger.warn('GET', '用户不存在', { uid: session.uid });
       return NextResponse.json({ authenticated: false, error: 'User not found' }, { status: 401 });
     }
 
     const user = JSON.parse(userStr);
     const avatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo');
     
+    logger.info('GET', '获取用户信息成功', { uid: session.uid });
     return NextResponse.json({
       authenticated: true,
       user: {
@@ -36,7 +43,7 @@ export async function GET() {
       }
     });
   } catch (error) {
-    console.error('Me error:', error);
+    logger.error('GET', '获取用户信息失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ authenticated: false, error: 'Internal server error' }, { status: 500 });
   }
 }

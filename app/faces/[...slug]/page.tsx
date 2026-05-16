@@ -56,9 +56,9 @@ export default function FaceDetailPage() {
   }));
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
+      <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
         {/* 面包屑 */}
         <nav className="flex items-center gap-2 text-sm text-zinc-400 mb-8 flex-wrap">
           <Link href="/faces" className="hover:text-zinc-900 transition-colors flex items-center gap-1">
@@ -82,16 +82,16 @@ export default function FaceDetailPage() {
         {/* 联系人信息 */}
         <article>
           <header className="mb-12 text-center">
-            <div className="w-32 h-32 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-zinc-100">
+            <div className="w-32 h-32 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-zinc-100">
               <span className="text-5xl font-black text-zinc-200">
                 {file.meta.title.charAt(0)}
               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-display font-black tracking-tight text-zinc-900 mb-4">
+            <h1 className="text-2xl font-bold text-zinc-900 mb-4">
               {file.meta.title}
             </h1>
             {file.meta.description && (
-              <p className="text-zinc-400 text-lg">{file.meta.description}</p>
+              <p className="text-sm text-zinc-400">{file.meta.description}</p>
             )}
             {file.meta.tags && file.meta.tags.length > 0 && (
               <div className="flex flex-wrap justify-center gap-2 mt-4">

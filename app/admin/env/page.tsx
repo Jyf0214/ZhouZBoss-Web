@@ -117,18 +117,18 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const progressPercent = summary.total > 0 ? Math.round((summary.set / summary.total) * 100) : 0;
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto">
+    <div className="p-6 md:p-10 max-w-4xl mx-auto bg-zinc-50">
       {/* 页面标题 */}
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-lg shadow-zinc-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center">
             <Server size={22} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
+            <h1 className="text-2xl font-bold text-zinc-900">
               {t('env.title') || '环境变量状态'}
             </h1>
-            <p className="text-zinc-400 text-sm mt-0.5">
+            <p className="text-zinc-400 text-sm">
               {t('env.subtitle') || '检查系统所需环境变量配置'}
             </p>
           </div>
@@ -136,7 +136,7 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
         <Button
           icon={<RefreshCw size={14} />}
           onClick={fetchEnvStatus}
-          className="rounded-2xl border-zinc-200 hover:border-zinc-300"
+          className="rounded-xl border-zinc-200 hover:border-zinc-300"
         >
           刷新
         </Button>
@@ -144,16 +144,16 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
       {/* 状态概览 */}
       <Card
-        className={`rounded-3xl border-2 mb-5 ${
+        className={`rounded-2xl border mb-4 ${
           summary.isReady
             ? 'border-emerald-100 bg-emerald-50/50'
             : 'border-amber-100 bg-amber-50/50'
         }`}
         bordered={false}
       >
-        <div className="flex items-start gap-5">
+        <div className="flex items-start gap-4">
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+            className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
               summary.isReady ? 'bg-emerald-100' : 'bg-amber-100'
             }`}
           >
@@ -194,22 +194,22 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
       </Card>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        <div className="bg-white rounded-3xl border border-zinc-100 p-4 text-center">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <div className="bg-white rounded-2xl border border-zinc-100 p-4 text-center">
           <div className="text-2xl font-black text-zinc-900">{summary.total}</div>
           <div className="text-xs text-zinc-400 font-medium mt-1">总变量</div>
         </div>
-        <div className="bg-white rounded-3xl border border-zinc-100 p-4 text-center">
+        <div className="bg-white rounded-2xl border border-zinc-100 p-4 text-center">
           <div className="text-2xl font-black text-emerald-600">{summary.set}</div>
           <div className="text-xs text-zinc-400 font-medium mt-1">已设置</div>
         </div>
-        <div className="bg-white rounded-3xl border border-zinc-100 p-4 text-center">
+        <div className="bg-white rounded-2xl border border-zinc-100 p-4 text-center">
           <div className="text-2xl font-black text-red-500">
             {summary.required - summary.requiredSet}
           </div>
           <div className="text-xs text-zinc-400 font-medium mt-1">必需缺失</div>
         </div>
-        <div className="bg-white rounded-3xl border border-zinc-100 p-4 text-center">
+        <div className="bg-white rounded-2xl border border-zinc-100 p-4 text-center">
           <div className="text-2xl font-black text-amber-500">
             {summary.optional - summary.optionalSet}
           </div>
@@ -218,7 +218,7 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
       </div>
 
       {/* 环境变量分组 */}
-      <div className="space-y-5">
+      <div className="space-y-4">
         {Object.entries(groups).map(([key, group]) => {
           const Icon = groupIcons[key] || Server;
           const groupSet = group.variables.filter((v) => v.isSet).length;
@@ -228,7 +228,7 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
           return (
             <Card
               key={key}
-              className="rounded-3xl border border-zinc-100 shadow-sm overflow-hidden"
+              className="rounded-2xl border border-zinc-100 overflow-hidden"
               bordered={false}
               styles={{ body: { padding: 0 } }}
             >
@@ -238,7 +238,7 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
                 className="w-full flex items-center justify-between px-6 py-4 hover:bg-zinc-50/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-zinc-100 rounded-2xl flex items-center justify-center">
+                  <div className="w-9 h-9 bg-zinc-100 rounded-lg flex items-center justify-center">
                     <Icon size={18} className="text-zinc-600" />
                   </div>
                   <div className="text-left">
@@ -318,8 +318,8 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
       </div>
 
       {/* 提示信息 */}
-      <div className="mt-5 bg-blue-50 border border-blue-100 rounded-3xl p-6 flex items-start gap-3">
-        <div className="w-8 h-8 bg-blue-100 rounded-2xl flex items-center justify-center shrink-0 mt-0.5">
+      <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-3">
+        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
           <span className="text-blue-600 text-sm">💡</span>
         </div>
         <div>

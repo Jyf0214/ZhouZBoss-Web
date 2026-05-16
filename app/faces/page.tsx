@@ -38,7 +38,7 @@ export default function FacesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#f8f8f8]">
+      <div className="min-h-screen flex flex-col bg-zinc-50">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <GlobalLoading size="large" />
@@ -48,13 +48,15 @@ export default function FacesPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8f8f8]">
+    <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12 md:py-20">
-        <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter text-zinc-900 mb-4">
-          {t('nav.faces')}
-        </h1>
-        <p className="text-zinc-400 text-lg mb-12">{t('home.facesDesc', { count: data.faces?.length || 0 })}</p>
+      <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
+        <div className="flex flex-col gap-3 mb-8">
+          <h1 className="text-2xl font-bold text-zinc-900">
+            {t('nav.faces')}
+          </h1>
+          <p className="text-sm text-zinc-400">{t('home.facesDesc', { count: data.faces?.length || 0 })}</p>
+        </div>
         <FacesListClient faces={data.faces || []} groups={data.groups || []} />
       </main>
     </div>

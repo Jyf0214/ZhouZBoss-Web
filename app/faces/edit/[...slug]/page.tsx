@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Trash2, Loader2 } from 'lucide-react';
-import { Button, Form, Input, Popconfirm, message } from 'antd';
+import { ArrowLeft, Save, Trash2 } from 'lucide-react';
+import { Button, Form, Input, Popconfirm, message, Select } from 'antd';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { showError } from '@/lib/error';
 import { editFace, deleteFace } from './actions';
 import type { ContentFile } from '@/types/content';
+import { GlobalLoading } from '@/components/Loading';
+import { Navbar } from '@/components/Navbar';
 
 const { TextArea } = Input;
 
@@ -149,12 +151,10 @@ export default function EditFacePage() {
   /** 加载状态 */
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-zinc-50">
+        <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 size={32} className="animate-spin text-zinc-400" />
-            <p className="text-zinc-400 text-sm">加载中...</p>
-          </div>
+          <GlobalLoading size="large" />
         </div>
       </div>
     );
@@ -166,8 +166,9 @@ export default function EditFacePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
+    <div className="min-h-screen flex flex-col bg-zinc-50">
+      <Navbar />
+      <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
         {/* 面包屑导航 */}
         <nav className="flex items-center gap-2 text-sm text-zinc-400 mb-8 flex-wrap">
           <Link
@@ -189,15 +190,15 @@ export default function EditFacePage() {
         </nav>
 
         {/* 页面标题 */}
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-display font-black tracking-tight text-zinc-900 mb-4">
+        <div className="flex flex-col gap-3 mb-8">
+          <h1 className="text-2xl font-bold text-zinc-900">
             编辑联系人
           </h1>
-          <p className="text-zinc-400 text-lg">修改 {file.meta.title} 的信息</p>
+          <p className="text-sm text-zinc-400">修改 {file.meta.title} 的信息</p>
         </div>
 
         {/* 表单容器 */}
-        <div className="bg-white rounded-3xl border border-zinc-100 p-8 md:p-12">
+        <div className="bg-white rounded-2xl border border-zinc-100 p-6">
           <Form
             form={form}
             layout="vertical"
@@ -217,8 +218,7 @@ export default function EditFacePage() {
               >
                 <Input
                   placeholder={t('auth.usernamePlaceholder')}
-                  className="h-12 rounded-xl"
-                  size="large"
+                  className="h-10 rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
                 />
               </Form.Item>
 
@@ -235,8 +235,7 @@ export default function EditFacePage() {
               >
                 <Input
                   placeholder={t('auth.inputEmailPlaceholder')}
-                  className="h-12 rounded-xl"
-                  size="large"
+                  className="h-10 rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
                 />
               </Form.Item>
             </div>
@@ -253,8 +252,7 @@ export default function EditFacePage() {
               >
                 <Input
                   placeholder={t('article.phonePlaceholder') || 'Phone'}
-                  className="h-12 rounded-xl"
-                  size="large"
+                  className="h-10 rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
                 />
               </Form.Item>
 
@@ -267,16 +265,14 @@ export default function EditFacePage() {
                 name="group"
                 rules={[{ required: true, message: t('validation.required') }]}
               >
-                <select
-                  className="w-full h-12 rounded-xl border border-zinc-200 px-4 text-zinc-900 bg-white focus:outline-none focus:border-zinc-400 transition-colors"
-                  style={{ fontSize: '16px' }}
-                >
-                  {groups.map((group) => (
-                    <option key={group.slug} value={group.groupName}>
-                      {group.title || group.groupName}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  placeholder={t('faces.groupName')}
+                  className="h-10 rounded-lg text-sm"
+                  options={groups.map((group) => ({
+                    value: group.groupName,
+                    label: group.title || group.groupName,
+                  }))}
+                />
               </Form.Item>
             </div>
 
@@ -291,10 +287,9 @@ export default function EditFacePage() {
             >
               <TextArea
                 placeholder={t('editor.contentPlaceholder')}
-                className="rounded-xl min-h-[200px]"
-                size="large"
+                className="rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
                 autoSize={{ minRows: 6 }}
-                style={{ fontSize: '16px', fontFamily: 'inherit' }}
+                style={{ fontFamily: 'inherit', resize: 'vertical' }}
               />
             </Form.Item>
 
@@ -304,7 +299,7 @@ export default function EditFacePage() {
                 <Button
                   type="default"
                   icon={<ArrowLeft size={16} />}
-                  className="h-12 px-6 rounded-xl"
+                  className="h-10 px-6 rounded-xl"
                 >
                   {t('common.back')}
                 </Button>
@@ -324,7 +319,7 @@ export default function EditFacePage() {
                     danger
                     icon={<Trash2 size={16} />}
                     loading={deleting}
-                    className="h-12 px-6 rounded-xl"
+                    className="h-10 px-6 rounded-xl"
                   >
                     {t('common.delete')}
                   </Button>
@@ -335,7 +330,7 @@ export default function EditFacePage() {
                   htmlType="submit"
                   icon={<Save size={16} />}
                   loading={submitting}
-                  className="h-12 px-8 rounded-xl bg-zinc-900 hover:bg-zinc-800"
+                  className="h-10 px-8 rounded-xl bg-zinc-900 hover:bg-zinc-800"
                 >
                   {t('common.save')}
                 </Button>

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-  import { getSession } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/users');
 
 /**
  * Users API
@@ -12,9 +15,11 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
+      logger.warn('GET', '未授权');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    logger.info('GET', '读取用户列表');
     const db = getDb();
     const { searchParams } = new URL(req.url);
     const username = searchParams.get('username');
@@ -25,6 +30,7 @@ export async function GET(req: NextRequest) {
       // Try to find by username (we store email, so extract username from email)
       const userListStr = await db.get('users:all:list');
       if (!userListStr) {
+        logger.warn('GET', '用户不存在', { username });
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
@@ -51,6 +57,7 @@ export async function GET(req: NextRequest) {
       }
 
       if (!userData) {
+        logger.warn('GET', '用户不存在', { username });
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
@@ -61,6 +68,7 @@ export async function GET(req: NextRequest) {
     if (uid) {
       const userStr = await db.get(`user:uid:${uid}`);
       if (!userStr) {
+        logger.warn('GET', '用户不存在', { uid });
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
       const user = JSON.parse(userStr);
@@ -76,6 +84,7 @@ export async function GET(req: NextRequest) {
 
     // List all users (sudo only)
     if (session.role !== 'sudo' && session.role !== 'admin') {
+      logger.warn('GET', '禁止访问', { role: session.role });
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -105,7 +114,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(allUsers);
   } catch (error) {
-    console.error('Users API error:', error);
+    logger.error('GET', '用户API错误', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

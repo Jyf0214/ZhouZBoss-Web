@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession, requireAdmin } from '@/lib/auth';
 import { DELETION_PERIOD_DAYS } from '@/lib/constants';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/recycle-bin');
 
 /**
  * Recycle Bin API
@@ -13,10 +16,12 @@ import { DELETION_PERIOD_DAYS } from '@/lib/constants';
 export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) {
+    logger.warn('GET', '未授权');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
+    logger.info('GET', '读取回收站列表');
     const db = getDb();
     const index = await db.hgetall('articles:index');
     
@@ -61,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(enrichedPending);
   } catch (error) {
-    console.error('Recycle bin GET error:', error);
+    logger.error('GET', '回收站读取失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -71,22 +76,29 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session) {
+    logger.warn('POST', '未授权');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
+    logger.info('POST', '恢复文章');
     const { id } = await req.json();
     if (!id) {
+      logger.warn('POST', '缺少文章ID');
       return NextResponse.json({ error: 'Article ID required' }, { status: 400 });
     }
 
     const db = getDb();
     const articleStr = await db.get(`article:data:${id}`);
     if (!articleStr) {
+      logger.warn('POST', '文章不存在', { id });
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
     const article = JSON.parse(articleStr);
     if (article.status !== 'pending_deletion') {
+      logger.warn('POST', '文章不在回收站中', { id, status: article.status });
       return NextResponse.json({ error: 'Article is not in recycle bin' }, { status: 400 });
     }
 
@@ -96,6 +108,7 @@ export async function POST(req: NextRequest) {
     const periodMs = DELETION_PERIOD_DAYS * 24 * 60 * 60 * 1000;
     
     if (now > requestedAt + periodMs) {
+      logger.warn('POST', '恢复期已过期', { id });
       return NextResponse.json({ error: 'Restoration period expired' }, { status: 400 });
     }
 
@@ -110,9 +123,10 @@ export async function POST(req: NextRequest) {
     await db.set(`article:data:${id}`, JSON.stringify(restored));
     await db.hset('articles:index', id, JSON.stringify(restored));
 
+    logger.info('POST', '文章恢复成功', { id });
     return NextResponse.json({ success: true, message: 'Article restored' });
   } catch (error) {
-    console.error('Restore article error:', error);
+    logger.error('POST', '恢复文章失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -123,18 +137,22 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    logger.warn('DELETE', '未授权');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
+    logger.info('DELETE', '永久删除文章');
     const { id } = await req.json();
     if (!id) {
+      logger.warn('DELETE', '缺少文章ID');
       return NextResponse.json({ error: 'Article ID required' }, { status: 400 });
     }
 
     const db = getDb();
     const articleStr = await db.get(`article:data:${id}`);
     if (!articleStr) {
+      logger.warn('DELETE', '文章不存在', { id });
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
@@ -142,6 +160,7 @@ export async function DELETE(req: NextRequest) {
 
     // Only delete if in pending_deletion status or user is sudo
     if (article.status !== 'pending_deletion' && session.role !== 'sudo') {
+      logger.warn('DELETE', '无法删除文章', { id, status: article.status });
       return NextResponse.json({ error: 'Cannot delete this article' }, { status: 400 });
     }
 
@@ -150,9 +169,10 @@ export async function DELETE(req: NextRequest) {
     await db.hdel('articles:index', id);
     await db.del(`file:articles/${id}.md`);
 
+    logger.info('DELETE', '文章永久删除成功', { id });
     return NextResponse.json({ success: true, message: 'Permanently deleted' });
   } catch (error) {
-    console.error('Permanent delete error:', error);
+    logger.error('DELETE', '永久删除失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

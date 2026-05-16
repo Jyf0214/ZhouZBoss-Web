@@ -5,8 +5,6 @@ import { GitHubDiffModal } from '@/components/GitHubDiff';
 
 interface UseGitHubDiffOptions {
   repo: string;
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
 }
 
 interface DiffParams {
@@ -16,7 +14,7 @@ interface DiffParams {
   onSubmit: () => Promise<void>;
 }
 
-export function useGitHubDiff({ repo, onSuccess, onError }: UseGitHubDiffOptions) {
+export function useGitHubDiff({ repo }: UseGitHubDiffOptions) {
   const [modalData, setModalData] = useState<DiffParams | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -34,13 +32,14 @@ export function useGitHubDiff({ repo, onSuccess, onError }: UseGitHubDiffOptions
     try {
       await modalData.onSubmit();
       hideDiff();
-      onSuccess?.();
+      // onSuccess 由 onSubmit 内部处理，这里不再重复调用
     } catch (error) {
-      onError?.(error instanceof Error ? error : new Error('同步失败'));
+      // onError 由 onSubmit 内部处理，这里仅做日志
+      console.error('[GitHubDiff] 提交失败:', error);
     } finally {
       setLoading(false);
     }
-  }, [modalData, hideDiff, onSuccess, onError]);
+  }, [modalData, hideDiff]);
 
   const DiffModal = modalData ? (
     <GitHubDiffModal

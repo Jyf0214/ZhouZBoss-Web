@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, storage } from '@/lib/db';
 import { loadConfig } from '@/lib/config';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/u/[username]/[articleId]');
 
 /**
  * Dynamic User Article Route API
@@ -13,6 +16,7 @@ export async function GET(
 ) {
   try {
     const { username, articleId } = await params;
+    logger.info('GET', '读取用户文章', { username, articleId });
     const db = getDb();
     const config = loadConfig();
 
@@ -22,6 +26,7 @@ export async function GET(
       // Try to find by UID directly
       const directUser = await db.get(`user:uid:${username}`);
       if (!directUser) {
+        logger.warn('GET', '用户不存在', { username });
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
       userStr = directUser;
@@ -35,6 +40,7 @@ export async function GET(
     // Find article by ID
     const articleStr = await db.get(`article:data:${articleId}`);
     if (!articleStr) {
+      logger.warn('GET', '文章不存在', { articleId });
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
@@ -42,11 +48,13 @@ export async function GET(
 
     // Check if article belongs to this user
     if (article.authorId !== user.uid) {
+      logger.warn('GET', '文章不属于该用户', { articleId, authorId: article.authorId, uid: user.uid });
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
     // Check if article is published
     if (article.status !== 'published') {
+      logger.warn('GET', '文章未发布', { articleId, status: article.status });
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
@@ -62,6 +70,7 @@ export async function GET(
       rawContent = '';
     }
 
+    logger.info('GET', '文章读取成功', { articleId });
     return NextResponse.json({
       id: article.id,
       title: article.title,
@@ -79,7 +88,7 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error('User article API error:', error);
+    logger.error('GET', '用户文章API错误', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

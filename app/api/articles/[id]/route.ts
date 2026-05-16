@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { getDraft, saveDraft, deleteDraft } from '@/lib/draft-storage';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/articles/[id]');
 
 /**
  * Article Detail API (GET, PATCH, DELETE)
@@ -18,6 +21,7 @@ export async function GET(
   const { id } = await params;
 
   try {
+    logger.info('GET', '读取文章详情', { id });
     const db = getDb();
 
     // 1. 先查数据库（草稿或已发布的备份元数据）
@@ -78,7 +82,7 @@ export async function GET(
 
     return NextResponse.json({ error: '文章不存在' }, { status: 404 });
   } catch (error) {
-    console.error(JSON.stringify({ type: 'get_article_error', message: (error as Error).message }));
+    logger.error('GET', '获取文章失败', { error: (error as Error).message });
     return NextResponse.json({ error: '获取文章失败' }, { status: 500 });
   }
 }
@@ -89,19 +93,27 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (!session) {
+    logger.warn('PATCH', '未登录');
+    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  }
 
   try {
+    logger.info('PATCH', '更新文章', { id });
     const body = await req.json();
     const db = getDb();
     const metaStr = await db.get(`article:data:${id}`);
 
-    if (!metaStr) return NextResponse.json({ error: '文章不存在' }, { status: 404 });
+    if (!metaStr) {
+      logger.warn('PATCH', '文章不存在', { id });
+      return NextResponse.json({ error: '文章不存在' }, { status: 404 });
+    }
 
     const meta = JSON.parse(metaStr);
 
     // 权限检查
     if (meta.authorId !== session.uid && session.role !== 'admin' && session.role !== 'sudo') {
+      logger.warn('PATCH', '无权限', { id, uid: session.uid });
       return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 
@@ -163,7 +175,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(JSON.stringify({ type: 'update_article_error', message: (error as Error).message }));
+    logger.error('PATCH', '更新文章失败', { error: (error as Error).message });
     return NextResponse.json({ error: '更新文章失败' }, { status: 500 });
   }
 }
@@ -174,13 +186,20 @@ export async function DELETE(
 ) {
   const { id } = await params;
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (!session) {
+    logger.warn('DELETE', '未登录');
+    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  }
 
   try {
+    logger.info('DELETE', '删除文章', { id });
     const db = getDb();
     const metaStr = await db.get(`article:data:${id}`);
 
-    if (!metaStr) return NextResponse.json({ error: '文章不存在' }, { status: 404 });
+    if (!metaStr) {
+      logger.warn('DELETE', '文章不存在', { id });
+      return NextResponse.json({ error: '文章不存在' }, { status: 404 });
+    }
 
     const meta = JSON.parse(metaStr);
 
@@ -216,6 +235,7 @@ export async function DELETE(
 
     // 普通用户：进入删除队列
     if (meta.authorId !== session.uid) {
+      logger.warn('DELETE', '无权限', { id, uid: session.uid });
       return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 
@@ -230,7 +250,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: '已提交删除申请，30天后自动删除' });
   } catch (error) {
-    console.error(JSON.stringify({ type: 'delete_article_error', message: (error as Error).message }));
+    logger.error('DELETE', '删除文章失败', { error: (error as Error).message });
     return NextResponse.json({ error: '删除文章失败' }, { status: 500 });
   }
 }

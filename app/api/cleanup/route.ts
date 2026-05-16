@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { DELETION_PERIOD_DAYS } from '@/lib/constants';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/cleanup');
 
 /**
  * Cleanup Cron Job API
@@ -22,9 +25,11 @@ export async function POST(req: NextRequest) {
       (cronSecret && expectedSecret && cronSecret === expectedSecret);
     
     if (!isAuthorized) {
+      logger.warn('POST', '未授权');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    logger.info('POST', '执行清理任务');
     const db = getDb();
     const index = await db.hgetall('articles:index');
     
@@ -55,6 +60,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    logger.info('POST', '清理任务完成', { deletedCount: deleted.length, errorCount: errors.length });
     return NextResponse.json({
       success: true,
       message: `Cleanup completed. Deleted ${deleted.length} articles.`,
@@ -63,7 +69,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString(),
   });
   } catch (error: unknown) {
-  console.error('Cleanup cron error:', error);
+  logger.error('POST', '清理任务失败', { error: error instanceof Error ? error.message : String(error) });
   return NextResponse.json({
   error: 'Internal server error',
   details: error instanceof Error ? error.message : String(error)
@@ -78,9 +84,11 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+      logger.warn('GET', '未授权');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    logger.info('GET', '获取清理统计');
     const db = getDb();
     const index = await db.hgetall('articles:index');
     
@@ -109,6 +117,7 @@ export async function GET() {
       }
     }
 
+    logger.info('GET', '清理统计获取成功', { pendingDeletion, expiringSoon, expired });
     return NextResponse.json({
       pendingDeletion,
       expiringSoon,
@@ -116,7 +125,7 @@ export async function GET() {
       deletionPeriodDays: DELETION_PERIOD_DAYS,
   });
   } catch (error: unknown) {
-  console.error('Cleanup stats error:', error);
+  logger.error('GET', '获取清理统计失败', { error: error instanceof Error ? error.message : String(error) });
   return NextResponse.json({
   error: 'Internal server error',
   details: error instanceof Error ? error.message : String(error)

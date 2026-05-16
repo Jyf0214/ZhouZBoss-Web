@@ -17,6 +17,7 @@ import LoadingAnimationConfig from '@/components/ui/LoadingAnimationConfig';
 import AccessControlSection from '@/components/ui/AccessControlSection';
 import BackgroundConfig from '@/components/ui/BackgroundConfig';
 import GitHubStatus from '@/components/ui/GitHubStatus';
+import yaml from 'js-yaml';
 
 type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
 type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -97,8 +98,6 @@ export default function ConfigPage() {
 
   const { showDiff, DiffModal } = useGitHubDiff({
     repo: githubRepo,
-    onSuccess: () => message.success(t('config.saveSuccess')),
-    onError: (error) => showError(`${t('config.saveFailed')}: ${error.message}`),
   });
 
   useEffect(() => {
@@ -171,23 +170,31 @@ export default function ConfigPage() {
       return;
     }
 
-    const newContent = JSON.stringify(config, null, 2);
+    console.warn('[Config] 开始保存配置至 GitHub');
+    const yamlContent = yaml.dump(config, { lineWidth: -1 });
+    console.warn('[Config] 配置已转换为 YAML 格式');
+
     showDiff({
       filePath: 'config.yaml',
       oldContent: remoteConfig,
-      newContent,
+      newContent: yamlContent,
       onSubmit: async () => {
+        console.warn('[Config] 用户确认提交，开始推送至 GitHub');
         setSaving(true);
         try {
           await updateFileInGithub({
             repo: githubRepo,
             token: githubToken,
             path: 'config.yaml',
-            content: newContent,
+            content: yamlContent,
             message: 'chore: update config from admin panel',
           });
-          setRemoteConfig(newContent);
+          setRemoteConfig(yamlContent);
+          console.warn('[Config] 配置已成功推送至 GitHub');
+          message.success(t('config.saveSuccess') || '配置已成功保存至 GitHub');
         } catch (error) {
+          console.error('[Config] 推送配置至 GitHub 失败:', error);
+          showError(`${t('config.saveFailed') || '保存失败'}: ${error instanceof Error ? error.message : '未知错误'}`);
           throw error;
         } finally {
           setSaving(false);
@@ -270,7 +277,7 @@ export default function ConfigPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-4">
+    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-4 bg-zinc-50">
       {/* 标题 */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center">

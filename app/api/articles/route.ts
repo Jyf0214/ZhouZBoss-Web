@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { getDraft, saveDraft } from '@/lib/draft-storage';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/articles');
 
 /**
  * Articles API
@@ -22,6 +25,7 @@ async function getDraftsFromDb() {
 
 export async function GET() {
   try {
+    logger.info('GET', '读取文章列表');
     // 已发布文章：从 posts/ 文件系统索引读取（由 lib/content.ts 在构建时生成）
     const { getContentFiles } = await import('@/lib/content');
     const publishedFiles = getContentFiles('posts');
@@ -58,7 +62,7 @@ export async function GET() {
 
     return NextResponse.json(all);
   } catch (error) {
-    console.error(JSON.stringify({ type: 'list_articles_error', message: (error as Error).message }));
+    logger.error('GET', '获取文章列表失败', { error: (error as Error).message });
     return NextResponse.json({ error: '获取文章列表失败' }, { status: 500 });
   }
 }
@@ -66,10 +70,12 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) {
+    logger.warn('POST', '未登录');
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
   try {
+    logger.info('POST', '创建文章');
     const { title, content, tags, coverImage, status, slug, description } = await req.json();
     const id = `draft-${Date.now().toString(36)}`;
     const now = new Date().toISOString();
@@ -137,7 +143,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, id });
   } catch (error) {
-    console.error(JSON.stringify({ type: 'create_article_error', message: (error as Error).message }));
+    logger.error('POST', '创建文章失败', { error: (error as Error).message });
     return NextResponse.json({ error: '创建文章失败' }, { status: 500 });
   }
 }

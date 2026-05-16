@@ -50,18 +50,18 @@ function UserArticleContent() {
   }, [username, article]);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
       <GlobalLoading size="large" />
     </div>
   );
 
   if (!articleData) return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
         <h1 className="text-4xl font-display font-black text-zinc-900 mb-4">{t('error.404')}</h1>
         <p className="text-zinc-500 mb-8">{t('error.notFound')}</p>
-        <Link href="/" className="lobe-button bg-zinc-900 text-white px-8 py-3 rounded-xl">
+        <Link href="/" className="bg-zinc-900 text-white px-8 py-3 rounded-xl hover:bg-zinc-800 transition-colors">
           {t('common.back')}
         </Link>
       </div>
@@ -69,7 +69,7 @@ function UserArticleContent() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
@@ -89,7 +89,7 @@ function UserArticleContent() {
               ))}
             </div>
 
-            <h1 className="text-4xl md:text-7xl font-display font-black tracking-tight text-zinc-900 mb-10 leading-[1.05]">
+            <h1 className="text-5xl md:text-7xl font-display font-black tracking-tight text-zinc-900 mb-10 leading-[1.05]">
               {articleData.title}
             </h1>
 
@@ -127,7 +127,7 @@ function UserArticleContent() {
           </header>
 
           {articleData.coverImage && (
-            <div className="w-full aspect-[21/9] rounded-[2rem] overflow-hidden bg-zinc-50 mb-16 shadow-2xl shadow-zinc-200 relative">
+            <div className="w-full aspect-[21/9] rounded-3xl overflow-hidden bg-zinc-50 mb-16 shadow-2xl shadow-zinc-200 relative">
               <Image
                 src={articleData.coverImage}
                 alt={articleData.title}
@@ -162,7 +162,7 @@ function UserArticleContent() {
 
 export default function UserArticlePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+    <Suspense fallback={<div className="min-h-screen bg-zinc-50" />}>
       <UserArticleContent />
     </Suspense>
   );

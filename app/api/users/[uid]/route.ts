@@ -3,6 +3,9 @@ import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { loadConfig } from '@/lib/config';
 import type { UserRole } from '@/lib/user';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/users/[uid]');
 
 export async function GET(
   req: NextRequest,
@@ -11,14 +14,17 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session) {
+      logger.warn('GET', '未授权');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { uid } = await params;
+    logger.info('GET', '获取用户信息', { uid });
     const db = getDb();
     const userStr = await db.get(`user:uid:${uid}`);
     
     if (!userStr) {
+      logger.warn('GET', '用户不存在', { uid });
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
@@ -26,6 +32,7 @@ export async function GET(
     const config = loadConfig();
     const avatar = config.users?.[uid]?.avatar || config.auth?.admin?.avatar || null;
 
+    logger.info('GET', '获取用户信息成功', { uid });
     return NextResponse.json({
       uid: user.uid,
       name: user.name,
@@ -37,7 +44,7 @@ export async function GET(
       avatar,
     });
   } catch (error) {
-    console.error('User GET error:', error);
+    logger.error('GET', '获取用户失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -49,14 +56,17 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session || (session.role !== 'sudo' && session.role !== 'admin')) {
+      logger.warn('PATCH', '无权限', { role: session?.role });
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { uid } = await params;
+    logger.info('PATCH', '更新用户信息', { uid });
     const db = getDb();
     const userStr = await db.get(`user:uid:${uid}`);
     
     if (!userStr) {
+      logger.warn('PATCH', '用户不存在', { uid });
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
@@ -67,6 +77,7 @@ export async function PATCH(
     if (role !== undefined) {
       const validRoles: UserRole[] = ['user', 'admin', 'sudo'];
       if (!validRoles.includes(role)) {
+        logger.warn('PATCH', '无效角色', { role });
         return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
       }
       user.role = role;
@@ -77,6 +88,7 @@ export async function PATCH(
     }
 
     await db.set(`user:uid:${uid}`, JSON.stringify(user));
+    logger.info('PATCH', '用户更新成功', { uid });
     return NextResponse.json({
       uid: user.uid,
       name: user.name,
@@ -86,7 +98,7 @@ export async function PATCH(
       status: user.status,
     });
   } catch (error) {
-    console.error('User PATCH error:', error);
+    logger.error('PATCH', '更新用户失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

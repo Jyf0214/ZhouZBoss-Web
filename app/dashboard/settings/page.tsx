@@ -49,7 +49,7 @@ function SettingsFormField({
       {children || (
         <Input
           placeholder={placeholder}
-          className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
+          className="!h-10 !rounded-lg !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
           allowClear
         />
       )}
@@ -69,8 +69,6 @@ export default function SettingsPage() {
 
   const { showDiff, DiffModal } = useGitHubDiff({
     repo: githubRepo || '',
-    onSuccess: () => message.success(t('settings.syncSuccess') || '同步成功'),
-    onError: (err) => showError(err.message),
   });
 
   useEffect(() => {
@@ -172,18 +170,18 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa]">
-      <div className="p-6 md:p-10 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-zinc-50">
+      <div className="p-6 md:p-10 max-w-4xl mx-auto">
         {/* 顶部导航 */}
         <div className="flex items-center gap-3 mb-8">
           <Link
             href="/dashboard"
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:border-zinc-300 transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-zinc-100 text-zinc-400 hover:text-zinc-900 hover:border-zinc-300 transition-all"
           >
             <ArrowLeft size={16} />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+            <h1 className="text-2xl font-bold text-zinc-900">
               {t('settings.title')}
             </h1>
             <p className="text-zinc-400 text-sm">{t('settings.subtitle')}</p>
@@ -192,7 +190,7 @@ export default function SettingsPage() {
 
         {/* 用户卡片 */}
         <div className="bg-white rounded-2xl border border-zinc-100 overflow-hidden mb-4">
-          <div className="px-8 pt-8 pb-6">
+          <div className="p-6">
             <div className="flex items-center gap-5">
               <div className="relative">
                 <Avatar
@@ -216,7 +214,7 @@ export default function SettingsPage() {
         </div>
 
         {/* 表单卡片 */}
-        <ConfigSection title={t('settings.title')} color="bg-zinc-500" className="p-8">
+        <ConfigSection title={t('settings.title')} color="bg-zinc-500">
           <Form
             form={form}
             layout="vertical"
@@ -234,7 +232,7 @@ export default function SettingsPage() {
               <div className="flex gap-2">
                 <Input
                   placeholder={t('settings.avatarUrlPlaceholder')}
-                  className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900 flex-1"
+                  className="!h-10 !rounded-lg !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900 flex-1"
                   allowClear
                 />
                 {githubRepo && githubToken && (
@@ -242,7 +240,7 @@ export default function SettingsPage() {
                     icon={<Github size={14} />}
                     onClick={handleSyncAvatarToGithub}
                     loading={loadingRemote}
-                    className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300"
+                    className="!h-10 !rounded-lg !text-sm !border-zinc-200 hover:!border-zinc-300"
                   >
                     {t('settings.syncToGithub') || '同步到 GitHub'}
                   </Button>
@@ -263,7 +261,7 @@ export default function SettingsPage() {
             >
               <Input
                 placeholder={t('settings.usernamePlaceholder')}
-                className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
+                className="!h-10 !rounded-lg !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
               />
             </SettingsFormField>
 
@@ -276,7 +274,7 @@ export default function SettingsPage() {
             >
               <Input
                 placeholder={t('settings.displayNamePlaceholder')}
-                className="!h-11 !rounded-xl !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
+                className="!h-10 !rounded-lg !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
               />
             </SettingsFormField>
 
@@ -287,7 +285,7 @@ export default function SettingsPage() {
                 loading={loading}
                 icon={!loading && <Save size={14} />}
                 block
-                className="!bg-zinc-900 hover:!bg-zinc-800 !h-11 !rounded-xl !text-sm !font-semibold !border-0 shadow-lg shadow-zinc-900/20 hover:shadow-xl hover:shadow-zinc-900/25 transition-all"
+                className="!bg-zinc-900 hover:!bg-zinc-800 !h-10 !rounded-lg !text-sm !font-semibold !border-0 shadow-sm transition-all"
               >
                 {t('common.save')}
               </Button>

@@ -4,12 +4,16 @@ import { createSession } from '@/lib/auth';
 import { getUserAvatarAsync } from '@/lib/config';
 import { verifyPassword, hashPassword } from '@/lib/hash';
 import { ensureAdminUser } from '@/lib/db-init';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/auth/login');
 
 export async function POST(req: NextRequest) {
   try {
     const { login, password } = await req.json();
 
     if (!login || !password) {
+      logger.warn('POST', '缺少登录信息或密码');
       return NextResponse.json({ error: '缺少登录信息或密码' }, { status: 400 });
     }
 
@@ -39,15 +43,17 @@ export async function POST(req: NextRequest) {
         }
       }
     } else {
-      console.warn('[登录] 用户已存在，跳过自动初始化');
+      logger.info('POST', '用户已存在，跳过自动初始化', { login });
     }
 
     if (!uid) {
+      logger.warn('POST', '账号或密码错误', { login });
       return NextResponse.json({ error: '账号或密码错误' }, { status: 401 });
     }
 
     const userStr = await db.get(`user:uid:${uid}`);
     if (!userStr) {
+      logger.error('POST', '用户数据异常', { uid });
       return NextResponse.json({ error: '用户数据异常' }, { status: 500 });
     }
 
@@ -56,6 +62,7 @@ export async function POST(req: NextRequest) {
     const passwordMatch = await verifyPassword(password, user.password);
     
     if (!passwordMatch) {
+      logger.warn('POST', '账号或密码错误', { login });
       return NextResponse.json({ error: '账号或密码错误' }, { status: 401 });
     }
 
@@ -64,7 +71,7 @@ export async function POST(req: NextRequest) {
         user.password = await hashPassword(password);
         await db.set(`user:uid:${user.uid}`, JSON.stringify(user));
       } catch {
-        console.error('密码哈希升级失败:', user.uid);
+        logger.warn('POST', '密码哈希升级失败', { uid: user.uid });
       }
     }
 
@@ -77,6 +84,7 @@ export async function POST(req: NextRequest) {
       userGroup: user.userGroup,
     });
 
+    logger.info('POST', '登录成功', { uid: user.uid });
     return NextResponse.json({
       success: true,
       user: {
@@ -90,7 +98,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(JSON.stringify({ type: 'login_error', message }));
+    logger.error('POST', '登录失败', { message });
     return NextResponse.json({ error: '登录失败' }, { status: 500 });
   }
 }

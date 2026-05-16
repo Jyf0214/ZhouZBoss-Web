@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getContentFile } from '@/lib/content';
 import { loadConfigAsync, canAccess, hasDatabase } from '@/lib/config';
 import { getSession } from '@/lib/auth';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/faces/[...slug]');
 
 export async function GET(
   req: NextRequest,
@@ -9,6 +12,7 @@ export async function GET(
 ) {
   const { slug } = await params;
   const fullPath = '/' + slug.join('/');
+  logger.info('GET', '读取联系人详情', { fullPath });
   
   const config = await loadConfigAsync();
   const session = await getSession();
@@ -19,6 +23,7 @@ export async function GET(
   const file = getContentFile('faces', fullPath);
 
   if (!file) {
+    logger.warn('GET', '联系人不存在', { fullPath });
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
@@ -31,9 +36,11 @@ export async function GET(
   );
 
   if (!isAccessible) {
+    logger.warn('GET', '无权访问联系人', { fullPath });
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  logger.info('GET', '联系人读取成功', { fullPath });
   // 返回联系人数据，包含原始 Markdown 内容
   return NextResponse.json({
     ...file,

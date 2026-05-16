@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { getContentFiles, getContentIndexes } from '@/lib/content';
 import { loadConfigAsync, canAccess, hasDatabase } from '@/lib/config';
 import { getSession } from '@/lib/auth';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/diary');
 
 /**
  * 日记列表 API
@@ -12,9 +15,11 @@ export async function GET() {
   const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
 
   if (!isAdmin) {
+    logger.warn('GET', '无权限访问', { role: session?.role });
     return NextResponse.json({ error: '无权限访问' }, { status: 403 });
   }
 
+  logger.info('GET', '读取日记列表');
   const config = await loadConfigAsync();
   const dbAvailable = hasDatabase();
   const allFiles = getContentFiles('diary');

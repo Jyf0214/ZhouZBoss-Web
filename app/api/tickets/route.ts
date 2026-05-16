@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getTicketTemplate, renderTicketBody } from '@/lib/tickets';
 import { getEnvConfig } from '@/lib/env';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/tickets');
 
 /**
  * 创建工单
@@ -11,19 +14,23 @@ import { getEnvConfig } from '@/lib/env';
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) {
+    logger.warn('POST', '未登录');
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
   try {
+    logger.info('POST', '创建工单');
     const { templateSlug, formData, title } = await req.json();
 
     if (!templateSlug || !formData) {
+      logger.warn('POST', '缺少必填字段');
       return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
     }
 
     // 获取模板
     const template = getTicketTemplate(templateSlug);
     if (!template) {
+      logger.warn('POST', '模板不存在', { templateSlug });
       return NextResponse.json({ error: '模板不存在' }, { status: 404 });
     }
 
@@ -50,6 +57,7 @@ export async function POST(req: NextRequest) {
     // 获取 GitHub 配置
     const env = getEnvConfig();
     if (!env.githubRepo || !env.githubToken) {
+      logger.error('POST', 'GitHub 配置缺失');
       return NextResponse.json({ error: 'GitHub 配置缺失' }, { status: 500 });
     }
 
@@ -70,9 +78,10 @@ export async function POST(req: NextRequest) {
     }
     const result = await postRes.json();
 
+    logger.info('POST', '工单创建成功', { slug });
     return NextResponse.json({ success: true, slug, result });
   } catch (error) {
-    console.error(JSON.stringify({ type: 'create_ticket_error', message: (error as Error).message }));
+    logger.error('POST', '创建工单失败', { error: (error as Error).message });
     return NextResponse.json({ error: '创建工单失败' }, { status: 500 });
   }
 }
@@ -86,12 +95,15 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) {
+    logger.warn('GET', '未登录');
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
   try {
+    logger.info('GET', '获取工单列表');
     const env = getEnvConfig();
     if (!env.githubRepo || !env.githubToken) {
+      logger.error('GET', 'GitHub 配置缺失');
       return NextResponse.json({ error: 'GitHub 配置缺失' }, { status: 500 });
     }
 
@@ -139,13 +151,14 @@ export async function GET(req: NextRequest) {
       })
     );
 
+    logger.info('GET', '工单列表获取成功', { count: tickets.filter(Boolean).length });
     return NextResponse.json(tickets.filter(Boolean));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (error.status === 404) {
       return NextResponse.json([]);
     }
-    console.error(JSON.stringify({ type: 'list_tickets_error', message: (error as Error).message }));
+    logger.error('GET', '获取工单列表失败', { error: (error as Error).message });
     return NextResponse.json({ error: '获取工单列表失败' }, { status: 500 });
   }
 }

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/db';
 import { createSession } from '@/lib/auth';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/auth/bind-verify');
 
 /**
  * 验证绑定验证码并完成账户绑定
@@ -10,11 +13,13 @@ export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
+      logger.warn('POST', '未通过 Clerk 登录');
       return NextResponse.json({ error: '请先通过 Clerk 登录' }, { status: 401 });
     }
 
     const { email, code } = await req.json();
     if (!email || !code) {
+      logger.warn('POST', '缺少参数');
       return NextResponse.json({ error: '缺少参数' }, { status: 400 });
     }
 
@@ -23,18 +28,21 @@ export async function POST(req: NextRequest) {
     // 验证验证码
     const storedCode = await db.get(`bind:code:${email}`);
     if (!storedCode || storedCode !== code) {
+      logger.warn('POST', '验证码错误或已过期', { email });
       return NextResponse.json({ error: '验证码错误或已过期' }, { status: 400 });
     }
 
     // 查找用户
     const uid = await db.get(`user:email:${email}`);
     if (!uid) {
+      logger.warn('POST', '用户不存在', { email });
       return NextResponse.json({ error: '用户不存在' }, { status: 404 });
     }
 
     // 获取用户信息
     const userStr = await db.get(`user:uid:${uid}`);
     if (!userStr) {
+      logger.error('POST', '用户数据异常', { uid });
       return NextResponse.json({ error: '用户数据异常' }, { status: 500 });
     }
 
@@ -43,6 +51,7 @@ export async function POST(req: NextRequest) {
     // 检查是否已被其他 Clerk 账户绑定
     const existingBinding = await db.get(`clerk:user:${userId}`);
     if (existingBinding && existingBinding !== uid) {
+      logger.warn('POST', 'Clerk 账户已绑定其他用户', { userId });
       return NextResponse.json({ error: '该 Clerk 账户已绑定其他用户' }, { status: 409 });
     }
 
@@ -75,12 +84,13 @@ export async function POST(req: NextRequest) {
       userGroup: user.userGroup,
     });
 
+    logger.info('POST', '账户绑定成功', { uid: user.uid, email });
     return NextResponse.json({
       success: true,
       user: { uid: user.uid, email: user.email, name: user.name },
     });
   } catch (error) {
-    console.error('Bind verify error:', error);
+    logger.error('POST', '绑定失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '绑定失败' }, { status: 500 });
   }
 }
@@ -92,6 +102,7 @@ export async function DELETE() {
   try {
     const { userId } = await auth();
     if (!userId) {
+      logger.warn('DELETE', '未通过 Clerk 登录');
       return NextResponse.json({ error: '请先通过 Clerk 登录' }, { status: 401 });
     }
 
@@ -100,6 +111,7 @@ export async function DELETE() {
     // 查找绑定关系
     const boundUid = await db.get(`clerk:user:${userId}`);
     if (!boundUid) {
+      logger.warn('DELETE', '未绑定任何账户', { userId });
       return NextResponse.json({ error: '未绑定任何账户' }, { status: 404 });
     }
 
@@ -111,9 +123,10 @@ export async function DELETE() {
     const { deleteSession } = await import('@/lib/auth');
     await deleteSession();
 
+    logger.info('DELETE', '账户解绑成功', { uid: boundUid });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Bind unbind error:', error);
+    logger.error('DELETE', '解绑失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '解绑失败' }, { status: 500 });
   }
 }

@@ -65,8 +65,7 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
             placeholder={t('faces.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-12 h-12 text-base w-full rounded-3xl bg-white border-zinc-200 hover:border-zinc-300 focus:border-zinc-400 transition-colors"
-            size="large"
+            className="pl-12 h-10 text-sm w-full rounded-xl bg-white border-zinc-200 hover:border-zinc-300 focus:border-zinc-900 transition-colors"
             variant="outlined"
             prefix={<span className="w-3" />}
           />
@@ -122,11 +121,11 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="group bg-white rounded-3xl border border-zinc-100 overflow-hidden hover:shadow-xl hover:shadow-zinc-200/50 hover:-translate-y-1 transition-all duration-300"
+              className="group bg-white rounded-2xl border border-zinc-100 p-6 overflow-hidden hover:shadow-xl hover:shadow-zinc-200/50 hover:-translate-y-1 transition-all duration-300"
             >
-              <Link href={`/faces${face.slug}`} className="block p-6">
+              <Link href={`/faces${face.slug}`} className="block">
                 {/* 头像 */}
-                <div className="w-20 h-20 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-zinc-100 group-hover:border-zinc-200 group-hover:from-zinc-200 group-hover:to-zinc-100 transition-all duration-300">
+                <div className="w-20 h-20 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-zinc-100 group-hover:border-zinc-200 group-hover:from-zinc-200 group-hover:to-zinc-100 transition-all duration-300">
                   <UserCircle size={40} className="text-zinc-300 group-hover:text-zinc-500 transition-colors duration-300" />
                 </div>
                 {/* 姓名 */}
@@ -145,7 +144,7 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
                     {face.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
-                        className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 bg-zinc-50 px-2.5 py-1 rounded-3xl group-hover:bg-zinc-100 transition-colors duration-300"
+                        className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 bg-zinc-50 px-2.5 py-1 rounded-full group-hover:bg-zinc-100 transition-colors duration-300"
                       >
                         {tag}
                       </span>
@@ -166,9 +165,9 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="py-20 text-center bg-white rounded-3xl border border-zinc-100"
+            className="py-20 text-center bg-white rounded-2xl border border-zinc-100 p-6"
           >
-            <div className="w-24 h-24 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-300">
+            <div className="w-24 h-24 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-zinc-300">
               <Users size={40} />
             </div>
             <h3 className="text-xl font-bold text-zinc-900 mb-2">{t('faces.noFaces')}</h3>

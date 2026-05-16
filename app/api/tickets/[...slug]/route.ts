@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getEnvConfig } from '@/lib/env';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/tickets/[...slug]');
 
 /**
  * 获取单个工单详情
@@ -13,13 +16,16 @@ export async function GET(
   const slug = '/' + (slugParts?.join('/') || '');
   const session = await getSession();
   if (!session) {
+    logger.warn('GET', '未登录');
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
   try {
+    logger.info('GET', '获取工单详情', { slug });
     const env = getEnvConfig();
 
     if (!env.githubRepo || !env.githubToken) {
+      logger.error('GET', 'GitHub 配置缺失');
       return NextResponse.json({ error: 'GitHub 配置缺失' }, { status: 500 });
     }
 
@@ -27,6 +33,7 @@ export async function GET(
 
     const contentRes = await fetch(`/api/github?path=${filePath}`);
     if (!contentRes.ok) {
+      logger.warn('GET', '工单不存在', { slug });
       return NextResponse.json({ error: '工单不存在' }, { status: 404 });
     }
     const { frontMatter, body } = await contentRes.json();
@@ -34,9 +41,11 @@ export async function GET(
     // 权限检查：admin/sudo 看全部，普通用户只看自己的
     const isAdmin = session.role === 'admin' || session.role === 'sudo';
     if (!isAdmin && frontMatter.author !== session.email) {
+      logger.warn('GET', '无权限访问工单', { slug });
       return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 
+    logger.info('GET', '工单详情获取成功', { slug });
     return NextResponse.json({
       slug,
       title: frontMatter.title,
@@ -48,7 +57,7 @@ export async function GET(
       content: body,
     });
   } catch (error) {
-    console.error(JSON.stringify({ type: 'get_ticket_error', message: (error as Error).message }));
+    logger.error('GET', '获取工单失败', { error: (error as Error).message });
     return NextResponse.json({ error: '获取工单失败' }, { status: 500 });
   }
 }
@@ -64,18 +73,22 @@ export async function PATCH(
   const slug = '/' + (slugParts?.join('/') || '');
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    logger.warn('PATCH', '无权限', { role: session?.role });
     return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
   try {
+    logger.info('PATCH', '更新工单状态', { slug });
     const { status } = await req.json();
 
     if (!['open', 'in-progress', 'closed'].includes(status)) {
+      logger.warn('PATCH', '无效的状态', { status });
       return NextResponse.json({ error: '无效的状态' }, { status: 400 });
     }
 
     const env = getEnvConfig();
     if (!env.githubRepo || !env.githubToken) {
+      logger.error('PATCH', 'GitHub 配置缺失');
       return NextResponse.json({ error: 'GitHub 配置缺失' }, { status: 500 });
     }
 
@@ -84,6 +97,7 @@ export async function PATCH(
     // 读取现有文件
     const existingRes = await fetch(`/api/github?path=${filePath}`);
     if (!existingRes.ok) {
+      logger.warn('PATCH', '工单不存在', { slug });
       return NextResponse.json({ error: '工单不存在' }, { status: 404 });
     }
     const { frontMatter, body, sha } = await existingRes.json();
@@ -108,9 +122,10 @@ export async function PATCH(
       throw new Error('Failed to update ticket on GitHub');
     }
 
+    logger.info('PATCH', '工单状态更新成功', { slug, status });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(JSON.stringify({ type: 'update_ticket_error', message: (error as Error).message }));
+    logger.error('PATCH', '更新工单失败', { error: (error as Error).message });
     return NextResponse.json({ error: '更新失败' }, { status: 500 });
   }
 }

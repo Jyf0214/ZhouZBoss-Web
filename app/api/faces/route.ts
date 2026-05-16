@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getContentFiles, getContentIndexes } from '@/lib/content';
 import { loadConfigAsync, canAccess, hasDatabase } from '@/lib/config';
 import { getSession, SessionPayload } from '@/lib/auth';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/faces');
 
 /**
  * 通讯录列表 API
@@ -15,6 +18,8 @@ export async function GET() {
   const allFiles = getContentFiles('faces');
   const indexes = getContentIndexes('faces');
   const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
+
+  logger.info('GET', '读取通讯录列表');
 
   const accessibleFiles = allFiles.filter((file) => {
     if (isAdmin) return true;
@@ -30,6 +35,7 @@ export async function GET() {
     return canAccess('faces', idx.slug, isAuthenticated, dbAvailable, config) && idx.public === true;
   });
 
+  logger.info('GET', '通讯录列表读取成功', { count: accessibleFiles.length });
   return NextResponse.json({
     faces: accessibleFiles.map((f) => ({
       slug: f.slug,
@@ -95,13 +101,16 @@ async function getFileFromGitHub(req: NextRequest, filePath: string): Promise<{ 
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    logger.warn('POST', '无权限', { role: session?.role });
     return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
   try {
+    logger.info('POST', '创建联系人');
     const { name, email, phone, group, content } = await req.json();
 
     if (!name || !group) {
+      logger.warn('POST', '缺少必填字段');
       return NextResponse.json({ error: '姓名和分组为必填项' }, { status: 400 });
     }
 
@@ -134,12 +143,14 @@ export async function POST(req: NextRequest) {
 
     if (!ghResponse.ok) {
       const error = await ghResponse.json();
+      logger.error('POST', '创建联系人失败', { error: error.error });
       return NextResponse.json({ error: error.error || '创建联系人失败' }, { status: 500 });
     }
 
-  return NextResponse.json({ success: true, slug: `/${group}/${slug}` });
+    logger.info('POST', '联系人创建成功', { slug: `/${group}/${slug}` });
+    return NextResponse.json({ success: true, slug: `/${group}/${slug}` });
   } catch (error: unknown) {
-  console.error('create_face_error:', error instanceof Error ? error.message : error);
+    logger.error('POST', '创建联系人失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '创建联系人失败' }, { status: 500 });
   }
 }
@@ -150,6 +161,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    logger.warn('PATCH', '无权限', { role: session?.role });
     return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
@@ -157,10 +169,12 @@ export async function PATCH(req: NextRequest) {
     const { slug, name, email, phone, group, content } = await req.json();
 
     if (!slug) {
+      logger.warn('PATCH', '缺少联系人路径');
       return NextResponse.json({ error: '缺少联系人路径' }, { status: 400 });
     }
 
     if (!name || !group) {
+      logger.warn('PATCH', '缺少必填字段');
       return NextResponse.json({ error: '姓名和分组为必填项' }, { status: 400 });
     }
 
@@ -169,12 +183,14 @@ export async function PATCH(req: NextRequest) {
     // 使用统一的 /api/github 端点读取文件
     const fileData = await getFileFromGitHub(req, oldFilePath);
     if (!fileData) {
+      logger.warn('PATCH', '联系人不存在', { slug });
       return NextResponse.json({ error: '联系人不存在' }, { status: 404 });
     }
 
     const { sha } = fileData;
 
     if (!canManageFace(session)) {
+      logger.warn('PATCH', '无权修改联系人', { slug });
       return NextResponse.json({ error: '无权修改此联系人' }, { status: 403 });
     }
 
@@ -223,7 +239,7 @@ export async function PATCH(req: NextRequest) {
       });
 
       if (!ghDeleteResponse.ok) {
-        console.error('delete_old_file_error');
+        logger.error('PATCH', '删除旧文件失败', { oldFilePath });
       }
 
       return NextResponse.json({ success: true, slug: `/${group}/${newSlug}` });
@@ -248,9 +264,10 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: error.error || '更新联系人失败' }, { status: 500 });
     }
 
-  return NextResponse.json({ success: true, slug: `/${group}/${newSlug}` });
+    logger.info('PATCH', '联系人更新成功', { slug: `/${group}/${newSlug}` });
+    return NextResponse.json({ success: true, slug: `/${group}/${newSlug}` });
   } catch (error: unknown) {
-  console.error('update_face_error:', error instanceof Error ? error.message : error);
+    logger.error('PATCH', '更新联系人失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '更新联系人失败' }, { status: 500 });
   }
 }
@@ -261,13 +278,16 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    logger.warn('DELETE', '无权限');
     return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
   try {
+    logger.info('DELETE', '删除联系人');
     const { slug } = await req.json();
 
     if (!slug) {
+      logger.warn('DELETE', '缺少联系人路径');
       return NextResponse.json({ error: '缺少联系人路径' }, { status: 400 });
     }
 
@@ -276,12 +296,14 @@ export async function DELETE(req: NextRequest) {
     // 使用统一的 /api/github 端点读取文件
     const fileData = await getFileFromGitHub(req, filePath);
     if (!fileData) {
+      logger.warn('DELETE', '联系人不存在', { slug });
       return NextResponse.json({ error: '联系人不存在' }, { status: 404 });
     }
 
     const { sha } = fileData;
 
     if (!canManageFace(session)) {
+      logger.warn('DELETE', '无权删除联系人', { slug });
       return NextResponse.json({ error: '无权删除此联系人' }, { status: 403 });
     }
 
@@ -301,9 +323,10 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: error.error || '删除联系人失败' }, { status: 500 });
     }
 
-  return NextResponse.json({ success: true });
+    logger.info('DELETE', '联系人删除成功', { slug });
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
-  console.error('delete_face_error:', error instanceof Error ? error.message : error);
+    logger.error('DELETE', '删除联系人失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '删除联系人失败' }, { status: 500 });
   }
 }

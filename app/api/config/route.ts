@@ -4,6 +4,9 @@ import { loadConfigAsync, saveConfigToDb, hasDatabase } from '@/lib/config';
 import type { AppConfig } from '@/lib/config';
 import { getFileFromGithub } from '@/lib/github';
 import { getDb } from '@/lib/db';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/config');
 
 /**
  * System Configuration API
@@ -17,6 +20,7 @@ import { getDb } from '@/lib/db';
  * 所有配置统一使用 AppConfig 结构
  */
 export async function GET() {
+  logger.info('GET', '读取配置');
   const config = await loadConfigAsync();
   const githubRepo = process.env.GITHUB_REPO;
   const githubToken = process.env.GITHUB_TOKEN;
@@ -32,24 +36,28 @@ export async function GET() {
     response._githubToken = '***';
   }
 
+  logger.info('GET', '配置读取成功');
   return NextResponse.json(response);
 }
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
+    logger.warn('POST', '无权限访问', { role: session?.role });
     return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
+
+  logger.info('POST', '开始更新配置', { role: session.role });
 
   try {
     const newConfig = await req.json() as Partial<AppConfig>;
     const currentConfig = await loadConfigAsync();
 
-    // 检查 GitHub 同步成功标志
     if (hasDatabase()) {
       const db = getDb();
       const syncFlag = await db.get('github:sync:success');
       if (syncFlag) {
+        logger.warn('POST', '配置已同步到 GitHub，拒绝重复提交');
         return NextResponse.json(
           { error: '配置已同步到 GitHub，请等待构建完成后再次提交' },
           { status: 409 }
@@ -57,7 +65,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 合并配置，保留未修改的字段
     const mergedConfig: AppConfig = {
       site: {
         title: newConfig.site?.title ?? currentConfig.site.title,
@@ -85,10 +92,9 @@ export async function POST(req: NextRequest) {
         : currentConfig.auth,
     };
 
-    // 保存到数据库
     await saveConfigToDb(mergedConfig);
+    logger.info('POST', '配置已保存至数据库');
 
-    // 如果有 GitHub 配置，同步站点配置到 GitHub
     const githubRepo = process.env.NEXT_PUBLIC_GITHUB_REPO;
     const githubToken = process.env.GITHUB_TOKEN;
     if (githubRepo && githubToken) {
@@ -102,8 +108,9 @@ export async function POST(req: NextRequest) {
         if (!syncRes.ok) {
           throw new Error(syncData.error || '同步配置到 GitHub 失败');
         }
+        logger.info('POST', '配置已同步至 GitHub');
       } catch (error) {
-        console.error('同步配置到 GitHub 失败:', error);
+        logger.error('POST', '同步配置到 GitHub 失败', { error: error instanceof Error ? error.message : '未知错误' });
         return NextResponse.json(
           { error: error instanceof Error ? error.message : '同步配置到 GitHub 失败' },
           { status: 500 }
@@ -111,9 +118,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    logger.info('POST', '配置更新成功');
     return NextResponse.json({ success: true, config: mergedConfig });
   } catch (error: unknown) {
-    console.error('更新配置失败:', error);
+    logger.error('POST', '更新配置失败', { error: error instanceof Error ? error.message : '未知错误' });
     return NextResponse.json({ error: error instanceof Error ? error.message : '保存失败' }, { status: 500 });
   }
 }
@@ -122,19 +130,23 @@ export async function POST(req: NextRequest) {
  * 强制从 GitHub 同步配置
  */
 export async function PUT() {
+  logger.info('PUT', '开始从 GitHub 强制同步配置');
   const db = hasDatabase();
   if (!db) {
+    logger.warn('PUT', '数据库未配置');
     return NextResponse.json({ error: '数据库未配置' }, { status: 400 });
   }
   const repo = process.env.NEXT_PUBLIC_GITHUB_REPO;
   const token = process.env.GITHUB_TOKEN;
   if (!repo || !token) {
+    logger.warn('PUT', 'GitHub 未配置');
     return NextResponse.json({ error: 'GitHub 未配置' }, { status: 400 });
   }
 
   try {
     const remote = await getFileFromGithub(repo, token, 'config.yaml');
     if (!remote) {
+      logger.warn('PUT', 'config.yaml 不存在');
       return NextResponse.json({ error: 'config.yaml 不存在' }, { status: 404 });
     }
     const parsed = JSON.parse(remote.content) as Partial<AppConfig>;
@@ -168,9 +180,10 @@ export async function PUT() {
     };
 
     await saveConfigToDb(mergedConfig);
+    logger.info('PUT', '从 GitHub 同步配置成功');
     return NextResponse.json({ success: true, config: mergedConfig });
   } catch (error) {
-    console.error('从 GitHub 同步配置失败:', error);
+    logger.error('PUT', '从 GitHub 同步配置失败', { error: error instanceof Error ? error.message : '未知错误' });
     return NextResponse.json({ error: '同步失败' }, { status: 500 });
   }
 }

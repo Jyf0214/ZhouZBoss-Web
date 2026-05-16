@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
 import { getDb } from '@/lib/db';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/webhooks/clerk');
 
 /**
  * Clerk Webhook 处理
@@ -9,6 +12,7 @@ import { getDb } from '@/lib/db';
 export async function POST(req: NextRequest) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
   if (!WEBHOOK_SECRET) {
+    logger.error('POST', 'Webhook secret 未配置');
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
   }
 
@@ -18,6 +22,7 @@ export async function POST(req: NextRequest) {
   const svixSignature = req.headers.get('svix-signature');
 
   if (!svixId || !svixTimestamp || !svixSignature) {
+    logger.warn('POST', '缺少svix签名头');
     return NextResponse.json({ error: 'Missing svix headers' }, { status: 400 });
   }
 
@@ -41,11 +46,13 @@ try {
   });
   payload = verified as ClerkWebhookPayload;
 } catch {
+    logger.warn('POST', '无效的webhook签名');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
   const db = getDb();
   const eventType = payload.type;
+  logger.info('POST', '收到Clerk webhook', { eventType });
 
   try {
     switch (eventType) {
@@ -82,17 +89,18 @@ try {
               where: { clerkId },
               data: { clerkId: null, clerkLinkedAt: null },
             });
-	} catch (error) {
-			console.error('清除 Prisma clerkId 失败:', error);
-		}
+ 	} catch (error) {
+ 			logger.error('POST', '清除Prisma clerkId失败', { error: error instanceof Error ? error.message : String(error) });
+ 		}
         }
         break;
       }
     }
 
+    logger.info('POST', 'Webhook处理成功', { eventType });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Clerk webhook error:', error);
+    logger.error('POST', 'Webhook处理失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

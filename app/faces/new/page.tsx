@@ -85,7 +85,7 @@ export default function NewFacePage() {
   /** 等待鉴权完成 */
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#f8f8f8]">
+      <div className="min-h-screen flex flex-col bg-zinc-50">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <GlobalLoading size="large" />
@@ -97,11 +97,11 @@ export default function NewFacePage() {
   /** 非管理员显示无权限提示 */
   if (!isSudo) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#f8f8f8]">
+      <div className="min-h-screen flex flex-col bg-zinc-50">
         <Navbar />
-        <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
-          <div className="bg-white rounded-3xl border border-zinc-100 p-8 md:p-12 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-zinc-100 rounded-2xl flex items-center justify-center mb-6">
+        <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
+          <div className="bg-white rounded-2xl border border-zinc-100 p-6 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-zinc-50 rounded-xl flex items-center justify-center mb-6">
               <Lock size={28} className="text-zinc-400" />
             </div>
             <h2 className="text-2xl font-bold text-zinc-900 mb-2">需要管理员权限</h2>
@@ -110,7 +110,7 @@ export default function NewFacePage() {
               <Button
                 type="default"
                 icon={<ArrowLeft size={16} />}
-                className="h-12 px-8 rounded-xl"
+                className="h-10 px-8 rounded-xl"
               >
                 返回通讯录
               </Button>
@@ -122,17 +122,17 @@ export default function NewFacePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8f8f8]">
+    <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-display font-black tracking-tight text-zinc-900 mb-4">
+      <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
+        <div className="flex flex-col gap-3 mb-8">
+          <h1 className="text-2xl font-bold text-zinc-900">
             新建联系人
           </h1>
-          <p className="text-zinc-400 text-lg">添加新联系人到通讯录</p>
+          <p className="text-sm text-zinc-400">添加新联系人到通讯录</p>
         </div>
 
-        <div className="bg-white rounded-3xl border border-zinc-100 p-8 md:p-12">
+        <div className="bg-white rounded-2xl border border-zinc-100 p-6">
           <Form
             form={form}
             layout="vertical"
@@ -153,8 +153,7 @@ export default function NewFacePage() {
             >
               <Input
                 placeholder="请输入联系人姓名"
-                className="!h-12 !rounded-xl !text-base !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
-                size="large"
+                className="h-10 rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
               />
             </Form.Item>
 
@@ -166,9 +165,8 @@ export default function NewFacePage() {
               <Select
                 mode="tags"
                 placeholder="输入后按回车添加标签"
-                className="!rounded-xl !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
-                size="large"
-                style={{ minHeight: 48 }}
+                className="rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
+                style={{ minHeight: 40 }}
                 tokenSeparators={[',']}
               />
             </Form.Item>
@@ -180,8 +178,7 @@ export default function NewFacePage() {
             >
               <Input
                 placeholder="请输入简短描述（可选）"
-                className="!h-12 !rounded-xl !text-base !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
-                size="large"
+                className="h-10 rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
               />
             </Form.Item>
 
@@ -193,8 +190,7 @@ export default function NewFacePage() {
             >
               <TextArea
                 placeholder="使用 Markdown 编写联系人详细内容..."
-                className="!rounded-xl !text-base !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
-                size="large"
+                className="rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
                 rows={12}
                 style={{ fontFamily: 'inherit', resize: 'vertical' }}
               />
@@ -205,7 +201,7 @@ export default function NewFacePage() {
                 <Button
                   type="default"
                   icon={<ArrowLeft size={16} />}
-                  className="h-12 px-6 rounded-xl"
+                  className="h-10 px-6 rounded-xl"
                 >
                   {t('common.back')}
                 </Button>
@@ -216,7 +212,7 @@ export default function NewFacePage() {
                 htmlType="submit"
                 icon={<Save size={16} />}
                 loading={submitting}
-                className="h-12 px-8 rounded-xl bg-zinc-900 hover:bg-zinc-800"
+                className="h-10 px-8 rounded-xl bg-zinc-900 hover:bg-zinc-800"
               >
                 {t('common.create')}
               </Button>

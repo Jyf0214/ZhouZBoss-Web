@@ -1,10 +1,14 @@
 import { getContentFiles, getContentIndexes } from '@/lib/content';
+import { createApiLogger } from '@/lib/api-logger';
+
+const logger = createApiLogger('/api/posts');
 
 /**
  * 帖子列表 API — 纯文件系统读取，不查数据库
  * 仅供后台管理使用
  */
 export async function GET() {
+  logger.info('GET', '读取帖子列表');
   const allFiles = getContentFiles('posts');
   const indexes = getContentIndexes('posts');
 
