@@ -1,5 +1,8 @@
-import { appConfig, type AppConfig, type SiteConfig, type AppearanceConfig, type AccessConfig, type AuthConfig, type UserConfig } from '@/next.config';
+import fs from 'fs';
+import path from 'path';
+import yaml from 'js-yaml';
 import { getDb } from '@/lib/db';
+import type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig } from '@/next.config';
 
 export type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig };
 
@@ -10,23 +13,67 @@ export function hasDatabase(): boolean {
   return !!(process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL_NON_POOLING);
 }
 
-/** 默认配置 */
-const defaultConfig: AppConfig = { ...appConfig };
+/**
+ * 从 config.yaml 加载配置
+ */
+function loadConfigFromYaml(): AppConfig {
+  const configPath = path.join(process.cwd(), 'config.yaml');
+  try {
+    const fileContent = fs.readFileSync(configPath, 'utf-8');
+    const parsed = yaml.load(fileContent) as AppConfig;
+    return parsed;
+  } catch (error) {
+    console.error('config.yaml 加载失败:', error);
+    return getDefaultConfig();
+  }
+}
+
+/**
+ * 默认配置
+ */
+function getDefaultConfig(): AppConfig {
+  return {
+    site: {
+      title: 'Originium Kernel',
+      description: '现代内容发布平台',
+      heroTitleLine1: '书写。同步。',
+      heroTitleLine2: '部署。',
+      lang: 'zh-CN',
+    },
+    appearance: {
+      background: { url: '', opacity: 0.8 },
+      customCSS: '',
+      customHead: '',
+      loading: {
+        page: { type: 'waves', color: '#c084fc', position: 'center' },
+        navigation: { type: 'antd', color: '#c084fc' },
+      },
+    },
+    access: {
+      posts: { public: ['*'], private: [] },
+      faces: { public: [], private: ['*'] },
+      diary: { public: [], private: ['*'] },
+    },
+    auth: {
+      allowRegistration: true,
+    },
+  };
+}
 
 /** 缓存已加载的配置 */
 let cachedConfig: AppConfig | null = null;
 
 /**
- * 同步加载配置（从 next.config.ts）
+ * 同步加载配置（从 config.yaml）
  */
 export function loadConfig(): AppConfig {
   if (cachedConfig) return cachedConfig;
-  cachedConfig = { ...defaultConfig };
+  cachedConfig = loadConfigFromYaml();
   return cachedConfig;
 }
 
 /**
- * 异步加载配置，优先级：数据库 > next.config.ts > 默认值
+ * 异步加载配置，优先级：数据库 > config.yaml > 默认值
  */
 export async function loadConfigAsync(): Promise<AppConfig> {
   const fileConfig = loadConfig();

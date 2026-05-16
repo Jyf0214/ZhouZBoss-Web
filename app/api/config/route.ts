@@ -10,8 +10,8 @@ import { getDb } from '@/lib/db';
  *
  * 配置优先级：
  * 1. 数据库缓存（管理员通过此 API 修改的配置）
- * 2. GitHub config.json（远程同步配置）
- * 3. config.json（本地文件配置）
+ * 2. GitHub config.yaml（远程同步配置）
+ * 3. config.yaml（本地文件配置）
  * 4. 默认值
  *
  * 所有配置统一使用 AppConfig 结构
@@ -133,9 +133,9 @@ export async function PUT() {
   }
 
   try {
-    const remote = await getFileFromGithub(repo, token, 'config.json');
+    const remote = await getFileFromGithub(repo, token, 'config.yaml');
     if (!remote) {
-      return NextResponse.json({ error: 'config.json 不存在' }, { status: 404 });
+      return NextResponse.json({ error: 'config.yaml 不存在' }, { status: 404 });
     }
     const parsed = JSON.parse(remote.content) as Partial<AppConfig>;
     const currentConfig = await loadConfigAsync();

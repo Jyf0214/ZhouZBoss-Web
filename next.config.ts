@@ -1,6 +1,6 @@
 import type {NextConfig} from 'next';
 
-interface SiteConfig {
+export interface SiteConfig {
   title: string;
   description: string;
   heroTitleLine1: string;
@@ -8,7 +8,7 @@ interface SiteConfig {
   lang: string;
 }
 
-interface AppearanceConfig {
+export interface AppearanceConfig {
   background: {
     url: string;
     opacity: number;
@@ -28,7 +28,7 @@ interface AppearanceConfig {
   };
 }
 
-interface AccessConfig {
+export interface AccessConfig {
   posts: {
     public: string[];
     private: string[];
@@ -43,51 +43,24 @@ interface AccessConfig {
   };
 }
 
-interface AuthConfig {
+export interface AuthConfig {
   allowRegistration: boolean;
   admin?: {
     avatar?: string;
   };
 }
 
-interface UserConfig {
+export interface UserConfig {
   avatar?: string;
 }
 
-interface AppConfig {
+export interface AppConfig {
   site: SiteConfig;
   appearance: AppearanceConfig;
   access: AccessConfig;
   auth: AuthConfig;
   users?: Record<string, UserConfig>;
 }
-
-const appConfig: AppConfig = {
-  site: {
-    title: 'Originium Kernel',
-    description: '现代内容发布平台',
-    heroTitleLine1: '书写。同步。',
-    heroTitleLine2: '部署。',
-    lang: 'zh-CN',
-  },
-  appearance: {
-    background: { url: '', opacity: 0.8 },
-    customCSS: '',
-    customHead: '',
-    loading: {
-      page: { type: 'waves', color: '#c084fc', position: 'center' },
-      navigation: { type: 'antd', color: '#c084fc' },
-    },
-  },
-  access: {
-    posts: { public: ['*'], private: [] },
-    faces: { public: [], private: ['*'] },
-    diary: { public: [], private: ['*'] },
-  },
-  auth: {
-    allowRegistration: true,
-  },
-};
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -118,5 +91,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export { appConfig, type AppConfig, type SiteConfig, type AppearanceConfig, type AccessConfig, type AuthConfig, type UserConfig };
 export default nextConfig;

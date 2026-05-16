@@ -143,7 +143,7 @@ export default function ConfigPage() {
           setGithubConfigured(!!(repo && token));
 
           if (repo && token) {
-            const remote = await getFileFromGithub(repo, token, 'config.json');
+            const remote = await getFileFromGithub(repo, token, 'config.yaml');
             setRemoteConfig(remote?.content || '');
           }
         }
@@ -173,7 +173,7 @@ export default function ConfigPage() {
 
     const newContent = JSON.stringify(config, null, 2);
     showDiff({
-      filePath: 'config.json',
+      filePath: 'config.yaml',
       oldContent: remoteConfig,
       newContent,
       onSubmit: async () => {
@@ -182,7 +182,7 @@ export default function ConfigPage() {
           await updateFileInGithub({
             repo: githubRepo,
             token: githubToken,
-            path: 'config.json',
+            path: 'config.yaml',
             content: newContent,
             message: 'chore: update config from admin panel',
           });
