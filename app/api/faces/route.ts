@@ -239,7 +239,7 @@ export async function PATCH(req: NextRequest) {
       });
 
       if (!ghDeleteResponse.ok) {
-        logger.error('PATCH', '删除旧文件失败', { oldFilePath });
+        logger.warn('PATCH', '删除旧文件失败', { oldFilePath });
       }
 
       return NextResponse.json({ success: true, slug: `/${group}/${newSlug}` });
@@ -261,10 +261,11 @@ export async function PATCH(req: NextRequest) {
 
     if (!ghResponse.ok) {
       const error = await ghResponse.json();
+      logger.error('PATCH', '更新联系人失败', { error: error.error });
       return NextResponse.json({ error: error.error || '更新联系人失败' }, { status: 500 });
     }
 
-    logger.info('PATCH', '联系人更新成功', { slug: `/${group}/${newSlug}` });
+    logger.info('PATCH', '更新联系人成功', { slug: `/${group}/${newSlug}` });
     return NextResponse.json({ success: true, slug: `/${group}/${newSlug}` });
   } catch (error: unknown) {
     logger.error('PATCH', '更新联系人失败', { error: error instanceof Error ? error.message : String(error) });
@@ -278,9 +279,26 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
-    logger.warn('DELETE', '无权限');
+    logger.warn('DELETE', '无权限', { role: session?.role });
     return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
+
+  try {
+    const { slug } = await req.json();
+
+    if (!slug) {
+      logger.warn('DELETE', '缺少联系人路径');
+      return NextResponse.json({ error: '缺少联系人路径' }, { status: 400 });
+    }
+
+    const filePath = `faces${slug}.md`;
+
+    // 使用统一的 /api/github 端点读取文件
+    const fileData = await getFileFromGitHub(req, filePath);
+    if (!fileData) {
+      logger.warn('DELETE', '联系人不存在', { slug });
+      return NextResponse.json({ error: '联系人不存在' }, { status: 404 });
+    }
 
   try {
     logger.info('DELETE', '删除联系人');
@@ -320,8 +338,17 @@ export async function DELETE(req: NextRequest) {
 
     if (!ghResponse.ok) {
       const error = await ghResponse.json();
+      logger.error('DELETE', '删除联系人失败', { error: error.error });
       return NextResponse.json({ error: error.error || '删除联系人失败' }, { status: 500 });
     }
+
+  logger.info('DELETE', '删除联系人成功', { slug });
+  return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+  logger.error('DELETE', '删除联系人失败', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: '删除联系人失败' }, { status: 500 });
+  }
+}
 
     logger.info('DELETE', '联系人删除成功', { slug });
     return NextResponse.json({ success: true });
