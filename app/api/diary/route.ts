@@ -35,6 +35,7 @@ export async function GET() {
     return canAccess('diary', idx.slug, true, dbAvailable, config);
   });
 
+  logger.info('GET', '日记列表读取成功', { count: accessibleFiles.length });
   return NextResponse.json({
     diaries: accessibleFiles.map((f) => ({
       slug: f.slug,

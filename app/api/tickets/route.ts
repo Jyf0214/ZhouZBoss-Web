@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    logger.info('POST', '创建工单');
     const { templateSlug, formData, title } = await req.json();
 
     if (!templateSlug || !formData) {
@@ -27,22 +26,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
     }
 
-    // 获取模板
+    logger.info('POST', '创建工单', { templateSlug });
+
     const template = getTicketTemplate(templateSlug);
     if (!template) {
       logger.warn('POST', '模板不存在', { templateSlug });
       return NextResponse.json({ error: '模板不存在' }, { status: 404 });
     }
 
-    // 渲染工单内容
     const body = renderTicketBody(template, formData);
 
-    // 生成工单文件名（使用时间戳）
     const timestamp = Date.now().toString(36);
     const slug = `/${template.slug}/${timestamp}`;
     const fileName = `tickets${slug}.md`;
 
-    // 构建 front matter
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const frontMatter: Record<string, any> = {
       title: title || template.title || 'Untitled',
@@ -54,14 +51,12 @@ export async function POST(req: NextRequest) {
       template: template.name,
     };
 
-    // 获取 GitHub 配置
     const env = getEnvConfig();
     if (!env.githubRepo || !env.githubToken) {
       logger.error('POST', 'GitHub 配置缺失');
       return NextResponse.json({ error: 'GitHub 配置缺失' }, { status: 500 });
     }
 
-    // 提交到 GitHub
     const postRes = await fetch('/api/github', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

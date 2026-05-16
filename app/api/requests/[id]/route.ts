@@ -11,18 +11,19 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    logger.info('PATCH', '处理申请');
     const { id } = await params;
     const body = await request.json();
     const { action } = body;
 
     if (action !== 'approve' && action !== 'reject') {
-      logger.warn('PATCH', '无效的操作', { action });
+      logger.warn('PATCH', '无效操作', { action });
       return NextResponse.json(
         { error: '无效的操作' },
         { status: 400 }
       );
     }
+
+    logger.info('PATCH', '处理申请', { id, action });
 
     const requestRecord = await prisma.request.findUnique({
       where: { id }
