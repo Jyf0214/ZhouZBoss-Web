@@ -7,9 +7,10 @@ import { Button, Input, Form, Avatar, message } from 'antd';
 import type { Rule } from 'antd/es/form';
 import { showError } from '@/lib/error';
 import { useGitHubDiff } from '@/hooks/use-github-diff';
-import { User, AtSign, Image as ImageIcon, Save, ArrowLeft, Check, Github } from 'lucide-react';
+import { User, AtSign, Image as ImageIcon, Save, ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 import ConfigSection from '@/components/ui/ConfigSection';
+import yaml from 'js-yaml';
 
 // 表单字段组件，适配 Ant Design Form
 interface SettingsFormFieldProps {
@@ -61,7 +62,6 @@ export default function SettingsPage() {
   const { t } = useI18n();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [loadingRemote, setLoadingRemote] = useState(false);
 
   const githubRepo = process.env.NEXT_PUBLIC_GITHUB_REPO;
 
@@ -82,21 +82,72 @@ export default function SettingsPage() {
   const handleSave = async (values: Record<string, string>) => {
     setLoading(true);
     try {
+      const avatarUrlValue = values.avatarUrl || '';
+      const uid = user?.uid;
+
+      // 1. 保存用户名/昵称到数据库（不含头像）
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          avatar: values.avatarUrl || undefined,
           username: values.username,
           name: values.displayName || undefined,
         }),
       });
       const data = await res.json();
-      if (res.ok) {
+      if (!res.ok) {
+        showError(data.error || t('settings.saveFailed'));
+        return;
+      }
+
+      // 2. 头像同步到 GitHub config.yaml（含用户确认弹窗）
+      if (uid && avatarUrlValue && githubRepo) {
+        const configRes = await fetch('/api/config');
+        if (!configRes.ok) throw new Error('读取配置失败');
+        const configData = await configRes.json();
+        const remoteRaw = configData._remoteConfig || '';
+        if (!remoteRaw) throw new Error('远程配置为空');
+
+        const remoteObj = (yaml.load(remoteRaw) || {}) as Record<string, unknown>;
+        const users = (remoteObj.users || {}) as Record<string, unknown>;
+        const userEntry = (users[uid] || {}) as Record<string, unknown>;
+        users[uid] = { ...userEntry, avatar: avatarUrlValue };
+        remoteObj.users = users;
+        const newYaml = yaml.dump(remoteObj, { lineWidth: -1 });
+
+        showDiff({
+          filePath: 'config.yaml',
+          oldContent: remoteRaw,
+          newContent: newYaml,
+          onSubmit: async () => {
+            setLoading(true);
+            try {
+              const syncRes = await fetch('/api/github/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: 'config-yaml',
+                  content: newYaml,
+                  message: `chore: update avatar for user ${user?.name || uid}`,
+                }),
+              });
+              if (!syncRes.ok) {
+                const err = await syncRes.json();
+                throw new Error(err.error || '同步失败');
+              }
+              message.success(t('settings.saveSuccess'));
+              await refresh();
+            } catch (e) {
+              showError(`头像同步失败: ${e instanceof Error ? e.message : '未知错误'}`);
+              throw e;
+            } finally {
+              setLoading(false);
+            }
+          },
+        });
+      } else {
         message.success(t('settings.saveSuccess'));
         await refresh();
-      } else {
-        showError(data.error || t('settings.saveFailed'));
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('settings.saveFailed');
@@ -107,59 +158,6 @@ export default function SettingsPage() {
   };
 
   const avatarUrl = Form.useWatch('avatarUrl', form);
-
-  // 同步头像到 GitHub
-  const handleSyncAvatarToGithub = async () => {
-    const avatarUrlValue = form.getFieldValue('avatarUrl') || '';
-
-    if (!user?.uid) {
-      showError('用户 ID 不存在');
-      return;
-    }
-
-    try {
-      setLoadingRemote(true);
-      const getRes = await fetch('/api/github?path=config.json');
-      if (!getRes.ok) throw new Error('读取远程配置失败');
-      const { raw: configContent } = await getRes.json();
-      const config = JSON.parse(configContent || '{}');
-
-      const newUsers = {
-        ...config.users,
-        [user.uid]: {
-          ...config.users?.[user.uid],
-          avatar: avatarUrlValue,
-        },
-      };
-      const newConfigContent = JSON.stringify({ ...config, users: newUsers }, null, 2);
-
-      showDiff({
-        filePath: 'config.json',
-        oldContent: configContent || '{}',
-        newContent: newConfigContent,
-        onSubmit: async () => {
-          const res = await fetch('/api/github', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'update',
-              path: 'config.json',
-              content: newConfigContent,
-              message: `chore: update avatar for user ${user.name || user.uid}`,
-            }),
-          });
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || '同步失败');
-          }
-        },
-      });
-    } catch {
-      showError('同步失败');
-    } finally {
-      setLoadingRemote(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -221,23 +219,11 @@ export default function SettingsPage() {
               placeholder={t('settings.avatarUrlPlaceholder')}
               extra={t('settings.avatarUrlHint')}
             >
-              <div className="flex gap-2">
-                <Input
-                  placeholder={t('settings.avatarUrlPlaceholder')}
-                  className="!h-10 !rounded-lg !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900 flex-1"
-                  allowClear
-                />
-                {githubRepo && (
-                  <Button
-                    icon={<Github size={14} />}
-                    onClick={handleSyncAvatarToGithub}
-                    loading={loadingRemote}
-                    className="!h-10 !rounded-lg !text-sm !border-zinc-200 hover:!border-zinc-300"
-                  >
-                    {t('settings.syncToGithub') || '同步到 GitHub'}
-                  </Button>
-                )}
-              </div>
+              <Input
+                placeholder={t('settings.avatarUrlPlaceholder')}
+                className="!h-10 !rounded-lg !text-sm !border-zinc-200 hover:!border-zinc-300 focus:!border-zinc-900"
+                allowClear
+              />
             </SettingsFormField>
 
             <SettingsFormField
