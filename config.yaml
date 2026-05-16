@@ -1,44 +1,39 @@
 site:
   title: Originium Kernel
   description: 现代内容发布平台
-  heroTitleLine1: ""
-  heroTitleLine2: ""
+  heroTitleLine1: ''
+  heroTitleLine2: ''
   lang: zh-CN
-
 appearance:
   background:
-    url: ""
+    url: ''
     opacity: 0.8
-  customCSS: ""
-  customHead: ""
+  customCSS: ''
+  customHead: ''
   loading:
     page:
       type: waves
-      color: "#c084fc"
+      color: '#c084fc'
       position: center
     navigation:
       type: antd
-      color: "#c084fc"
-
+      color: '#c084fc'
 access:
   posts:
     public:
-      - "*"
+      - '*'
     private: []
   faces:
     public: []
     private:
-      - "*"
+      - '*'
   diary:
     public: []
     private:
-      - "*"
-
+      - '*'
 auth:
   allowRegistration: true
-
-_testField: "this-should-be-preserved-by-surgical-save-2026"
-
+_testField: this-should-be-preserved-by-surgical-save-2026
 users:
-  "169313142":
+  '169313142':
     avatar: https://avatars.githubusercontent.com/u/169313142?v=4
