@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { Button } from 'antd';
-import { Settings, Shield, Loader2 } from 'lucide-react';
+import { Settings, Save, Shield, Loader2 } from 'lucide-react';
 import { GlobalLoading } from '@/components/Loading';
 import { useGitHubConfigSync } from '@/hooks/use-github-config-sync';
 import ConfigSection from '@/components/ui/ConfigSection';
@@ -411,18 +411,16 @@ export default function ConfigPage() {
       {DiffModal}
     </div>
 
-      {/* 保存按钮 - 固定在屏幕右下角 */}
+      {/* 保存按钮 - 圆形，固定在右下角 */}
       <div className="fixed bottom-8 right-8 z-50">
         <Button
           onClick={handleSave}
           loading={saving}
-          icon={<Settings size={14} />}
+          icon={<Save size={18} />}
           type="primary"
-          className="bg-zinc-900 hover:bg-zinc-800 rounded-xl h-10 px-8 shadow-lg"
+          className="!w-12 !h-12 !rounded-full bg-zinc-900 hover:!bg-zinc-800 shadow-lg !border-0 flex items-center justify-center"
           disabled={!githubConfigured || remoteFetchFailed}
-        >
-          {saving ? t('config.saving') : t('config.save')}
-        </Button>
+        />
       </div>
     </div>
   );
