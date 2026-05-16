@@ -168,7 +168,7 @@ export async function DELETE(req: NextRequest) {
     await db.hdel('articles:index', id);
     await db.del(`file:articles/${id}.md`);
 
-    logger.info('DELETE', '文章永久删除成功', { id });
+    logger.info('DELETE', '永久删除成功', { id });
     return NextResponse.json({ success: true, message: 'Permanently deleted' });
   } catch (error) {
     logger.error('DELETE', '永久删除失败', { error: error instanceof Error ? error.message : String(error) });
