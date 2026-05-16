@@ -3,11 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
-import { message, Button } from 'antd';
+import { Button } from 'antd';
 import { Settings, Shield, Loader2 } from 'lucide-react';
-import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
-import { useGitHubDiff } from '@/hooks/use-github-diff';
+import { useGitHubConfigSync } from '@/hooks/use-github-config-sync';
 import ConfigSection from '@/components/ui/ConfigSection';
 import FormField from '@/components/ui/FormField';
 import ToggleField from '@/components/ui/ToggleField';
@@ -16,8 +15,6 @@ import LoadingAnimationConfig from '@/components/ui/LoadingAnimationConfig';
 import AccessControlSection from '@/components/ui/AccessControlSection';
 import BackgroundConfig from '@/components/ui/BackgroundConfig';
 import GitHubStatus from '@/components/ui/GitHubStatus';
-import yaml from 'js-yaml';
-
 type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
 type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
@@ -103,8 +100,17 @@ export default function ConfigPage() {
   const [githubRepo, setGithubRepo] = useState<string>('');
   const initialConfigRef = React.useRef<ConfigState | null>(null);
 
-  const { showDiff, DiffModal } = useGitHubDiff({
+  const { handleSave: handleGitHubSave, DiffModal } = useGitHubConfigSync({
     repo: githubRepo,
+    remoteConfig,
+    currentConfig: config,
+    managedFields: ['site', 'appearance', 'access', 'auth'],
+    onSyncStart: () => setSaving(true),
+    onSyncComplete: (yamlContent) => {
+      setRemoteConfig(yamlContent);
+      setSaving(false);
+    },
+    onSyncError: () => setSaving(false),
   });
 
   useEffect(() => {
@@ -185,73 +191,7 @@ export default function ConfigPage() {
   }, [userRole]);
 
   const handleSave = () => {
-    if (!githubRepo) {
-      message.error('GitHub 未配置');
-      return;
-    }
-
-    if (!initialConfigRef.current) {
-      message.error('初始配置未加载');
-      return;
-    }
-
-    if (JSON.stringify(initialConfigRef.current) === JSON.stringify(config)) {
-      message.info('没有需要保存的变更');
-      return;
-    }
-
-    let remoteObj: Record<string, unknown> = {};
-    if (remoteConfig) {
-      try {
-        remoteObj = (yaml.load(remoteConfig) || {}) as Record<string, unknown>;
-      } catch {
-        remoteObj = {};
-      }
-    }
-
-    const managed: (keyof typeof config)[] = ['site', 'appearance', 'access', 'auth'];
-    const merged = { ...remoteObj };
-    for (const key of managed) {
-      if (key in config) {
-        merged[key] = config[key] as unknown;
-      }
-    }
-
-    const yamlContent = yaml.dump(merged, { lineWidth: -1 });
-
-    showDiff({
-      filePath: 'config.yaml',
-      oldContent: remoteConfig,
-      newContent: yamlContent,
-      onSubmit: async () => {
-        console.warn('[Config] 用户确认提交，开始推送至 GitHub');
-        setSaving(true);
-        try {
-          const res = await fetch('/api/github/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'config-yaml',
-              content: yamlContent,
-              message: 'chore: update config from admin panel',
-            }),
-          });
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || '同步失败');
-          }
-          setRemoteConfig(yamlContent);
-          console.warn('[Config] 配置已成功推送至 GitHub');
-          message.success(t('config.saveSuccess') || '配置已成功保存至 GitHub');
-        } catch (error) {
-          console.error('[Config] 推送配置至 GitHub 失败:', error);
-          showError(`${t('config.saveFailed') || '保存失败'}: ${error instanceof Error ? error.message : '未知错误'}`);
-          throw error;
-        } finally {
-          setSaving(false);
-        }
-      },
-    });
+    handleGitHubSave(initialConfigRef.current);
   };
 
   // 更新页面加载动画配置

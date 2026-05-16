@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     const user = JSON.parse(userStr);
-    const avatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo');
+    const configAvatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo');
 
     logger.info('GET', '获取用户资料成功', { uid: session.uid });
     return NextResponse.json({
@@ -32,7 +32,7 @@ export async function GET() {
         email: user.email,
         username: user.username,
         name: user.name,
-        avatar: avatar || undefined,
+        avatar: user.avatar || configAvatar || undefined,
         role: user.role,
         userGroup: user.userGroup,
         createdAt: user.createdAt,
@@ -90,10 +90,7 @@ export async function PUT(req: NextRequest) {
       await db.del(`user:username:${user.username}`);
     }
 
-    // 头像更新已禁用，头像仅从配置文件读取
-    // if (avatar !== undefined) {
-    //   // 需要手动更新 next.config.ts 中的 users 配置
-    // }
+    if (avatar !== undefined) user.avatar = avatar;
     if (username !== undefined) user.username = username || null;
     if (name !== undefined) user.name = name;
 
@@ -103,7 +100,7 @@ export async function PUT(req: NextRequest) {
       await db.set(`user:username:${username}`, session.uid);
     }
 
-    const currentAvatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo');
+    const configAvatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo');
 
     logger.info('PUT', '资料更新成功', { uid: session.uid });
     return NextResponse.json({
@@ -113,7 +110,7 @@ export async function PUT(req: NextRequest) {
         email: user.email,
         username: user.username,
         name: user.name,
-        avatar: currentAvatar || undefined,
+        avatar: user.avatar || configAvatar || undefined,
         role: user.role,
         userGroup: user.userGroup,
       },
