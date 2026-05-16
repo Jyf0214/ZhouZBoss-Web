@@ -66,9 +66,35 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(enrichedPending);
   } catch (error) {
-    logger.error('GET', '回收站读取失败', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('GET', '回收站读取错误', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+/**
+ * Restore an article from recycle bin
+ */
+export async function POST(req: NextRequest) {
+  const session = await requireAdmin();
+  if (!session) {
+    logger.warn('POST', '未授权');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { id } = await req.json();
+    if (!id) {
+      logger.warn('POST', '缺少文章ID');
+      return NextResponse.json({ error: 'Article ID required' }, { status: 400 });
+    }
+
+    logger.info('POST', '恢复文章', { id });
+    const db = getDb();
+    const articleStr = await db.get(`article:data:${id}`);
+    if (!articleStr) {
+      logger.warn('POST', '文章不存在', { id });
+      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    }
 }
 
 /**
@@ -129,6 +155,7 @@ export async function POST(req: NextRequest) {
     logger.error('POST', '恢复文章失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
 }
 
 /**

@@ -50,6 +50,7 @@ export function useGitHubDiff({ repo }: UseGitHubDiffOptions) {
       onConfirm={handleConfirm}
       onCancel={hideDiff}
       loading={loading}
+      open={true}
     />
   ) : null;
 
