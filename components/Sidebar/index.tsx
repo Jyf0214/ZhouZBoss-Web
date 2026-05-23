@@ -230,12 +230,16 @@ function SidebarContent({
 }
 
 function Sidebar({ variant = 'user' }: { variant?: SidebarVariant }) {
-  const { user, logout } = useAuth();
+  const { user, isSudo, logout } = useAuth();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useI18n();
 
-  const items = variant === 'admin' ? adminMenuItems : userMenuItems;
+  const items = variant === 'admin'
+    ? adminMenuItems
+    : isSudo
+      ? [...userMenuItems, { key: 'dashboard.adminConsole', icon: Settings, href: '/admin', group: 'admin' }]
+      : userMenuItems;
 
   const handleLogout = async () => {
     await logout();
