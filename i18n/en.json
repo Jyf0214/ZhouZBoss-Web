@@ -173,7 +173,8 @@
     "tickets": "Tickets",
     "diary": "Private Diary",
     "originiumKernel": "Originium Kernel",
-    "configPreview": "Config Preview"
+    "configPreview": "Config Preview",
+    "returnDashboard": "Back to Dashboard"
   },
   "tickets": {
     "add": "Add",

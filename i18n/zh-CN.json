@@ -173,7 +173,8 @@
     "tickets": "工单",
     "diary": "私密日记",
     "originiumKernel": "Originium Kernel",
-    "configPreview": "配置预览"
+    "configPreview": "配置预览",
+    "returnDashboard": "返回用户面板"
   },
   "tickets": {
     "add": "添加",

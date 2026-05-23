@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
+  ArrowLeft,
   Home,
   BookOpen,
   Users,
@@ -45,6 +46,7 @@ const userMenuItems: MenuItem[] = [
 ];
 
 const adminMenuItems: MenuItem[] = [
+  { key: 'sidebar.returnDashboard', icon: ArrowLeft, href: '/dashboard', group: 'back' },
   { key: 'sidebar.systemConfig', icon: Settings, href: '/admin/config', group: 'admin' },
   { key: 'sidebar.configPreview', icon: Eye, href: '/admin/config/preview', group: 'admin' },
   { key: 'sidebar.envVariables', icon: Activity, href: '/admin/env', group: 'admin' },
@@ -53,6 +55,7 @@ const adminMenuItems: MenuItem[] = [
 ];
 
 const groupKeys: Record<string, string> = {
+  back: 'sidebar.returnDashboard',
   overview: 'dashboard.overview',
   content: 'dashboard.contentManagement',
   manage: 'dashboard.articles',
