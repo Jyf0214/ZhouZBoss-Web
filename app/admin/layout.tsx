@@ -1,10 +1,10 @@
 'use client';
-
 import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { GlobalLoading } from '@/components/Loading';
 import Sidebar from '@/components/Sidebar/index';
+import TopHeader from '@/components/TopHeader';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isSudo, loading } = useAuth();
@@ -12,30 +12,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!loading) {
-      if (!user) {
-        router.push('/login');
-      } else if (!isSudo) {
-        router.push('/dashboard');
-      }
+      if (!user) { router.push('/login'); }
+      else if (!isSudo) { router.push('/dashboard'); }
     }
   }, [user, isSudo, loading, router]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-zinc-50">
-        <GlobalLoading size="large" />
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen bg-zinc-50"><GlobalLoading size="large" /></div>;
   }
-
   if (!user || !isSudo) return null;
 
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 md:ml-[260px] min-h-screen bg-zinc-50 pt-20 md:pt-0">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col md:ml-[280px] min-h-screen bg-zinc-50">
+        <TopHeader />
+        <main className="flex-1">{children}</main>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Plus, Search } from 'lucide-react';
 import { Input, Tag, Popconfirm, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
+import ProCard from '@/components/ui/ProCard';
 
 interface ArticleItem {
   id: string;
@@ -142,7 +143,7 @@ export default function ArticlesPage() {
       </div>
 
       {/* 文章列表 */}
-      <div className="bg-white rounded-2xl border border-zinc-100 overflow-hidden">
+      <ProCard padding="p-0">
         {filteredArticles.length > 0 ? (
           <div className="divide-y divide-zinc-50">
             {filteredArticles.map((article) => (
@@ -171,26 +172,26 @@ export default function ArticlesPage() {
                 {/* 右侧：按钮 */}
                 <div className="flex items-center gap-1 shrink-0">
                   {isRecycleBin ? (
-      <>
-        <button
-          onClick={() => handleRestore(article.id)}
-          disabled={operating === article.id}
-          className="px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {t('common.restore')}
-        </button>
-        <Popconfirm
-          title={t('article.permanentlyDeleteConfirm')}
-          onConfirm={() => handleDelete(article.id)}
-          okText={t('common.delete')}
-          cancelText={t('common.cancel')}
-          okButtonProps={{ danger: true }}
-        >
-          <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            {t('common.delete')}
-          </button>
-        </Popconfirm>
-      </>
+                    <>
+                      <button
+                        onClick={() => handleRestore(article.id)}
+                        disabled={operating === article.id}
+                        className="px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {t('common.restore')}
+                      </button>
+                      <Popconfirm
+                        title={t('article.permanentlyDeleteConfirm')}
+                        onConfirm={() => handleDelete(article.id)}
+                        okText={t('common.delete')}
+                        cancelText={t('common.cancel')}
+                        okButtonProps={{ danger: true }}
+                      >
+                        <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                          {t('common.delete')}
+                        </button>
+                      </Popconfirm>
+                    </>
                   ) : (
                     <>
                       {article.status === 'published' && article.slug && (
@@ -200,22 +201,22 @@ export default function ArticlesPage() {
                           </button>
                         </Link>
                       )}
-            <Link href={`/editor?id=${article.id}`}>
-              <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-lg transition-colors disabled:opacity-50">
-                {t('common.edit')}
-              </button>
-            </Link>
-            <Popconfirm
-              title={t('article.deleteConfirm')}
-              onConfirm={() => handleDelete(article.id)}
-              okText={t('common.delete')}
-              cancelText={t('common.cancel')}
-              okButtonProps={{ danger: true }}
-            >
-              <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                {t('common.delete')}
-              </button>
-            </Popconfirm>
+                      <Link href={`/editor?id=${article.id}`}>
+                        <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-lg transition-colors disabled:opacity-50">
+                          {t('common.edit')}
+                        </button>
+                      </Link>
+                      <Popconfirm
+                        title={t('article.deleteConfirm')}
+                        onConfirm={() => handleDelete(article.id)}
+                        okText={t('common.delete')}
+                        cancelText={t('common.cancel')}
+                        okButtonProps={{ danger: true }}
+                      >
+                        <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                          {t('common.delete')}
+                        </button>
+                      </Popconfirm>
                     </>
                   )}
                 </div>
@@ -238,7 +239,7 @@ export default function ArticlesPage() {
             )}
           </div>
         )}
-      </div>
+      </ProCard>
     </div>
   );
 }

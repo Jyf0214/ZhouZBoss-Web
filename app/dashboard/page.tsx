@@ -12,6 +12,7 @@ import {
 import { Button, Tag } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
+import ProCard from '@/components/ui/ProCard';
 import Link from 'next/link';
 
 interface Stats {
@@ -37,6 +38,61 @@ interface Article {
   slug?: string;
   updatedAt?: string;
   date?: string;
+}
+
+interface StatCardData {
+  title: string;
+  value: number;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  color: string;
+  textColor: string;
+  trend?: { rate: number; direction: 'up' | 'down'; label: string };
+  progress?: { value: number; color: string };
+}
+
+function DashboardStatCard({ card }: { card: StatCardData }) {
+  const Icon = card.icon;
+  const TrendIcon = card.trend?.direction === 'up'
+    ? () => (
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M5 1L9 5H6V9H4V5H1L5 1Z" className={card.trend!.rate >= 50 ? 'fill-emerald-500' : 'fill-amber-500'} />
+        </svg>
+      )
+    : card.trend?.direction === 'down'
+    ? () => (
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M5 9L1 5H4V1H6V5H9L5 9Z" className="fill-red-400" />
+        </svg>
+      )
+    : null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-zinc-100 p-5 hover:shadow-lg hover:shadow-zinc-100 transition-all duration-300 group">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+          <Icon size={18} className={card.textColor} />
+        </div>
+        {card.trend && (
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-50">
+            {TrendIcon && <TrendIcon />}
+            <span className={`text-[11px] font-semibold ${card.trend.rate >= 50 ? 'text-emerald-600' : 'text-zinc-500'}`}>
+              {card.trend.rate}%
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="text-3xl font-black text-zinc-900 mb-1">{card.value}</div>
+      <div className="text-xs text-zinc-400 font-medium mb-3">{card.title}</div>
+      {card.progress && (
+        <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+          <div
+            className={`h-full ${card.progress.color} rounded-full transition-all duration-700`}
+            style={{ width: `${card.progress.value}%` }}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -88,8 +144,8 @@ export default function DashboardPage() {
           }
         }
       } catch (error) {
-		console.error('Failed to fetch stats:', error);
-		showError('仪表盘数据加载失败');
+        console.error('Failed to fetch stats:', error);
+        showError('仪表盘数据加载失败');
       } finally {
         setLoading(false);
       }
@@ -97,13 +153,69 @@ export default function DashboardPage() {
     void fetchData();
   }, [isSudo]);
 
-  const statCards = [
-    { title: t('dashboard.allArticles'), value: stats.totalArticles, icon: FileText, color: 'bg-zinc-900', textColor: 'text-white' },
-    { title: t('dashboard.published'), value: stats.publishedArticles, icon: Globe, color: 'bg-emerald-500', textColor: 'text-white' },
-    { title: t('dashboard.drafts'), value: stats.draftArticles, icon: Clock, color: 'bg-amber-500', textColor: 'text-white' },
+  const publishedRate = stats.totalArticles > 0
+    ? Math.round((stats.publishedArticles / stats.totalArticles) * 100)
+    : 0;
+  const draftRate = stats.totalArticles > 0
+    ? Math.round((stats.draftArticles / stats.totalArticles) * 100)
+    : 0;
+
+  const statCards: {
+    title: string;
+    value: number;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    color: string;
+    textColor: string;
+    trend?: { rate: number; direction: 'up' | 'down'; label: string };
+    progress?: { value: number; color: string };
+  }[] = [
+    {
+      title: t('dashboard.allArticles'),
+      value: stats.totalArticles,
+      icon: FileText,
+      color: 'bg-zinc-900',
+      textColor: 'text-white',
+      trend: undefined,
+    },
+    {
+      title: t('dashboard.published'),
+      value: stats.publishedArticles,
+      icon: Globe,
+      color: 'bg-emerald-500',
+      textColor: 'text-white',
+      progress: { value: publishedRate, color: 'bg-emerald-400' },
+      trend: stats.totalArticles > 0
+        ? { rate: publishedRate, direction: publishedRate >= 50 ? 'up' : 'down', label: t('dashboard.ofTotal') || '占比' }
+        : undefined,
+    },
+    {
+      title: t('dashboard.drafts'),
+      value: stats.draftArticles,
+      icon: Clock,
+      color: 'bg-amber-500',
+      textColor: 'text-white',
+      progress: { value: draftRate, color: 'bg-amber-400' },
+      trend: stats.totalArticles > 0
+        ? { rate: draftRate, direction: draftRate <= 30 ? 'up' : 'down', label: t('dashboard.ofTotal') || '占比' }
+        : undefined,
+    },
     ...(isSudo ? [
-      { title: t('dashboard.totalUsers'), value: stats.totalUsers, icon: Users, color: 'bg-blue-500', textColor: 'text-white' },
-      { title: t('dashboard.pendingDeletion'), value: stats.pendingDeletion, icon: Trash2, color: 'bg-red-500', textColor: 'text-white' },
+      {
+        title: t('dashboard.totalUsers'),
+        value: stats.totalUsers,
+        icon: Users,
+        color: 'bg-blue-500',
+        textColor: 'text-white',
+        trend: undefined,
+      },
+      {
+        title: t('dashboard.pendingDeletion'),
+        value: stats.pendingDeletion,
+        icon: Trash2,
+        color: 'bg-red-500',
+        textColor: 'text-white',
+        trend: undefined,
+      },
     ] : []),
   ];
 
@@ -149,21 +261,9 @@ export default function DashboardPage() {
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
-        {statCards.map((card, index) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={index}
-              className="bg-white rounded-2xl border border-zinc-100 p-5 hover:shadow-lg hover:shadow-zinc-100 transition-all duration-300 group"
-            >
-              <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                <Icon size={18} className={card.textColor} />
-              </div>
-              <div className="text-3xl font-black text-zinc-900 mb-1">{card.value}</div>
-              <div className="text-xs text-zinc-400 font-medium">{card.title}</div>
-            </div>
-          );
-        })}
+        {statCards.map((card, index) => (
+          <DashboardStatCard key={index} card={card} />
+        ))}
       </div>
 
       {/* 快捷操作 */}
@@ -196,16 +296,17 @@ export default function DashboardPage() {
 
       {/* 最近文章 */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-zinc-900">{t('dashboard.recentArticles')}</h2>
-          <Link href="/dashboard/articles">
-            <Button size="small" icon={<ArrowRight size={14} />} className="rounded-xl">
-              {t('dashboard.viewAll')}
-            </Button>
-          </Link>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-zinc-100 overflow-hidden">
+        <ProCard
+          title={t('dashboard.recentArticles')}
+          extra={
+            <Link href="/dashboard/articles">
+              <Button size="small" icon={<ArrowRight size={14} />} className="rounded-xl">
+                {t('dashboard.viewAll')}
+              </Button>
+            </Link>
+          }
+          padding="p-0"
+        >
           {recentArticles.length > 0 ? (
             <div className="divide-y divide-zinc-50">
               {recentArticles.map((article) => (
@@ -267,7 +368,7 @@ export default function DashboardPage() {
               </Link>
             </div>
           )}
-        </div>
+        </ProCard>
       </div>
     </div>
   );
