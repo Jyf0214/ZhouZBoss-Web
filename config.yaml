@@ -49,9 +49,9 @@ access:
 auth:
   allowRegistration: false
 nav:
-  enable: false
-  travelling: false
-  clock: false
+  enable: true
+  travelling: true
+  clock: true
   menu:
     - title: 网页
       item:
@@ -65,7 +65,12 @@ nav:
           icon: /Jyf0214
 mourn:
   enable: true
-  days: [4-5, 5-12, 7-7, 9-18, 12-13]
+  days:
+    - 4-5
+    - 5-12
+    - 7-7
+    - 9-18
+    - 12-13
 highlight:
   theme: light
   copy: true
@@ -156,10 +161,10 @@ footer:
   owner:
     enable: true
     since: 2020
-  custom_text: ''
+  customText: ''
   runtime:
     enable: false
-    launch_time: 04/01/2021 00:00:00
+    launchTime: 04/01/2021 00:00:00
 _testField: this-should-be-preserved-by-surgical-save-2026
 users:
   '169313142':
