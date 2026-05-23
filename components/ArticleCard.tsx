@@ -24,10 +24,18 @@ interface PostMetaPageConfig {
   label?: boolean;
 }
 
+interface CoverConfig {
+  indexEnable?: boolean;
+  asideEnable: boolean;
+  position: string;
+  defaultCover?: string[];
+}
+
 interface ArticleCardProps {
   article: Article;
   wordcount?: WordCountConfig;
   postMeta?: PostMetaPageConfig;
+  coverConfig?: CoverConfig;
 }
 
 function calcWordCount(text: string): { chars: number; readingTime: number } {
@@ -39,12 +47,12 @@ function calcWordCount(text: string): { chars: number; readingTime: number } {
   return { chars: totalChars, readingTime };
 }
 
-function ArticleCover({ article }: { article: Article }) {
+function ArticleCover({ article, horizontal, defaultCover }: { article: Article; horizontal?: boolean; defaultCover?: string }) {
   return (
-    <Link href={`/user/${article.id}`} className="block overflow-hidden aspect-[16/10] bg-zinc-50 relative">
-      {article.coverImage ? (
+    <Link href={`/user/${article.id}`} className={`block overflow-hidden bg-zinc-50 relative ${horizontal ? 'h-full' : 'aspect-[16/10]'}`}>
+      {article.coverImage || defaultCover ? (
         <Image
-          src={article.coverImage}
+          src={article.coverImage ?? defaultCover!}
           alt={article.title}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-700"
@@ -97,6 +105,24 @@ function ArticleMetaStats({ chars, readingTime, wordcount }: { chars: number; re
   );
 }
 
+function ArticleCoverSection({ article, coverConfig }: { article: Article; coverConfig?: CoverConfig }) {
+  const showCover = coverConfig?.asideEnable !== false && coverConfig?.indexEnable !== false;
+  const coverPosition = coverConfig?.position ?? 'both';
+  const isHorizontal = coverPosition === 'left' || coverPosition === 'right';
+
+  if (!showCover) return null;
+
+  if (isHorizontal) {
+    return (
+      <div className={`${coverPosition === 'right' ? 'order-last' : ''} w-2/5 shrink-0`}>
+        <ArticleCover article={article} horizontal defaultCover={coverConfig?.defaultCover?.[0]} />
+      </div>
+    );
+  }
+
+  return <ArticleCover article={article} defaultCover={coverConfig?.defaultCover?.[0]} />;
+}
+
 function FormatDate({ createdAt, postMeta }: { createdAt: string; postMeta?: PostMetaPageConfig }) {
   const formatted = postMeta?.dateType === 'none'
     ? ''
@@ -109,7 +135,49 @@ function FormatDate({ createdAt, postMeta }: { createdAt: string; postMeta?: Pos
   return <span>{formatted}</span>;
 }
 
-export function ArticleCard({ article, wordcount, postMeta }: ArticleCardProps) {
+function ArticleCardBody({ article, postMeta, excerpt }: { article: Article; postMeta?: PostMetaPageConfig; excerpt: string }) {
+  return (
+    <>
+      {postMeta?.tags !== false && <TagBadges tags={article.tags} />}
+      <Link href={`/user/${article.id}`} className="block group/title">
+        <h2 className="text-2xl font-black text-zinc-900 mb-4 line-clamp-2 leading-tight group-hover/title:text-zinc-600 transition-colors">
+          {article.title}
+        </h2>
+      </Link>
+      <p className="text-zinc-400 text-sm line-clamp-2 mb-8 font-medium leading-relaxed">
+        {excerpt}
+      </p>
+    </>
+  );
+}
+
+function ArticleCardFooter({ article, chars, readingTime, wordcount, postMeta }: {
+  article: Article; chars: number; readingTime: number; wordcount?: WordCountConfig; postMeta?: PostMetaPageConfig;
+}) {
+  return (
+    <div className="mt-auto pt-8 border-t border-zinc-50 flex items-center justify-between text-zinc-400">
+      <div className="flex items-center gap-3">
+        <Avatar name={article.authorName} avatarUrl={article.authorAvatar} size={32} />
+        <span className="text-xs font-bold text-zinc-900 uppercase tracking-tighter">{article.authorName}</span>
+      </div>
+      <div className="flex items-center gap-3 text-[10px] font-black">
+        <ArticleMetaStats chars={chars} readingTime={readingTime} wordcount={wordcount} />
+        {postMeta?.label && (
+          <span className="text-[10px] font-black uppercase tracking-widest text-white bg-zinc-900 px-2 py-0.5 rounded-full">
+            Article
+          </span>
+        )}
+        <span className="flex items-center gap-1">
+          <Calendar size={12} />
+          <FormatDate createdAt={article.createdAt} postMeta={postMeta} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function ArticleCard({ article, wordcount, postMeta, coverConfig }: ArticleCardProps) {
+  const isHorizontal = coverConfig?.position === 'left' || coverConfig?.position === 'right';
   const excerpt = article.content
     ? article.content.replace(/[#*`]/g, '').slice(0, 120)
     : '';
@@ -123,32 +191,12 @@ export function ArticleCard({ article, wordcount, postMeta }: ArticleCardProps) 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group bg-white rounded-[2rem] border-2 border-zinc-50 overflow-hidden hover:border-zinc-900 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-zinc-100 flex flex-col"
+      className={`group bg-white rounded-[2rem] border-2 border-zinc-50 overflow-hidden hover:border-zinc-900 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-zinc-100 ${isHorizontal ? 'flex' : 'flex flex-col'}`}
     >
-      <ArticleCover article={article} />
+      <ArticleCoverSection article={article} coverConfig={coverConfig} />
       <div className="p-8 flex-1 flex flex-col">
-        <TagBadges tags={article.tags} />
-        <Link href={`/user/${article.id}`} className="block group/title">
-          <h2 className="text-2xl font-black text-zinc-900 mb-4 line-clamp-2 leading-tight group-hover/title:text-zinc-600 transition-colors">
-            {article.title}
-          </h2>
-        </Link>
-        <p className="text-zinc-400 text-sm line-clamp-2 mb-8 font-medium leading-relaxed">
-          {excerpt}
-        </p>
-        <div className="mt-auto pt-8 border-t border-zinc-50 flex items-center justify-between text-zinc-400">
-          <div className="flex items-center gap-3">
-            <Avatar name={article.authorName} avatarUrl={article.authorAvatar} size={32} />
-            <span className="text-xs font-bold text-zinc-900 uppercase tracking-tighter">{article.authorName}</span>
-          </div>
-          <div className="flex items-center gap-3 text-[10px] font-black">
-            <ArticleMetaStats chars={chars} readingTime={readingTime} wordcount={wordcount} />
-            <span className="flex items-center gap-1">
-              <Calendar size={12} />
-              <FormatDate createdAt={article.createdAt} postMeta={postMeta} />
-            </span>
-          </div>
-        </div>
+        <ArticleCardBody article={article} postMeta={postMeta} excerpt={excerpt} />
+        <ArticleCardFooter article={article} chars={chars} readingTime={readingTime} wordcount={wordcount} postMeta={postMeta} />
       </div>
     </motion.div>
   );

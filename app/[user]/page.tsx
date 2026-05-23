@@ -12,8 +12,15 @@ import { Avatar } from '@/components/Avatar';
 import Footer from '@/components/Footer';
 import AuthorCard from '@/components/AuthorCard';
 import { useConfig } from '@/hooks/use-config';
-import { Calendar, Mail } from 'lucide-react';
+import { Calendar, Mail, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+
+function calcTotalWords(text: string): number {
+  const cleaned = text.replace(/[#*`\[\]()>|~_\-]/g, '').replace(/\s+/g, ' ').trim();
+  const chineseChars = (cleaned.match(/[\u4e00-\u9fff]/g) ?? []).length;
+  const englishWords = cleaned.replace(/[\u4e00-\u9fff]/g, ' ').split(/\s+/).filter(Boolean).length;
+  return chineseChars + englishWords;
+}
 
 function UserProfileContent() {
   const params = useParams();
@@ -113,9 +120,21 @@ function UserProfileContent() {
 
         {/* Articles Grid */}
         <div className="max-w-4xl mx-auto px-6 py-12">
-          <h2 className="text-2xl font-display font-bold text-zinc-900 mb-8">
-            Articles ({articles.length})
-          </h2>
+          {(() => {
+            const showTotal = siteConfig?.wordcount?.totalWordcount === true;
+            const totalWords = showTotal ? articles.reduce((sum, a) => sum + calcTotalWords(a.content ?? ''), 0) : 0;
+            return (
+              <h2 className="text-2xl font-display font-bold text-zinc-900 mb-8">
+                Articles ({articles.length})
+                {showTotal && totalWords > 0 && (
+                  <span className="inline-flex items-center gap-1.5 text-sm font-normal text-zinc-400 ml-3">
+                    <BookOpen size={14} />
+                    总计 {totalWords} 字
+                  </span>
+                )}
+              </h2>
+            );
+          })()}
           
           {articles.length === 0 ? (
             <div className="text-center py-12 text-zinc-400">
@@ -124,7 +143,7 @@ function UserProfileContent() {
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
               {articles.map((article) => (
-                <ArticleCard key={article.id} article={article} wordcount={siteConfig?.wordcount} postMeta={siteConfig?.postMeta?.page} />
+                <ArticleCard key={article.id} article={article} wordcount={siteConfig?.wordcount} postMeta={siteConfig?.postMeta?.page} coverConfig={siteConfig?.cover} />
               ))}
             </div>
           )}

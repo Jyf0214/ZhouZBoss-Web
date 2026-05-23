@@ -61,6 +61,7 @@ export interface FrontendConfig {
   authorStatus?: { enable: boolean; statusImg: string; skills: string[] };
   postEdit?: { enable: boolean; github: string | false };
   site?: { title: string; description: string; lang: string };
+  auth?: { allowRegistration: boolean };
 }
 
 let cachedConfig: FrontendConfig | null = null;

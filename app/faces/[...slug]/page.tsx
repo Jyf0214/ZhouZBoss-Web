@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { type ContentFile } from '@/types/content';
+import { Avatar } from '@/components/Avatar';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import Link from 'next/link';
@@ -14,13 +15,118 @@ import { useAuth } from '@/hooks/use-auth';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
 
+function LoadingView() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <GlobalLoading size="large" />
+    </div>
+  );
+}
+
+function BreadcrumbsNav({ slugArray }: { slugArray: string[] }) {
+  const { t } = useI18n();
+  const breadcrumbs = slugArray.map((segment, index) => ({
+    label: segment,
+    href: '/faces/' + slugArray.slice(0, index + 1).join('/'),
+    isLast: index === slugArray.length - 1,
+  }));
+
+  return (
+    <nav className="flex items-center gap-2 text-sm text-zinc-400 mb-8 flex-wrap">
+      <Link href="/faces" className="hover:text-zinc-900 transition-colors flex items-center gap-1">
+        <ArrowLeft size={14} />
+        {t('nav.faces')}
+      </Link>
+      {breadcrumbs.map((crumb) => (
+        <span key={crumb.href} className="flex items-center gap-2">
+          <span>/</span>
+          {crumb.isLast ? (
+            <span className="text-zinc-900 font-medium">{crumb.label}</span>
+          ) : (
+            <Link href={crumb.href} className="hover:text-zinc-900 transition-colors">
+              {crumb.label}
+            </Link>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+}
+
+function FaceDetailHeader({ file, isSudo, rawContent, showRaw, setShowRaw }: {
+  file: ContentFile;
+  isSudo: boolean;
+  rawContent: string;
+  showRaw: boolean;
+  setShowRaw: (v: boolean) => void;
+}) {
+  const { config: siteConfig } = useConfig();
+  return (
+    <header className="mb-12 text-center">
+      <div className="flex justify-center mb-6">
+        <Avatar
+          name={file.meta.title}
+          size={128}
+          fallbackImg={siteConfig?.errorImg?.flink}
+        />
+      </div>
+      <h1 className="text-2xl font-bold text-zinc-900 mb-4">
+        {file.meta.title}
+      </h1>
+      {file.meta.description && (
+        <p className="text-sm text-zinc-400">{file.meta.description}</p>
+      )}
+      {file.meta.tags && file.meta.tags.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2 mt-4">
+          {file.meta.tags.map((tag: string) => (
+            <span
+              key={tag}
+              className="px-3 py-1 bg-zinc-50 text-zinc-500 text-xs font-bold uppercase tracking-widest rounded-full border border-zinc-100"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+      {isSudo && rawContent && (
+        <div className="mt-6">
+          <button
+            onClick={() => setShowRaw(!showRaw)}
+            className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors"
+          >
+            {showRaw ? <Eye size={18} /> : <Code size={18} />}
+            <span className="text-sm font-bold">{showRaw ? '预览渲染' : '查看原始文件'}</span>
+          </button>
+        </div>
+      )}
+    </header>
+  );
+}
+
+function FaceDetailContent({ file, showRaw, rawContent }: {
+  file: ContentFile;
+  showRaw: boolean;
+  rawContent: string;
+}) {
+  const { config: siteConfig } = useConfig();
+  return (
+    <div className="max-w-3xl mx-auto">
+      {showRaw && rawContent ? (
+        <pre className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 overflow-x-auto font-mono text-sm leading-relaxed whitespace-pre-wrap">
+          {rawContent}
+        </pre>
+      ) : (
+        <MarkdownRenderer content={file.content} highlight={siteConfig?.highlight} />
+      )}
+    </div>
+  );
+}
+
 export default function FaceDetailPage() {
   const params = useParams();
   const slugArray = params?.slug as string[] || [];
   const fullPath = '/' + slugArray.join('/');
-  const { t } = useI18n();
   const { isSudo } = useAuth();
-  const { config: siteConfig } = useConfig();
 
   const [file, setFile] = React.useState<ContentFile | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -41,8 +147,8 @@ export default function FaceDetailPage() {
           setFile(null);
         }
       } catch (err) {
-		console.error('Failed to fetch face details:', err);
-		showError('联系人详情加载失败');
+        console.error('Failed to fetch face details:', err);
+        showError('联系人详情加载失败');
       } finally {
         setLoading(false);
       }
@@ -50,92 +156,23 @@ export default function FaceDetailPage() {
     void fetchData();
   }, [fullPath]);
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <GlobalLoading size="large" />
-    </div>
-  );
+  if (loading) return <LoadingView />;
   if (!file) notFound();
-
-  const breadcrumbs = slugArray.map((segment, index) => ({
-    label: segment,
-    href: '/faces/' + slugArray.slice(0, index + 1).join('/'),
-    isLast: index === slugArray.length - 1,
-  }));
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
       <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
-        {/* 面包屑 */}
-        <nav className="flex items-center gap-2 text-sm text-zinc-400 mb-8 flex-wrap">
-          <Link href="/faces" className="hover:text-zinc-900 transition-colors flex items-center gap-1">
-            <ArrowLeft size={14} />
-            {t('nav.faces')}
-          </Link>
-          {breadcrumbs.map((crumb) => (
-            <span key={crumb.href} className="flex items-center gap-2">
-              <span>/</span>
-              {crumb.isLast ? (
-                <span className="text-zinc-900 font-medium">{crumb.label}</span>
-              ) : (
-                <Link href={crumb.href} className="hover:text-zinc-900 transition-colors">
-                  {crumb.label}
-                </Link>
-              )}
-            </span>
-          ))}
-        </nav>
-
-        {/* 联系人信息 */}
+        <BreadcrumbsNav slugArray={slugArray} />
         <article>
-          <header className="mb-12 text-center">
-            <div className="w-32 h-32 bg-gradient-to-br from-zinc-100 to-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-zinc-100">
-              <span className="text-5xl font-black text-zinc-200">
-                {file.meta.title.charAt(0)}
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold text-zinc-900 mb-4">
-              {file.meta.title}
-            </h1>
-            {file.meta.description && (
-              <p className="text-sm text-zinc-400">{file.meta.description}</p>
-            )}
-            {file.meta.tags && file.meta.tags.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-2 mt-4">
-                {file.meta.tags.map((tag: string) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-zinc-50 text-zinc-500 text-xs font-bold uppercase tracking-widest rounded-full border border-zinc-100"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-            {isSudo && rawContent && (
-              <div className="mt-6">
-                <button
-                  onClick={() => setShowRaw(!showRaw)}
-                  className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors"
-                >
-                  {showRaw ? <Eye size={18} /> : <Code size={18} />}
-                  <span className="text-sm font-bold">{showRaw ? '预览渲染' : '查看原始文件'}</span>
-                </button>
-              </div>
-            )}
-          </header>
-
-          {/* 详细内容 */}
-          <div className="max-w-3xl mx-auto">
-            {showRaw && rawContent ? (
-              <pre className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 overflow-x-auto font-mono text-sm leading-relaxed whitespace-pre-wrap">
-                {rawContent}
-              </pre>
-            ) : (
-              <MarkdownRenderer content={file.content} highlight={siteConfig?.highlight} />
-            )}
-          </div>
+          <FaceDetailHeader
+            file={file}
+            isSudo={isSudo}
+            rawContent={rawContent}
+            showRaw={showRaw}
+            setShowRaw={setShowRaw}
+          />
+          <FaceDetailContent file={file} showRaw={showRaw} rawContent={rawContent} />
         </article>
       </main>
       <Footer />

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { loadConfigAsync, canAccess, hasDatabase } from '@/lib/config';
 import { getDraft, saveDraft } from '@/lib/draft-storage';
 import { createApiLogger } from '@/lib/api-logger';
 
@@ -27,8 +28,14 @@ export async function GET() {
   try {
     logger.info('GET', '获取文章列表');
     // 已发布文章：从 posts/ 文件系统索引读取（由 lib/content.ts 在构建时生成）
+    const session = await getSession();
+    const isAuthenticated = !!session;
+    const config = await loadConfigAsync();
+    const dbAvailable = hasDatabase();
     const { getContentFiles } = await import('@/lib/content');
-    const publishedFiles = getContentFiles('posts');
+    const publishedFiles = getContentFiles('posts').filter((f) =>
+      canAccess('posts', f.slug, isAuthenticated, dbAvailable, config)
+    );
     const published = publishedFiles.map((f) => ({
       id: f.slug,
       slug: f.slug,

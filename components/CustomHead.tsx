@@ -1,9 +1,11 @@
 import { loadConfigAsync } from '@/lib/config';
+import { HeadInjector } from './HeadInjector';
 
 /**
  * 自定义 Head 注入组件
  * 从配置读取 customCSS 和 customHead，注入到页面中
- * 此组件在服务端渲染，确保内容在 HTML 初始加载时就存在
+ * customCSS 以内联 style 直接渲染（Server Component）
+ * customHead 通过客户端组件注入到 document.head
  */
 export async function CustomHead() {
   const config = await loadConfigAsync();
@@ -15,7 +17,7 @@ export async function CustomHead() {
         <style dangerouslySetInnerHTML={{ __html: customCSS }} />
       )}
       {customHead && (
-        <div dangerouslySetInnerHTML={{ __html: customHead }} />
+        <HeadInjector content={customHead} />
       )}
     </>
   );

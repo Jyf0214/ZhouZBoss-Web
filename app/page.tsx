@@ -79,6 +79,7 @@ export default async function HomePage() {
         heroTitleLine1={config.site.heroTitleLine1}
         heroTitleLine2={config.site.heroTitleLine2}
         defaultCover={config.cover?.defaultCover?.[0]}
+        coverConfig={config.cover}
       />
     </div>
   );

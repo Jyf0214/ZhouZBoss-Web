@@ -31,6 +31,7 @@ interface ArticleData {
   coverImage: string;
   createdAt: string;
   status: string;
+  category?: string;
 }
 
 interface UserInfo {
@@ -93,6 +94,32 @@ function SudoActions({ showRaw, rawContent, onToggleRaw }: {
   );
 }
 
+function ArticleLabelBadge({ postMeta, category }: {
+  postMeta?: PostMetaPostConfig;
+  category?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 mb-4">
+      {postMeta?.label && (
+        <span className="inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-zinc-900 text-white">
+          文章
+        </span>
+      )}
+      {postMeta?.unread && (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-red-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+          未读
+        </span>
+      )}
+      {postMeta?.categories && category && (
+        <span className="inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
+          {category}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function ArticleHeader({
   articleData,
   userData,
@@ -116,15 +143,15 @@ function ArticleHeader({
   const dateFormat = postMeta?.dateFormat ?? 'date';
   const showTags = postMeta?.tags !== false;
 
-  const displayDate = dateType === 'none' ? null : new Date(articleData.createdAt).toLocaleDateString(
-    'zh-CN',
-    dateFormat === 'simple'
-      ? { month: 'short', day: 'numeric' }
-      : { year: 'numeric', month: 'long', day: 'numeric' }
-  );
+  const dateOptions: Intl.DateTimeFormatOptions = dateFormat === 'simple'
+    ? { month: 'short', day: 'numeric' }
+    : { year: 'numeric', month: 'long', day: 'numeric' };
+  const displayDate = dateType === 'none' ? null : new Date(articleData.createdAt).toLocaleDateString('zh-CN', dateOptions);
 
   return (
     <header className="mb-12">
+      <ArticleLabelBadge postMeta={postMeta} category={articleData.category} />
+
       <TagsSection tags={articleData.tags} show={showTags} />
 
       <h1 className="text-5xl md:text-7xl font-display font-black tracking-tight text-zinc-900 mb-10 leading-[1.05]">
@@ -233,7 +260,7 @@ function ArticleCoverSection({
   mainColor: string | null | undefined;
 }) {
   const coverSrc = articleData.coverImage || siteConfig?.cover?.defaultCover?.[0];
-  if (!coverSrc || siteConfig?.cover?.indexEnable === false) return null;
+  if (!coverSrc) return null;
 
   return (
     <ArticleCoverImage

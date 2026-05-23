@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { loadConfig, canAccess, hasDatabase, type AppConfig } from '@/lib/config';
 import { getDraft, saveDraft, deleteDraft } from '@/lib/draft-storage';
 import { createApiLogger } from '@/lib/api-logger';
 
@@ -53,12 +54,18 @@ async function handlePublishedArticleResponse(
 
 async function handleFileSystemLookup(
   id: string,
+  isAuthenticated: boolean,
+  dbAvailable: boolean,
+  config: AppConfig,
 ): Promise<NextResponse | null> {
   const { getContentFile } = await import('@/lib/content');
   const slug = id.startsWith('/') ? id : `/${id}`;
   const file = getContentFile('posts', slug);
   if (!file) {
     return null;
+  }
+  if (!canAccess('posts', file.slug, isAuthenticated, dbAvailable, config)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   return NextResponse.json({
     id: file.slug,
@@ -98,7 +105,11 @@ export async function GET(
       return NextResponse.json(meta);
     }
 
-    const fileResponse = await handleFileSystemLookup(id);
+    const session = await getSession();
+    const isAuthenticated = !!session;
+    const config = loadConfig();
+    const dbAvailable = hasDatabase();
+    const fileResponse = await handleFileSystemLookup(id, isAuthenticated, dbAvailable, config);
     if (fileResponse) {
       return fileResponse;
     }

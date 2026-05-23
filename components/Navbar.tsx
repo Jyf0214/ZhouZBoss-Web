@@ -9,6 +9,7 @@ import { LoginOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
+import { useConfig } from '@/hooks/use-config';
 import { Clock, MapPin } from 'lucide-react';
 
 interface NavMenuItem {
@@ -29,11 +30,80 @@ interface NavConfig {
   menu: NavMenuGroup[];
 }
 
+function NavMenuGroup({ config }: { config: NavConfig | null }) {
+  if (!config?.enable || !config.menu?.length) return null;
+  return (
+    <div className="hidden md:flex items-center gap-1 ml-8">
+      {config.menu.map((group, gi) => (
+        <React.Fragment key={gi}>
+          {group.item.map((item, ii) => (
+            <Link key={`${gi}-${ii}`} href={item.link}>
+              <Button type="text" size="small" className="text-zinc-500 hover:text-zinc-900">
+                {item.icon && <img src={item.icon} alt="" className="w-4 h-4" />}
+                {item.name}
+              </Button>
+            </Link>
+          ))}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function NavClock({ travelling, clock, time }: { travelling?: boolean; clock?: boolean; time: string }) {
+  return (
+    <>
+      {travelling && (
+        <span className="hidden md:flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
+          <MapPin size={12} />
+          旅行中
+        </span>
+      )}
+      {clock && time && (
+        <span className="hidden md:flex items-center gap-1 text-xs text-zinc-400 font-mono">
+          <Clock size={12} />
+          {time}
+        </span>
+      )}
+    </>
+  );
+}
+
+function NavAuthSection({ user, allowRegistration, clerkAvailable, t }: { user: unknown; allowRegistration: boolean; clerkAvailable: boolean; t: (key: string) => string }) {
+  if (user) return <UserMenu />;
+  return (
+    <>
+      <Link href="/login">
+        <Button type="text" size="large" className="text-zinc-600 hover:text-zinc-900">
+          {t('auth.login')}
+        </Button>
+      </Link>
+      {allowRegistration && (
+        <Link href="/register">
+          <Button size="large" className="bg-zinc-900 text-white hover:bg-zinc-800 border-0 rounded-xl px-6">
+            <span className="flex items-center gap-1.5">
+              <LoginOutlined />
+              <span>{t('auth.register')}</span>
+            </span>
+          </Button>
+        </Link>
+      )}
+      {clerkAvailable && allowRegistration && (
+        <ClerkAuthProvider>
+          <ClerkLoginSection variant="compact" />
+        </ClerkAuthProvider>
+      )}
+    </>
+  );
+}
+
 export function Navbar() {
   const { user, clerkAvailable } = useAuth();
   const { t } = useI18n();
+  const { config: siteConfig } = useConfig();
   const [navConfig, setNavConfig] = useState<NavConfig | null>(null);
   const [time, setTime] = useState('');
+  const allowRegistration = siteConfig?.auth?.allowRegistration !== false;
 
   useEffect(() => {
     const fetchNav = async () => {
@@ -74,66 +144,11 @@ export function Navbar() {
               </div>
               <span className="font-display font-bold text-xl tracking-tight text-zinc-900">{t('sidebar.originiumKernel')}</span>
             </Link>
-            {navConfig?.enable && navConfig.menu.length > 0 && (
-              <div className="hidden md:flex items-center gap-1 ml-8">
-                {navConfig.menu.map((group, gi) => (
-                  <React.Fragment key={gi}>
-                    {group.item.map((item, ii) => (
-                      <Link key={`${gi}-${ii}`} href={item.link}>
-                        <Button
-                          type="text"
-                          size="small"
-                          className="text-zinc-500 hover:text-zinc-900"
-                        >
-                          {item.icon && (
-                            <img src={item.icon} alt="" className="w-4 h-4" />
-                          )}
-                          {item.name}
-                        </Button>
-                      </Link>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </div>
-            )}
+            <NavMenuGroup config={navConfig} />
           </div>
           <div className="flex items-center gap-3">
-            {navConfig?.travelling && (
-              <span className="hidden md:flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
-                <MapPin size={12} />
-                旅行中
-              </span>
-            )}
-            {navConfig?.clock && time && (
-              <span className="hidden md:flex items-center gap-1 text-xs text-zinc-400 font-mono">
-                <Clock size={12} />
-                {time}
-              </span>
-            )}
-            {user ? (
-              <UserMenu />
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button type="text" size="large" className="text-zinc-600 hover:text-zinc-900">
-                    {t('auth.login')}
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button size="large" className="bg-zinc-900 text-white hover:bg-zinc-800 border-0 rounded-xl px-6">
-                    <span className="flex items-center gap-1.5">
-                      <LoginOutlined />
-                      <span>{t('auth.register')}</span>
-                    </span>
-                  </Button>
-                </Link>
-                {clerkAvailable && (
-                  <ClerkAuthProvider>
-                    <ClerkLoginSection variant="compact" />
-                  </ClerkAuthProvider>
-                )}
-              </>
-            )}
+            <NavClock travelling={navConfig?.travelling} clock={navConfig?.clock} time={time} />
+            <NavAuthSection user={user} allowRegistration={allowRegistration} clerkAvailable={clerkAvailable} t={t} />
           </div>
         </div>
       </div>

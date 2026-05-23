@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* 文章主色调：使用封面提取的主色调 */
+article header h1 {
+  color: var(--main-tone, #18181b) !important;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  color: var(--main-tone, #18181b);
+}
+
+.prose a {
+  color: var(--main-tone, #18181b);
+}
+
+.prose blockquote {
+  border-left-color: var(--main-tone, #18181b);
+}

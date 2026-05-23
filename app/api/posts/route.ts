@@ -1,4 +1,6 @@
 import { getContentFiles, getContentIndexes } from '@/lib/content';
+import { loadConfigAsync, canAccess, hasDatabase } from '@/lib/config';
+import { getSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
 
 const logger = createApiLogger('/api/posts');
@@ -7,14 +9,26 @@ const logger = createApiLogger('/api/posts');
  * 帖子列表 API — 纯文件系统读取，不查数据库
  * 仅供后台管理使用
  */
-export function GET() {
+export async function GET() {
   logger.info('GET', '读取帖子列表');
+  const session = await getSession();
+  const isAuthenticated = !!session;
+  const config = await loadConfigAsync();
+  const dbAvailable = hasDatabase();
   const allFiles = getContentFiles('posts');
   const indexes = getContentIndexes('posts');
 
-  logger.info('GET', '帖子列表读取成功', { count: allFiles.length });
+  const accessibleFiles = allFiles.filter((f) =>
+    canAccess('posts', f.slug, isAuthenticated, dbAvailable, config)
+  );
+
+  const accessibleIndexes = indexes.filter((idx) =>
+    canAccess('posts', idx.slug, isAuthenticated, dbAvailable, config)
+  );
+
+  logger.info('GET', '帖子列表读取成功', { count: accessibleFiles.length });
   return Response.json({
-    posts: allFiles.map((f) => ({
+    posts: accessibleFiles.map((f) => ({
       slug: f.slug,
       title: f.meta.title,
       date: f.meta.date,
@@ -23,7 +37,7 @@ export function GET() {
       cover: f.meta.cover,
       description: f.meta.description,
     })),
-    indexes: indexes.map((idx) => ({
+    indexes: accessibleIndexes.map((idx) => ({
       slug: idx.slug,
       title: idx.title,
       description: idx.description,

@@ -12,17 +12,112 @@ interface TocItem {
 
 interface TableOfContentsProps {
   content: string;
+  pageType?: 'post' | 'page';
 }
 
-export default function TableOfContents({ content }: TableOfContentsProps) {
+function TocButton({ simple, onClick }: { simple?: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`fixed bottom-6 right-6 z-50 w-12 h-12 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center transition-all ${
+        simple
+          ? 'text-zinc-300 hover:text-zinc-500 shadow-sm'
+          : 'text-zinc-500 hover:text-zinc-900 hover:shadow-xl'
+      }`}
+      aria-label="目录"
+    >
+      <List size={simple ? 18 : 20} />
+    </button>
+  );
+}
+
+interface TocItemProps {
+  item: TocItem;
+  index: number;
+  activeId: string;
+  simple?: boolean;
+  maxLevel: number;
+  numberEnabled?: boolean;
+  onClick: () => void;
+}
+
+function TocItemButton({ item, index, activeId, simple, maxLevel, numberEnabled, onClick }: TocItemProps) {
+  const isActive = activeId === item.id;
+  return (
+    <button
+      onClick={onClick}
+      className={`block w-full text-left py-1 rounded-lg px-2 transition-colors ${
+        isActive
+          ? simple
+            ? 'bg-zinc-50 text-zinc-700'
+            : 'bg-zinc-100 text-zinc-900 font-medium'
+          : simple
+            ? 'text-zinc-300 hover:text-zinc-500 hover:bg-zinc-50'
+            : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50'
+      } ${simple ? 'text-xs' : 'text-sm'}`}
+      style={{ paddingLeft: `${(item.level - maxLevel) * (simple ? 8 : 12) + 8}px` }}
+    >
+      {!simple && numberEnabled && `${index + 1}. `}{item.text}
+    </button>
+  );
+}
+
+interface TocPanelProps {
+  open: boolean;
+  items: TocItem[];
+  activeId: string;
+  simple?: boolean;
+  maxLevel: number;
+  numberEnabled?: boolean;
+  onItemClick: (id: string) => void;
+  panelRef: React.RefObject<HTMLDivElement | null>;
+}
+
+function TocPanel({ open, items, activeId, simple, maxLevel, numberEnabled, onItemClick, panelRef }: TocPanelProps) {
+  if (!open) return null;
+  return (
+    <div
+      ref={panelRef}
+      className={`fixed bottom-20 right-6 z-50 max-h-80 overflow-y-auto bg-white rounded-2xl shadow-xl border border-zinc-100 ${
+        simple ? 'p-3 w-56' : 'p-4 w-64'
+      }`}
+    >
+      <h4 className={`font-bold uppercase tracking-widest text-zinc-400 mb-3 ${
+        simple ? 'text-[10px]' : 'text-xs'
+      }`}>目录</h4>
+      <nav className={simple ? 'space-y-0.5' : 'space-y-1'}>
+        {items.map((item, i) => (
+          <TocItemButton
+            key={i}
+            item={item}
+            index={i}
+            activeId={activeId}
+            simple={simple}
+            maxLevel={maxLevel}
+            numberEnabled={numberEnabled}
+            onClick={() => onItemClick(item.id)}
+          />
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+export default function TableOfContents({ content, pageType = 'post' }: TableOfContentsProps) {
   const { config } = useConfig();
   const cfg = config?.toc;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(cfg?.expand ?? false);
   const [items, setItems] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState<string>('');
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const isDisabled = cfg?.post === false;
+  const isDisabled = pageType === 'post'
+    ? cfg?.post === false
+    : cfg?.page !== true;
+
+  useEffect(() => {
+    if (cfg?.expand) setOpen(true);
+  }, [cfg?.expand]);
 
   useEffect(() => {
     const headingRegex = /^(#{1,6})\s+(.+)$/gm;
@@ -71,46 +166,29 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
   if (isDisabled || items.length === 0) return null;
 
   const maxLevel = Math.min(...items.map(i => i.level));
+  const simple = cfg?.styleSimple;
+
+  const handleItemClick = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+      setOpen(false);
+    }
+  };
 
   return (
     <>
-      <button
-        onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:shadow-xl transition-all"
-        aria-label="目录"
-      >
-        <List size={20} />
-      </button>
-      {open && (
-        <div
-          ref={panelRef}
-          className="fixed bottom-20 right-6 z-50 w-64 max-h-80 overflow-y-auto bg-white rounded-2xl shadow-xl border border-zinc-100 p-4"
-        >
-          <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">目录</h4>
-          <nav className="space-y-1">
-            {items.map((item, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  const el = document.getElementById(item.id);
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth' });
-                    setOpen(false);
-                  }
-                }}
-                className={`block w-full text-left text-sm py-1 rounded-lg px-2 transition-colors ${
-                  activeId === item.id
-                    ? 'bg-zinc-100 text-zinc-900 font-medium'
-                    : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50'
-                }`}
-                style={{ paddingLeft: `${(item.level - maxLevel) * 12 + 8}px` }}
-              >
-                {cfg?.number && `${i + 1}. `}{item.text}
-              </button>
-            ))}
-          </nav>
-        </div>
-      )}
+      <TocButton simple={simple} onClick={() => setOpen(!open)} />
+      <TocPanel
+        open={open}
+        items={items}
+        activeId={activeId}
+        simple={simple}
+        maxLevel={maxLevel}
+        numberEnabled={cfg?.number}
+        onItemClick={handleItemClick}
+        panelRef={panelRef}
+      />
     </>
   );
 }

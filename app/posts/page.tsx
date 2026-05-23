@@ -53,7 +53,7 @@ export default function PostsPage() {
           {config.site.title}
         </h1>
         <p className="text-zinc-400 text-lg mb-12">{config.site.description}</p>
-        <PostListClient posts={posts} groups={groups} />
+        <PostListClient posts={posts} groups={groups} coverConfig={config.cover} />
       </main>
     </div>
   );
