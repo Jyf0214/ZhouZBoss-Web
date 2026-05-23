@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { ArrowLeft, User } from 'lucide-react';
+import { GlobalLoading } from '@/components/Loading';
 import Link from 'next/link';
 import { useI18n } from '@/hooks/use-i18n';
 import { showError } from '@/lib/error';
@@ -43,11 +44,8 @@ export default function ArticlePage() {
   if (loading) return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center text-zinc-500">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="w-12 h-12 bg-zinc-100 rounded-full"></div>
-          <div className="h-4 w-32 bg-zinc-100 rounded"></div>
-        </div>
+      <div className="flex-1 flex items-center justify-center">
+        <GlobalLoading size="large" />
       </div>
     </div>
   );

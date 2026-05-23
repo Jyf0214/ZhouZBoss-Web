@@ -5,7 +5,8 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
 import { Navbar } from '@/components/Navbar';
-  import { Button, Input, Steps, message } from 'antd';
+import { Button, Input, Steps, message } from 'antd';
+import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { Mail, Shield, KeyRound, ArrowRight, CheckCircle2 } from 'lucide-react';
 
@@ -14,7 +15,7 @@ import { Mail, Shield, KeyRound, ArrowRight, CheckCircle2 } from 'lucide-react';
  * 流程：输入邮箱 → 发送验证码 → 输入验证码 → 绑定
  */
 export default function ClerkBindPage() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
@@ -86,6 +87,8 @@ export default function ClerkBindPage() {
       setLoading(false);
     }
   };
+
+  if (!isLoaded) return <GlobalLoading />;
 
   if (!user) {
     return (

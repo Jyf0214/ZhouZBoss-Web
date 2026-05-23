@@ -162,7 +162,7 @@ if (res.ok) {
     }
   };
 
-  if (fetching) return <div className="p-8 text-center text-zinc-500">{t('editor.loading')}</div>;
+  if (fetching) return <GlobalLoading size="large" />;
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10 min-h-screen flex flex-col">

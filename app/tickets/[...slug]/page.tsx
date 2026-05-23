@@ -68,7 +68,7 @@ function TicketStatusUpdater({
 }
 
 export default function TicketDetailPage({ params }: { params: Promise<{ slug: string[] }> }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const resolvedParams = use(params);
   const { t, locale } = useI18n();
@@ -150,6 +150,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
 
   const isAdmin = user?.role === 'admin' || user?.role === 'sudo';
 
+  if (authLoading) return <GlobalLoading />;
   if (!user) return null;
 
   if (loading) {

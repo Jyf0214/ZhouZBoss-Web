@@ -27,7 +27,7 @@ interface GroupItem {
 export default function DiaryPage() {
   const [data, setData] = React.useState<{diaries: DiaryItem[], groups: GroupItem[]}>({diaries: [], groups: []});
   const [loading, setLoading] = React.useState(true);
-  const { user, isSudo } = useAuth();
+  const { user, isSudo, loading: authLoading } = useAuth();
   const router = useRouter();
 
   React.useEffect(() => {
@@ -56,6 +56,8 @@ export default function DiaryPage() {
     };
     void fetchData();
   }, [user, isSudo, router]);
+
+  if (authLoading) return <GlobalLoading />;
 
   if (loading) {
     return (

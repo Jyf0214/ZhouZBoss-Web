@@ -6,6 +6,7 @@ import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import Link from 'next/link';
 import { ArrowLeft, Code, Eye } from 'lucide-react';
+import { GlobalLoading } from '@/components/Loading';
 import { notFound, useParams } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
@@ -46,7 +47,11 @@ export default function FaceDetailPage() {
     void fetchData();
   }, [fullPath]);
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <GlobalLoading size="large" />
+    </div>
+  );
   if (!file) notFound();
 
   const breadcrumbs = slugArray.map((segment, index) => ({

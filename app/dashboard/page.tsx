@@ -94,7 +94,7 @@ function DashboardStatCard({ card }: { card: StatCardData }) {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t, locale } = useI18n();
   const router = useRouter();
 
@@ -196,7 +196,7 @@ export default function DashboardPage() {
     { label: t('sidebar.recycleBin'), icon: Trash2, href: '/dashboard/articles?status=pending_deletion', desc: t('dashboard.recycleBinDesc') },
   ];
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <GlobalLoading size="large" />

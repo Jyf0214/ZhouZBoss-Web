@@ -24,7 +24,7 @@ interface ArticleItem {
 }
 
 export default function ArticlesPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const status = searchParams?.get('status');
@@ -95,6 +95,7 @@ export default function ArticlesPage() {
     !searchTerm || a.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (authLoading) return <GlobalLoading />;
   if (!user) return null;
 
   if (loading) {

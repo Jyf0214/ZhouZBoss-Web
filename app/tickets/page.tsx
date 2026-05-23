@@ -20,7 +20,7 @@ interface Ticket {
 }
 
 export default function TicketsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { t, locale } = useI18n();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -72,6 +72,7 @@ export default function TicketsPage() {
     }
   };
 
+  if (authLoading) return <GlobalLoading />;
   if (!user) return null;
 
   if (loading) {

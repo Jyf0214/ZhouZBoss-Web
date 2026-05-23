@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Button, Input, message } from 'antd';
+import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { useI18n } from '@/hooks/use-i18n';
 
@@ -27,7 +28,7 @@ interface TicketTemplate {
 }
 
 export default function NewTicketPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { t } = useI18n();
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
@@ -80,6 +81,7 @@ export default function NewTicketPage() {
     }
   };
 
+  if (authLoading) return <GlobalLoading />;
   if (!user) return null;
 
   return (
