@@ -269,9 +269,9 @@ export async function DELETE(
 
     // 管理员直接永久删除
     if (session.role === 'admin' || session.role === 'sudo') {
-      // 删除 GitHub 文件（通过 /api/github POST 端点）
+      // 删除 GitHub 文件（失败不影响本地删除）
       if (meta.status === 'published' && meta.slug) {
-        await fetch(`${req.nextUrl.origin}/api/github`, {
+        fetch(`${req.nextUrl.origin}/api/github`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -279,7 +279,7 @@ export async function DELETE(
             path: `posts${meta.slug}.md`,
             message: `delete: remove post "${meta.title}"`,
           }),
-        });
+        }).catch(() => logger.warn('DELETE', 'GitHub 文件删除失败（已忽略）', { slug: meta.slug }));
       }
 
       // 删除数据库记录

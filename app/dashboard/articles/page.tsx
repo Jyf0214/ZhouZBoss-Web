@@ -64,6 +64,9 @@ export default function ArticlesPage() {
       if (res.ok) {
         setArticles(articles.filter(a => a.id !== id));
         message.success(t('common.success'));
+      } else {
+        const body = await res.json().catch(() => ({ error: '删除失败' }));
+        showError(body.error || `删除失败 (${res.status})`);
       }
     } catch {
       showError(t('common.error'));
