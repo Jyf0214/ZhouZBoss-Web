@@ -20,28 +20,22 @@ async function main() {
     process.env.POSTGRES_PRISMA_URL ||
     process.env.POSTGRES_URL_NON_POOLING;
   
-  if (!databaseUrl) {
-    console.log('[数据库初始化] 未找到数据库 URL，跳过初始化');
-    return;
-  }
-  
   if (process.env.SKIP_DB_INIT === 'true') {
     console.log('[数据库初始化] SKIP_DB_INIT=true，跳过初始化');
     return;
   }
-  
-  let finalUrl = databaseUrl
-  if (databaseUrl.startsWith('postgres') && !databaseUrl.includes('sslmode')) {
-    const separator = databaseUrl.includes('?') ? '&' : '?'
-    finalUrl = `${databaseUrl}${separator}sslmode=require&ssl=true`
-  }
-  
-  process.env.DATABASE_URL = finalUrl
-  console.log('[数据库初始化] 开始初始化...')
 
   const { execSync } = await import('child_process')
   
-  try {
+  if (databaseUrl) {
+    let finalUrl = databaseUrl
+    if (databaseUrl.startsWith('postgres') && !databaseUrl.includes('sslmode')) {
+      const separator = databaseUrl.includes('?') ? '&' : '?'
+      finalUrl = `${databaseUrl}${separator}sslmode=require&ssl=true`
+    }
+    process.env.DATABASE_URL = finalUrl
+    console.log('[数据库初始化] 开始 Schema 推送...')
+
     try {
       execSync('npx prisma db push --accept-data-loss', {
         stdio: 'pipe',
@@ -55,39 +49,48 @@ async function main() {
           errorMsg.includes('max clients reached') ||
           errorMsg.includes('too many clients') ||
           errorMsg.includes('connection pool')) {
-        console.log('[数据库初始化] ⚠️ 数据库连接池已满，跳过初始化')
-        return
+        console.log('[数据库初始化] ⚠️ 数据库连接池已满，跳过 Schema 推送')
+      } else {
+        console.log('[数据库初始化] ⚠️ Schema 推送失败:', errorMsg.split('\n')[0])
       }
-      console.log('[数据库初始化] ⚠️ 数据库连接失败，跳过初始化:', errorMsg.split('\n')[0])
       return
     }
-    
+  } else {
+    console.log('[数据库初始化] 未找到数据库 URL，跳过 Schema 推送')
+  }
+
+  if (!databaseUrl) {
+    console.log('[数据库初始化] 无数据库，跳过数据初始化')
+    return
+  }
+
+  try {
     const authSecret = process.env.AUTH_SECRET || 'fallback-secret-at-least-32-chars-long';
     const adminPassword = process.env.ADMIN_PASSWORD;
     const adminEmail = process.env.ADMIN_EMAIL;
-    
+
     if (!adminPassword || !adminEmail) {
       console.log('[数据库初始化] ⚠️ 未配置 ADMIN_EMAIL 或 ADMIN_PASSWORD，跳过初始化');
       return;
     }
-    
+
     const { PrismaClient } = await import('@prisma/client')
     const prisma = new PrismaClient()
-    
+
     const users = await prisma.originiumKV.findMany({
       where: { key: { startsWith: 'user:uid:' } }
     })
-    
+
     const newHash = hashPassword(adminPassword, authSecret);
     let updatedCount = 0;
     let createdCount = 0;
-    
+
     for (const record of users) {
       if (!record.value) continue
-      
+
       try {
         const user = JSON.parse(record.value)
-        
+
         if (user.role === 'admin' || user.role === 'sudo') {
           if (isLegacyPassword(user.password)) {
             user.password = newHash;
@@ -111,11 +114,11 @@ async function main() {
         console.error('用户数据处理失败:', record.key, e.message);
       }
     }
-    
+
     const existingUid = await prisma.originiumKV.findUnique({
       where: { key: `user:email:${adminEmail}` }
     });
-    
+
     if (!existingUid) {
       const uid = crypto.randomUUID();
       const now = new Date().toISOString();
@@ -140,26 +143,26 @@ async function main() {
         update: { value: uid },
         create: { key: `user:email:${adminEmail}`, value: uid },
       });
-      
+
       await prisma.originiumKV.upsert({
         where: { key: `user:username:${adminEmail.split('@')[0]}` },
         update: { value: uid },
         create: { key: `user:username:${adminEmail.split('@')[0]}`, value: uid },
       });
-      
+
       createdCount++;
       console.log(`[数据库初始化] ✓ 创建新管理员: ${adminEmail}`);
     }
-    
+
     if (updatedCount > 0) {
       console.log(`[数据库初始化] ✓ 已更新 ${updatedCount} 个用户密码`);
     }
     if (createdCount > 0) {
       console.log(`[数据库初始化] ✓ 已创建 ${createdCount} 个新管理员`);
     }
-    
+
     await prisma.$disconnect()
-    
+
     try {
       const syncFlag = await prisma.originiumKV.findUnique({
         where: { key: 'github:sync:success' }
