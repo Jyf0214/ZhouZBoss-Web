@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 const LS_KEY_PREFIX = 'diary:draft:';
 
@@ -33,6 +33,8 @@ function removeLocalDraft(id: string): void {
   } catch {}
 }
 
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 export interface UseDiaryDraftOptions {
   id: string;
   title: string;
@@ -45,15 +47,29 @@ export interface UseDiaryDraftOptions {
 export function useDiaryDraft({ id, title, content, tags, date, onDraftFound }: UseDiaryDraftOptions) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasCheckedRef = useRef(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   const autoSave = useCallback(() => {
+    setSaveStatus('saving');
     const data: DraftData = { title, content, tags, date };
     saveLocalDraft(id, data);
     fetch('/api/diary/draft', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, title, content, tags, date }),
-    }).catch(() => undefined);
+    })
+      .then((res) => {
+        if (res.ok) {
+          setSaveStatus('saved');
+          setLastSavedAt(new Date());
+        } else {
+          setSaveStatus('error');
+        }
+      })
+      .catch(() => {
+        setSaveStatus('error');
+      });
   }, [id, title, content, tags, date]);
 
   useEffect(() => {
@@ -90,5 +106,5 @@ export function useDiaryDraft({ id, title, content, tags, date, onDraftFound }: 
     fetch(`/api/diary/draft?id=${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => undefined);
   }
 
-  return { clearDraft };
+  return { clearDraft, saveStatus, lastSavedAt };
 }

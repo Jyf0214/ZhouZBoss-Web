@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Cloud, CloudOff } from 'lucide-react';
 import { showError } from '@/lib/error';
 import { useDiaryDraft } from '@/hooks/use-diary-draft';
 
@@ -23,9 +23,15 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
   const [diaryDate, setDiaryDate] = React.useState(initialDate ?? new Date().toISOString().slice(0, 10));
   const [saving, setSaving] = React.useState(false);
   const [recovered, setRecovered] = React.useState(false);
+  const [nowTick, setNowTick] = React.useState(Date.now());
   const router = useRouter();
 
-  const { clearDraft } = useDiaryDraft({
+  React.useEffect(() => {
+    const iv = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const { clearDraft, saveStatus, lastSavedAt } = useDiaryDraft({
     id: draftId,
     title,
     content,
@@ -64,6 +70,16 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
     }
   };
 
+  function agoLabel(): string {
+    if (!lastSavedAt) return '';
+    const secs = Math.floor((nowTick - lastSavedAt.getTime()) / 1000);
+    if (secs < 5) return '刚刚保存';
+    if (secs < 60) return `${secs}秒前保存`;
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return `${mins}分钟前保存`;
+    return `${Math.floor(mins / 60)}小时前保存`;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <div className="border-b border-zinc-100 bg-white">
@@ -89,12 +105,25 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-10">
         <div className="space-y-4 sm:space-y-6">
-          <input
-            type="date"
-            value={diaryDate}
-            onChange={(e) => setDiaryDate(e.target.value)}
-            className="w-full text-base sm:text-lg text-zinc-600 bg-transparent border border-zinc-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 transition-all"
-          />
+          <div className="flex items-center gap-3">
+            <input
+              type="date"
+              value={diaryDate}
+              onChange={(e) => setDiaryDate(e.target.value)}
+              className="flex-1 text-base sm:text-lg text-zinc-600 bg-transparent border border-zinc-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 transition-all"
+            />
+            <div className="flex items-center gap-1.5 shrink-0 text-xs text-zinc-400">
+              {saveStatus === 'saving' && (
+                <><Loader2 size={12} className="animate-spin" /><span>保存中...</span></>
+              )}
+              {saveStatus === 'saved' && (
+                <><Cloud size={14} className="text-green-500" /><span>{agoLabel() || '已保存'}</span></>
+              )}
+              {saveStatus === 'error' && (
+                <><CloudOff size={14} className="text-red-400" /><span>保存失败</span></>
+              )}
+            </div>
+          </div>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
