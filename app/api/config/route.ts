@@ -122,6 +122,14 @@ function mergeAuth(
   return { ...base, ...overrideAuth };
 }
 
+function mergeNav(
+  base: AppConfig['nav'],
+  overrideNav: Partial<AppConfig['nav']> | undefined,
+): AppConfig['nav'] | undefined {
+  if (!overrideNav) return base;
+  return { ...(base ?? { enable: false, travelling: false, clock: false, menu: [] }), ...overrideNav };
+}
+
 function mergeAppConfig(
   base: AppConfig,
   override: Partial<AppConfig>,
@@ -131,6 +139,7 @@ function mergeAppConfig(
     appearance: mergeAppearance(base.appearance, override.appearance),
     access: mergeAccess(base.access, override.access),
     auth: mergeAuth(base.auth, override.auth),
+    nav: mergeNav(base.nav, override.nav),
   };
 }
 

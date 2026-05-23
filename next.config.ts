@@ -51,6 +51,24 @@ export interface AuthConfig {
   };
 }
 
+export interface NavMenuItem {
+  name: string;
+  link: string;
+  icon?: string;
+}
+
+export interface NavMenuGroup {
+  title: string;
+  item: NavMenuItem[];
+}
+
+export interface NavConfig {
+  enable: boolean;
+  travelling: boolean;
+  clock: boolean;
+  menu: NavMenuGroup[];
+}
+
 export interface UserConfig {
   avatar?: string;
 }
@@ -60,6 +78,7 @@ export interface AppConfig {
   appearance: AppearanceConfig;
   access: AccessConfig;
   auth: AuthConfig;
+  nav?: NavConfig;
   users?: Record<string, UserConfig>;
 }
 

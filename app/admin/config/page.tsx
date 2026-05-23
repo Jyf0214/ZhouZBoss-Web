@@ -14,12 +14,31 @@ import SiteConfigForm from '@/components/ui/SiteConfigForm';
 import LoadingAnimationConfig from '@/components/ui/LoadingAnimationConfig';
 import AccessControlSection from '@/components/ui/AccessControlSection';
 import BackgroundConfig from '@/components/ui/BackgroundConfig';
+import NavConfig from '@/components/ui/NavConfig';
 import GitHubStatus from '@/components/ui/GitHubStatus';
 type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
 type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 interface UserConfig {
   avatar?: string;
+}
+
+interface NavMenuItemData {
+  name: string;
+  link: string;
+  icon?: string;
+}
+
+interface NavMenuGroupData {
+  title: string;
+  item: NavMenuItemData[];
+}
+
+interface NavConfigData {
+  enable: boolean;
+  travelling: boolean;
+  clock: boolean;
+  menu: NavMenuGroupData[];
 }
 
 interface ConfigState {
@@ -59,6 +78,7 @@ interface ConfigState {
     allowRegistration: boolean;
     admin?: { avatar?: string };
   };
+  nav: NavConfigData;
   users?: Record<string, UserConfig>;
 }
 
@@ -98,12 +118,26 @@ function buildAuthConfig(data: Record<string, unknown>): ConfigState['auth'] {
   return (data.auth as ConfigState['auth']) || { allowRegistration: true };
 }
 
+function buildNavConfig(data: Record<string, unknown>): ConfigState['nav'] {
+  const navData = data.nav as Record<string, unknown> | undefined;
+  if (!navData) {
+    return { enable: false, travelling: false, clock: false, menu: [] };
+  }
+  return {
+    enable: (navData.enable as boolean) ?? false,
+    travelling: (navData.travelling as boolean) ?? false,
+    clock: (navData.clock as boolean) ?? false,
+    menu: (navData.menu as NavMenuGroupData[]) ?? [],
+  };
+}
+
 function buildConfigState(data: Record<string, unknown>): ConfigState {
   return {
     site: buildSiteConfig(data),
     appearance: buildAppearanceConfig(data),
     access: buildAccessConfig(data),
     auth: buildAuthConfig(data),
+    nav: buildNavConfig(data),
     users: (data.users as Record<string, UserConfig>) || {},
   };
 }
@@ -374,6 +408,13 @@ function ConfigFormBody({
         />
       </ConfigSection>
 
+      <ConfigSection title={t('config.nav') || '导航栏'} icon={Settings} color="bg-indigo-500">
+        <NavConfig
+          config={config.nav}
+          onChange={newNav => onConfigChange({ ...config, nav: newNav })}
+        />
+      </ConfigSection>
+
       <LoadingAnimationsSection
         config={config}
         onPageLoadingChange={handlePageLoadingChange}
@@ -466,6 +507,12 @@ export default function ConfigPage() {
     auth: {
       allowRegistration: true,
     },
+    nav: {
+      enable: false,
+      travelling: false,
+      clock: false,
+      menu: [],
+    },
     users: {},
   });
   const [loading, setLoading] = useState(true);
@@ -481,7 +528,7 @@ export default function ConfigPage() {
     repo: githubRepo,
     remoteConfig,
     currentConfig: config,
-    managedFields: ['site', 'appearance', 'access', 'auth'],
+    managedFields: ['site', 'appearance', 'access', 'auth', 'nav'],
     onSyncStart: () => setSaving(true),
     onSyncComplete: (yamlContent) => {
       setRemoteConfig(yamlContent);

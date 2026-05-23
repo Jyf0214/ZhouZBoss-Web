@@ -389,7 +389,8 @@
     "accessFaces": "通讯录访问",
     "accessDiary": "日记访问",
     "accessPublic": "公开",
-    "accessPrivate": "私有（默认全部）"
+    "accessPrivate": "私有（默认全部）",
+    "nav": "导航栏配置"
   },
   "editor": {
     "slugPlaceholder": "文章别名（URL 友好）",

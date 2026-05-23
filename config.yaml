@@ -48,6 +48,21 @@ access:
       - '*'
 auth:
   allowRegistration: false
+nav:
+  enable: false
+  travelling: false
+  clock: false
+  menu:
+    - title: 网页
+      item:
+        - name: 博客
+          link: https://amiya.giize.com/
+          icon: /img/favicon.ico
+    - title: 项目
+      item:
+        - name: Jyf0214
+          link: /Jyf0214
+          icon: /Jyf0214
 _testField: this-should-be-preserved-by-surgical-save-2026
 users:
   '169313142':

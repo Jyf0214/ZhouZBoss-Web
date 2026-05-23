@@ -389,7 +389,8 @@
     "accessFaces": "Faces Access",
     "accessDiary": "Diary Access",
     "accessPublic": "Public",
-    "accessPrivate": "Private (all by default)"
+    "accessPrivate": "Private (all by default)",
+    "nav": "Navigation Bar"
   },
   "editor": {
     "slugPlaceholder": "Article slug (URL-friendly)",
