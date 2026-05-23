@@ -50,9 +50,8 @@ export async function POST(req: NextRequest) {
 
     logger.info('POST', '重置链接已发送', { email });
     return NextResponse.json({ success: true, message: '重置链接已发送' }, { status: 201 });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    logger.error('POST', '密码重置错误', { error: error.message });
+  } catch (error: unknown) {
+    logger.error('POST', '密码重置错误', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }
@@ -101,9 +100,8 @@ export async function PUT(req: NextRequest) {
 
     logger.info('PUT', '密码重置成功', { uid });
     return NextResponse.json({ success: true, message: '密码重置成功' }, { status: 201 });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    logger.error('PUT', '密码重置错误', { error: error.message });
+  } catch (error: unknown) {
+    logger.error('PUT', '密码重置错误', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }

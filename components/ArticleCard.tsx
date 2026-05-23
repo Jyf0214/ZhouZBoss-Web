@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { Calendar, ArrowUpRight } from 'lucide-react';
+import { Calendar, ArrowUpRight, BookOpen, Clock } from 'lucide-react';
 import { Avatar } from './Avatar';
 
 import { type Article } from '@/types/content';
@@ -13,10 +13,21 @@ interface ArticleCardProps {
   article: Article;
 }
 
+function calcWordCount(text: string): { chars: number; readingTime: number } {
+  const cleaned = text.replace(/[#*`\[\]()>|~_\-]/g, '').replace(/\s+/g, ' ').trim();
+  const chineseChars = (cleaned.match(/[\u4e00-\u9fff]/g) ?? []).length;
+  const englishWords = cleaned.replace(/[\u4e00-\u9fff]/g, ' ').split(/\s+/).filter(Boolean).length;
+  const totalChars = chineseChars + englishWords;
+  const readingTime = Math.max(1, Math.ceil(totalChars / 300));
+  return { chars: totalChars, readingTime };
+}
+
 export function ArticleCard({ article }: ArticleCardProps) {
   const excerpt = article.content
     ? article.content.replace(/[#*`]/g, '').slice(0, 120)
     : '';
+
+  const { chars, readingTime } = article.content ? calcWordCount(article.content) : { chars: 0, readingTime: 0 };
 
   return (
     <motion.div
@@ -65,9 +76,23 @@ export function ArticleCard({ article }: ArticleCardProps) {
             <Avatar name={article.authorName} avatarUrl={article.authorAvatar} size={32} />
             <span className="text-xs font-bold text-zinc-900 uppercase tracking-tighter">{article.authorName}</span>
           </div>
-          <div className="flex items-center gap-2 text-[10px] font-black">
-            <Calendar size={12} />
-            <span>{new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+          <div className="flex items-center gap-3 text-[10px] font-black">
+            {chars > 0 && (
+              <span className="flex items-center gap-1">
+                <BookOpen size={12} />
+                <span>{chars} 字</span>
+              </span>
+            )}
+            {readingTime > 0 && (
+              <span className="flex items-center gap-1">
+                <Clock size={12} />
+                <span>{readingTime} 分钟</span>
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <Calendar size={12} />
+              <span>{new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+            </span>
           </div>
         </div>
       </div>

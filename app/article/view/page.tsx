@@ -8,6 +8,7 @@ import { ArrowLeft, User, Calendar, Tag } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { GlobalLoading } from '@/components/Loading';
+import Footer from '@/components/Footer';
 import { showError } from '@/lib/error';
 
 /**
@@ -18,8 +19,7 @@ function ArticleViewContent() {
   const userParam = searchParams?.get('user');
   const articleParam = searchParams?.get('article');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [article, setArticle] = useState<any>(null);
+  const [article, setArticle] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -125,11 +125,7 @@ function ArticleViewContent() {
         </article>
       </main>
 
-      <footer className="border-t border-zinc-100 py-12 bg-zinc-50/50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-zinc-400 text-sm font-medium">Published with Originium Kernel</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

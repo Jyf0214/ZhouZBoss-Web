@@ -28,6 +28,9 @@ import TocConfig from '@/components/ui/TocConfig';
 import CopyrightConfig from '@/components/ui/CopyrightConfig';
 import RewardConfig from '@/components/ui/RewardConfig';
 import PostEditConfig from '@/components/ui/PostEditConfig';
+import ShareConfig from '@/components/ui/ShareConfig';
+import MainToneConfig from '@/components/ui/MainToneConfig';
+import FooterConfig from '@/components/ui/FooterConfig';
 import GitHubStatus from '@/components/ui/GitHubStatus';
 type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
 type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -97,8 +100,11 @@ interface ConfigState {
   copy: { enable: boolean; copyright: { enable: boolean; limitCount: number } };
   social: Record<string, string>;
   authorStatus: { enable: boolean; statusImg: string; skills: string[] };
-  cover: { indexEnable: boolean; asideEnable: boolean; archivesEnable: boolean; position: string; defaultCover: string[] };
+  cover: { indexEnable: boolean; asideEnable: boolean; archivesEnable: boolean; position: 'left' | 'right' | 'both'; defaultCover: string[] };
   errorImg: { flink: string; postPage: string };
+  share: { sharejs: { enable: boolean; sites: string }; addtoany: { enable: boolean; item: string } };
+  mainTone: { enable: boolean; mode: 'cdn' | 'api' | 'both' };
+  footer: { owner: { enable: boolean; since: number }; customText: string; runtime: { enable: boolean; launchTime: string } };
   postMeta: {
     page: { dateType: string; dateFormat: string; categories: boolean; tags: boolean; label: boolean };
     post: { dateType: string; dateFormat: string; categories: boolean; tags: boolean; label: boolean; unread: boolean };
@@ -208,7 +214,7 @@ function buildCoverConfig(data: Record<string, unknown>): ConfigState['cover'] {
     indexEnable: (d?.indexEnable as boolean) ?? true,
     asideEnable: (d?.asideEnable as boolean) ?? true,
     archivesEnable: (d?.archivesEnable as boolean) ?? true,
-    position: (d?.position as string) ?? 'left',
+    position: (d?.position as 'left' | 'right' | 'both') ?? 'left',
     defaultCover: (d?.defaultCover as string[]) ?? [],
   };
 }
@@ -297,6 +303,47 @@ function buildPostEditConfig(data: Record<string, unknown>): ConfigState['postEd
   };
 }
 
+function buildShareConfig(data: Record<string, unknown>): ConfigState['share'] {
+  const d = data.share as Record<string, unknown> | undefined;
+  const sharejs = d?.sharejs as Record<string, unknown> | undefined;
+  const addtoany = d?.addtoany as Record<string, unknown> | undefined;
+  return {
+    sharejs: {
+      enable: (sharejs?.enable as boolean) ?? true,
+      sites: (sharejs?.sites as string) ?? 'facebook,twitter,wechat,weibo,qq',
+    },
+    addtoany: {
+      enable: (addtoany?.enable as boolean) ?? false,
+      item: (addtoany?.item as string) ?? 'facebook,twitter,wechat,sina_weibo,email,copy_link',
+    },
+  };
+}
+
+function buildMainToneConfig(data: Record<string, unknown>): ConfigState['mainTone'] {
+  const d = data.mainTone as Record<string, unknown> | undefined;
+  return {
+    enable: (d?.enable as boolean) ?? false,
+    mode: (d?.mode as 'cdn' | 'api' | 'both') ?? 'api',
+  };
+}
+
+function buildFooterConfig(data: Record<string, unknown>): ConfigState['footer'] {
+  const d = data.footer as Record<string, unknown> | undefined;
+  const owner = d?.owner as Record<string, unknown> | undefined;
+  const runtime = d?.runtime as Record<string, unknown> | undefined;
+  return {
+    owner: {
+      enable: (owner?.enable as boolean) ?? true,
+      since: (owner?.since as number) ?? 2020,
+    },
+    customText: (d?.customText as string) ?? '',
+    runtime: {
+      enable: (runtime?.enable as boolean) ?? false,
+      launchTime: (runtime?.launchTime as string) ?? '04/01/2021 00:00:00',
+    },
+  };
+}
+
 function buildConfigState(data: Record<string, unknown>): ConfigState {
   return {
     site: buildSiteConfig(data),
@@ -317,6 +364,9 @@ function buildConfigState(data: Record<string, unknown>): ConfigState {
     copyright: buildCopyrightConfig(data),
     reward: buildRewardConfig(data),
     postEdit: buildPostEditConfig(data),
+    share: buildShareConfig(data),
+    mainTone: buildMainToneConfig(data),
+    footer: buildFooterConfig(data),
     users: (data.users as Record<string, UserConfig>) || {},
   };
 }
@@ -685,6 +735,27 @@ function ConfigFormBody({
         />
       </ConfigSection>
 
+      <ConfigSection title={t('config.share') || '分享'} color="bg-green-500">
+        <ShareConfig
+          config={config.share}
+          onChange={v => onConfigChange({ ...config, share: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.mainTone') || '主色调'} color="bg-purple-500">
+        <MainToneConfig
+          config={config.mainTone}
+          onChange={v => onConfigChange({ ...config, mainTone: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.footer') || '页脚'} color="bg-zinc-600">
+        <FooterConfig
+          config={config.footer}
+          onChange={v => onConfigChange({ ...config, footer: v })}
+        />
+      </ConfigSection>
+
       <LoadingAnimationsSection
         config={config}
         onPageLoadingChange={handlePageLoadingChange}
@@ -799,6 +870,9 @@ export default function ConfigPage() {
     copyright: { enable: true, decode: false, authorHref: '', location: '中国', license: 'CC BY-NC-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/', avatarSinks: true, authorImgBack: '', authorImgFront: '', authorLink: '/' },
     reward: { enable: true, qrCodes: [] },
     postEdit: { enable: false, github: false },
+    share: { sharejs: { enable: true, sites: 'facebook,twitter,wechat,weibo,qq' }, addtoany: { enable: false, item: 'facebook,twitter,wechat,sina_weibo,email,copy_link' } },
+    mainTone: { enable: false, mode: 'api' },
+    footer: { owner: { enable: true, since: 2020 }, customText: '', runtime: { enable: false, launchTime: '04/01/2021 00:00:00' } },
     users: {},
   });
   const [loading, setLoading] = useState(true);
@@ -814,7 +888,7 @@ export default function ConfigPage() {
     repo: githubRepo,
     remoteConfig,
     currentConfig: config,
-    managedFields: ['site', 'appearance', 'access', 'auth', 'nav', 'mourn', 'highlight', 'copy', 'social', 'authorStatus', 'cover', 'errorImg', 'postMeta', 'wordcount', 'toc', 'copyright', 'reward', 'postEdit'],
+    managedFields: ['site', 'appearance', 'access', 'auth', 'nav', 'mourn', 'highlight', 'copy', 'social', 'authorStatus', 'cover', 'errorImg', 'postMeta', 'wordcount', 'toc', 'copyright', 'reward', 'postEdit', 'share', 'mainTone', 'footer'],
     onSyncStart: () => setSaving(true),
     onSyncComplete: (yamlContent) => {
       setRemoteConfig(yamlContent);

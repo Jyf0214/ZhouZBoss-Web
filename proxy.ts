@@ -23,12 +23,8 @@ export default async function proxy(req: NextRequest) {
   try {
     const { clerkMiddleware } = await import('@clerk/nextjs/server');
     // 所有路由都放行，认证由页面和 API 自行处理
-    const handler = clerkMiddleware(
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      async () => {},
-    );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (handler as any)(req, undefined);
+    const handler = clerkMiddleware(() => NextResponse.next());
+    return handler(req);
 	} catch (error) {
 		console.error('Clerk 中间件加载失败，跳过 Clerk 处理:', error);
 		return NextResponse.next();

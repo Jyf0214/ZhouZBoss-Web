@@ -7,6 +7,7 @@ import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import Link from 'next/link';
 import { ArrowLeft, Code, Eye } from 'lucide-react';
 import { GlobalLoading } from '@/components/Loading';
+import Footer from '@/components/Footer';
 import { notFound, useParams } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
@@ -135,11 +136,7 @@ export default function FaceDetailPage() {
           </div>
         </article>
       </main>
-      <footer className="border-t border-zinc-100 py-12 bg-zinc-50/50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-zinc-400 text-sm font-medium">Originium Kernel</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

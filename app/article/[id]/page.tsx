@@ -18,8 +18,7 @@ export default function ArticlePage() {
   const id = params?.id as string;
   const { t } = useI18n();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [article, setArticle] = useState<any>(null);
+  const [article, setArticle] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

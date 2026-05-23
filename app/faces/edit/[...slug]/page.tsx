@@ -12,6 +12,7 @@ import { editFace, deleteFace } from './actions';
 import type { ContentFile } from '@/types/content';
 import { GlobalLoading } from '@/components/Loading';
 import { Navbar } from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const { TextArea } = Input;
 
@@ -340,12 +341,7 @@ export default function EditFacePage() {
         </div>
       </main>
 
-      {/* 页脚 */}
-      <footer className="border-t border-zinc-100 py-12 bg-zinc-50/50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-zinc-400 text-sm font-medium">Originium Kernel</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

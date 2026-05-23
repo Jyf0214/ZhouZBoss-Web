@@ -142,6 +142,24 @@ reward:
 postEdit:
   enable: false
   github: false
+share:
+  sharejs:
+    enable: true
+    sites: facebook,twitter,wechat,weibo,qq
+  addtoany:
+    enable: false
+    item: facebook,twitter,wechat,sina_weibo,email,copy_link
+mainTone:
+  enable: false
+  mode: api
+footer:
+  owner:
+    enable: true
+    since: 2020
+  custom_text: ''
+  runtime:
+    enable: false
+    launch_time: 04/01/2021 00:00:00
 _testField: this-should-be-preserved-by-surgical-save-2026
 users:
   '169313142':

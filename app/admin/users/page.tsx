@@ -11,8 +11,7 @@ import { showError } from '@/lib/error';
 export default function UsersPage() {
   const { userRole } = useAuth();
   const { t } = useI18n();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState('');

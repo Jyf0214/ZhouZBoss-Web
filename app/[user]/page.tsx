@@ -9,6 +9,7 @@ import { type Article } from '@/types/content';
 import { useI18n } from '@/hooks/use-i18n';
 import { GlobalLoading } from '@/components/Loading';
 import { Avatar } from '@/components/Avatar';
+import Footer from '@/components/Footer';
 import { Calendar, Mail } from 'lucide-react';
 import Link from 'next/link';
 
@@ -121,11 +122,7 @@ function UserProfileContent() {
         </div>
       </main>
 
-      <footer className="border-t border-zinc-100 py-12 bg-zinc-50/50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-zinc-400 text-sm font-medium">Powered by Originium Kernel</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -173,6 +173,42 @@ export interface PostEditConfig {
   github: string | false;
 }
 
+export interface SharejsConfig {
+  enable: boolean;
+  sites: string;
+}
+
+export interface AddtoanyConfig {
+  enable: boolean;
+  item: string;
+}
+
+export interface ShareConfig {
+  sharejs: SharejsConfig;
+  addtoany: AddtoanyConfig;
+}
+
+export interface MainToneConfig {
+  enable: boolean;
+  mode: 'cdn' | 'api' | 'both';
+}
+
+export interface FooterOwnerConfig {
+  enable: boolean;
+  since: number;
+}
+
+export interface FooterRuntimeConfig {
+  enable: boolean;
+  launchTime: string;
+}
+
+export interface FooterConfig {
+  owner: FooterOwnerConfig;
+  customText: string;
+  runtime: FooterRuntimeConfig;
+}
+
 export interface UserConfig {
   avatar?: string;
 }
@@ -196,6 +232,9 @@ export interface AppConfig {
   copyright?: CopyrightConfig;
   reward?: RewardConfig;
   postEdit?: PostEditConfig;
+  share?: ShareConfig;
+  mainTone?: MainToneConfig;
+  footer?: FooterConfig;
   users?: Record<string, UserConfig>;
 }
 
@@ -217,8 +256,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   transpilePackages: ['motion'],
   turbopack: {},
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  webpack: (config: any, {dev}: {dev?: boolean}) => {
+  webpack: (config: { watchOptions?: { ignored?: RegExp } }, {dev}: {dev?: boolean}) => {
     if (dev && process.env.DISABLE_HMR === 'true') {
       config.watchOptions = {
         ignored: /.*/,

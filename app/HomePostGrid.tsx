@@ -25,12 +25,13 @@ interface HomePostGridProps {
   isAdmin?: boolean;
   heroTitleLine1?: string;
   heroTitleLine2?: string;
+  defaultCover?: string;
 }
 
 /**
  * 首页帖子网格 — 客户端组件，负责搜索/筛选交互
  */
-export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, heroTitleLine1, heroTitleLine2 }: HomePostGridProps) {
+export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, heroTitleLine1, heroTitleLine2, defaultCover }: HomePostGridProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const { t, locale } = useI18n();
@@ -190,9 +191,9 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
                     className="group bg-white rounded-[2rem] border-2 border-zinc-50 overflow-hidden hover:border-zinc-900 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-zinc-100 flex flex-col"
                   >
                     <Link href={`/posts${post.slug}`} className="block overflow-hidden aspect-video bg-zinc-50 relative">
-                      {post.cover ? (
+                      {post.cover || defaultCover ? (
                         <Image
-                          src={post.cover}
+                          src={post.cover || defaultCover!}
                           alt={post.title}
                           fill
                           className="object-cover group-hover:scale-110 transition-transform duration-700"

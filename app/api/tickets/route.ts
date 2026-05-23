@@ -40,8 +40,7 @@ export async function POST(req: NextRequest) {
     const slug = `/${template.slug}/${timestamp}`;
     const fileName = `tickets${slug}.md`;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const frontMatter: Record<string, any> = {
+    const frontMatter: Record<string, unknown> = {
       title: title ?? template.title ?? 'Untitled',
       author: session.email,
       date: new Date().toISOString(),
@@ -86,8 +85,7 @@ export async function POST(req: NextRequest) {
  * - Admin/Sudo 可见全部
  * - 普通用户只能看自己的
  */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const session = await getSession();
   if (!session) {
     logger.warn('GET', '未登录');
@@ -116,8 +114,7 @@ export async function GET(req: NextRequest) {
 
     // 读取每个工单文件
     const tickets = await Promise.all(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data.map(async (file: any) => {
+      data.map(async (file: { path: string; name: string }) => {
         try {
           const contentRes = await fetch(`/api/github?path=${file.path}`);
           if (!contentRes.ok) return null;
@@ -148,8 +145,7 @@ export async function GET(req: NextRequest) {
 
     logger.info('GET', '工单列表获取成功', { count: tickets.filter(Boolean).length });
     return NextResponse.json(tickets.filter(Boolean));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error.status === 404) {
       return NextResponse.json([]);
     }

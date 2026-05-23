@@ -28,8 +28,7 @@ export function parseMarkdown(markdown: string): ParsedMarkdown {
       content,
       frontMatter: data as FrontMatter,
     };
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
+  } catch {
     // If parsing fails, return full content without front matter
     return {
       content: markdown,

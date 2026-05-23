@@ -39,9 +39,8 @@ export async function GET() {
         status: user.status,
       }
     });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    logger.error('GET', '获取用户资料失败', { error: error.message });
+  } catch (error: unknown) {
+    logger.error('GET', '获取用户资料失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '获取用户资料失败' }, { status: 500 });
   }
 }
@@ -156,9 +155,8 @@ export async function PUT(req: NextRequest) {
       user: buildUserResponse(user, configAvatar),
       message: '资料更新成功'
     }, { status: 201 });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    logger.error('PUT', '更新用户资料失败', { error: error.message });
+  } catch (error: unknown) {
+    logger.error('PUT', '更新用户资料失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '更新用户资料失败' }, { status: 500 });
   }
 }

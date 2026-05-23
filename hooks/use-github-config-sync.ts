@@ -10,8 +10,7 @@ import { useI18n } from '@/hooks/use-i18n';
 export interface UseGitHubConfigSyncOptions {
   repo: string;
   remoteConfig: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  currentConfig: any;
+  currentConfig: Record<string, unknown>;
   managedFields?: string[];
   /**
    * 自定义字段合并函数。
@@ -47,8 +46,7 @@ export function useGitHubConfigSync({
    * @param commitMessage 可选：自定义 Git 提交信息
    * @param repoOverride 可选：运行时覆盖 repo，用于 settings 页等场景
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSave = useCallback((initialConfig: any, remoteConfigOverride?: string, commitMessage?: string, repoOverride?: string) => {
+  const handleSave = useCallback((initialConfig: Record<string, unknown>, remoteConfigOverride?: string, commitMessage?: string, repoOverride?: string) => {
     const effectiveRepo = repoOverride ?? repo;
     if (!effectiveRepo) {
       message.error('GitHub 未配置');
@@ -76,12 +74,12 @@ export function useGitHubConfigSync({
 
     let merged: Record<string, unknown>;
     if (customTransform) {
-      merged = customTransform(remoteObj, currentConfig as Record<string, unknown>);
+      merged = customTransform(remoteObj, currentConfig);
     } else {
       merged = { ...remoteObj };
       for (const key of managedFields) {
         if (key in currentConfig) {
-          merged[key] = (currentConfig as Record<string, unknown>)[key];
+          merged[key] = currentConfig[key];
         }
       }
     }

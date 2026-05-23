@@ -1,42 +1,64 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, type ComponentType } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface MarkdownRendererProps {
   content: string;
+  theme?: string;
 }
 
-/**
- * Markdown 渲染组件
- * 代码高亮使用动态加载，避免 SSR 时 ESM/CJS 兼容问题
- */
-export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+const themeMap: Record<string, string> = {
+  light: 'oneLight',
+  dark: 'vscDarkPlus',
+};
+
+function resolveTheme(theme: string): string {
+  return themeMap[theme] ?? 'vscDarkPlus';
+}
+
+interface HighlighterProps {
+  style: Record<string, React.CSSProperties>;
+  language: string;
+  PreTag: string;
+  className?: string;
+  children: string;
+  [key: string]: unknown;
+}
+
+interface CodeProps {
+  node?: unknown;
+  inline?: boolean;
+  className?: string;
+  children: React.ReactNode;
+  [key: string]: unknown;
+}
+
+export function MarkdownRenderer({ content, theme: themeProp }: MarkdownRendererProps) {
   const [highlighter, setHighlighter] = useState<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Component: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    style: any;
+    Component: ComponentType<HighlighterProps>;
+    style: Record<string, React.CSSProperties>;
   } | null>(null);
 
   useEffect(() => {
+    const themeName = resolveTheme(themeProp ?? 'dark');
     Promise.all([
       import('react-syntax-highlighter/dist/esm/prism'),
       import('react-syntax-highlighter/dist/esm/styles/prism'),
     ]).then(([prismMod, stylesMod]) => {
+      const mod = stylesMod as Record<string, Record<string, React.CSSProperties>>;
+      const style = mod[themeName] ?? mod.vscDarkPlus;
       setHighlighter({
-        Component: prismMod.default,
-        style: stylesMod.vscDarkPlus,
+        Component: prismMod.default as ComponentType<HighlighterProps>,
+        style,
       });
-	}).catch((error) => {
-		console.error('代码高亮模块加载失败，降级为普通代码块:', error);
-	});
-  }, []);
+    }).catch((error) => {
+      console.error('代码高亮模块加载失败，降级为普通代码块:', error);
+    });
+  }, [themeProp]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const components: Record<string, React.ComponentType<any>> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    code({ inline, className, children, ...props }: any) {
+  const components: Record<string, ComponentType<CodeProps>> = {
+    code({ inline, className, children, ...props }: CodeProps) {
       const match = /language-(\w+)/.exec(className ?? '');
       if (!inline && match && highlighter) {
         return (

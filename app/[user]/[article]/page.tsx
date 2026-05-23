@@ -11,6 +11,27 @@ import Image from 'next/image';
 import { GlobalLoading } from '@/components/Loading';
 import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
+import ShareButtons from '@/components/ShareButtons';
+import Footer from '@/components/Footer';
+import { useConfig } from '@/hooks/use-config';
+import { useMainTone } from '@/hooks/use-main-tone';
+
+interface ArticleData {
+  id: string;
+  title: string;
+  authorName: string;
+  content: string;
+  tags: string[];
+  coverImage: string;
+  createdAt: string;
+  status: string;
+}
+
+interface UserInfo {
+  uid: string;
+  name: string;
+  avatar?: string;
+}
 
 function ArticleHeader({
   articleData,
@@ -21,10 +42,8 @@ function ArticleHeader({
   rawContent,
   onToggleRaw,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  articleData: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  userData: any;
+  articleData: ArticleData;
+  userData: UserInfo | null;
   username: string;
   isSudo: boolean;
   showRaw: boolean;
@@ -85,17 +104,29 @@ function ArticleHeader({
   );
 }
 
-function ArticleCoverImage({ coverImage, title }: { coverImage: string; title: string }) {
+function ArticleCoverImage({ coverImage, title, mainColor }: { coverImage: string; title: string; mainColor?: string | null }) {
+  const [imgError, setImgError] = useState(false);
+
   return (
-    <div className="w-full aspect-[21/9] rounded-3xl overflow-hidden bg-zinc-50 mb-16 shadow-2xl shadow-zinc-200 relative">
-      <Image
-        src={coverImage}
-        alt={title}
-        fill
-        className="object-cover hover:scale-105 transition-transform duration-1000"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
-        unoptimized
-      />
+    <div
+      className="w-full aspect-[21/9] rounded-3xl overflow-hidden bg-zinc-50 mb-16 relative"
+      style={mainColor ? { boxShadow: `0 25px 50px -12px ${mainColor}40` } : { boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)' }}
+    >
+      {imgError ? (
+        <div className="w-full h-full flex items-center justify-center text-zinc-200 font-black text-6xl select-none">
+          {title.charAt(0)}
+        </div>
+      ) : (
+        <Image
+          src={coverImage}
+          alt={title}
+          fill
+          className="object-cover hover:scale-105 transition-transform duration-1000"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+          unoptimized
+          onError={() => setImgError(true)}
+        />
+      )}
     </div>
   );
 }
@@ -107,13 +138,21 @@ function UserArticleContent() {
   const { t } = useI18n();
   const { isSudo } = useAuth();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [articleData, setArticleData] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [userData, setUserData] = useState<any>(null);
+  const [articleData, setArticleData] = useState<ArticleData | null>(null);
+  const [userData, setUserData] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRaw, setShowRaw] = useState(false);
   const [rawContent, setRawContent] = useState('');
+
+  const { config: siteConfig } = useConfig();
+  const shareConfig = siteConfig?.share;
+  const mainToneConfig = siteConfig?.mainTone;
+  const highlightTheme = siteConfig?.highlight?.theme;
+  const { mainColor } = useMainTone(
+    articleData?.coverImage,
+    mainToneConfig?.mode,
+    mainToneConfig?.enable,
+  );
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -166,7 +205,7 @@ function UserArticleContent() {
           <span className="font-medium">Back to {userData?.name}&apos;s Profile</span>
         </Link>
 
-        <article>
+        <article style={mainColor ? { '--main-tone': mainColor } as React.CSSProperties : undefined}>
           <ArticleHeader
             articleData={articleData}
             userData={userData}
@@ -178,7 +217,7 @@ function UserArticleContent() {
           />
 
           {articleData.coverImage && (
-            <ArticleCoverImage coverImage={articleData.coverImage} title={articleData.title} />
+            <ArticleCoverImage coverImage={articleData.coverImage} title={articleData.title} mainColor={mainColor} />
           )}
 
           <div className="max-w-3xl mx-auto">
@@ -187,17 +226,19 @@ function UserArticleContent() {
                 {rawContent}
               </pre>
             ) : (
-              <MarkdownRenderer content={articleData.content} />
+              <MarkdownRenderer content={articleData.content} theme={highlightTheme} />
             )}
           </div>
+
+          {shareConfig && (shareConfig.sharejs.enable || shareConfig.addtoany.enable) && (
+            <div className="max-w-3xl mx-auto mt-12 pt-8 border-t border-zinc-100">
+              <ShareButtons config={shareConfig} title={articleData.title} />
+            </div>
+          )}
         </article>
       </main>
 
-      <footer className="border-t border-zinc-100 py-12 bg-zinc-50/50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-zinc-400 text-sm font-medium">Published with Originium Kernel</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -235,6 +235,32 @@ function mergePostEdit(
   return { ...(base ?? { enable: false, github: false }), ...overridePostEdit };
 }
 
+function mergeShare(
+  base: AppConfig['share'],
+  overrideShare: Partial<AppConfig['share']> | undefined,
+): AppConfig['share'] | undefined {
+  if (!overrideShare) return base;
+  const def = { sharejs: { enable: true, sites: 'facebook,twitter,wechat,weibo,qq' }, addtoany: { enable: false, item: 'facebook,twitter,wechat,sina_weibo,email,copy_link' } };
+  return { ...def, ...base, ...overrideShare };
+}
+
+function mergeMainTone(
+  base: AppConfig['mainTone'],
+  overrideMainTone: Partial<AppConfig['mainTone']> | undefined,
+): AppConfig['mainTone'] | undefined {
+  if (!overrideMainTone) return base;
+  return { ...(base ?? { enable: false, mode: 'api' }), ...overrideMainTone };
+}
+
+function mergeFooter(
+  base: AppConfig['footer'],
+  overrideFooter: Partial<AppConfig['footer']> | undefined,
+): AppConfig['footer'] | undefined {
+  if (!overrideFooter) return base;
+  const def = { owner: { enable: true, since: 2020 }, customText: '', runtime: { enable: false, launchTime: '04/01/2021 00:00:00' } };
+  return { ...def, ...base, ...overrideFooter };
+}
+
 function mergeAppConfig(
   base: AppConfig,
   override: Partial<AppConfig>,
@@ -258,6 +284,9 @@ function mergeAppConfig(
     copyright: mergeCopyright(base.copyright, override.copyright),
     reward: mergeReward(base.reward, override.reward),
     postEdit: mergePostEdit(base.postEdit, override.postEdit),
+    share: mergeShare(base.share, override.share),
+    mainTone: mergeMainTone(base.mainTone, override.mainTone),
+    footer: mergeFooter(base.footer, override.footer),
   };
 }
 

@@ -3,7 +3,7 @@ import path from 'path';
 import yaml from 'js-yaml';
 import type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig } from '@/next.config';
 
-export type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig };
+export type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig, ShareConfig, MainToneConfig, FooterConfig, FooterOwnerConfig, FooterRuntimeConfig, SharejsConfig, AddtoanyConfig, PostEditConfig, CopyrightConfig, TocConfig, WordCountConfig, PostMetaConfig, PostMetaDisplayConfig, PostMetaPostConfig, ErrorImgConfig, CoverConfig, AuthorStatusConfig, SocialConfig, CopyConfig, HighlightConfig, MournConfig, NavConfig, NavMenuItem, NavMenuGroup, RewardConfig, QRCodeItem };
 
 /**
  * 检测数据库是否可用（其他非配置页面使用，配置页面不再依赖数据库）

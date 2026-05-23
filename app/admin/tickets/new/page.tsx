@@ -142,8 +142,7 @@ export default function NewTicketTemplatePage() {
         const err = await res.json();
         showError(err.error ?? t('tickets.saveFailed'));
       }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
+    } catch {
       showError(t('tickets.saveFailed'));
     } finally {
       setSaving(false);
