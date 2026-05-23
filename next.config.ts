@@ -69,6 +69,110 @@ export interface NavConfig {
   menu: NavMenuGroup[];
 }
 
+export interface MournConfig {
+  enable: boolean;
+  days: string[];
+}
+
+export interface HighlightConfig {
+  theme: string;
+  copy: boolean;
+  lang: boolean;
+  shrink: boolean;
+  heightLimit: number;
+  wordWrap: boolean;
+}
+
+export interface CopyConfig {
+  enable: boolean;
+  copyright: {
+    enable: boolean;
+    limitCount: number;
+  };
+}
+
+export type SocialConfig = Record<string, string>;
+
+export interface AuthorStatusConfig {
+  enable: boolean;
+  statusImg: string;
+  skills: string[];
+}
+
+export interface CoverConfig {
+  indexEnable: boolean;
+  asideEnable: boolean;
+  archivesEnable: boolean;
+  position: 'left' | 'right' | 'both';
+  defaultCover: string[];
+}
+
+export interface ErrorImgConfig {
+  flink: string;
+  postPage: string;
+}
+
+export interface PostMetaDisplayConfig {
+  dateType: 'created' | 'updated' | 'both';
+  dateFormat: 'date' | 'relative' | 'simple';
+  categories: boolean;
+  tags: boolean;
+  label: boolean;
+}
+
+export interface PostMetaPostConfig extends PostMetaDisplayConfig {
+  unread: boolean;
+}
+
+export interface PostMetaConfig {
+  page: PostMetaDisplayConfig & { dateFormat: 'date' | 'relative' | 'simple' };
+  post: PostMetaPostConfig;
+}
+
+export interface WordCountConfig {
+  enable: boolean;
+  postWordcount: boolean;
+  min2read: boolean;
+  totalWordcount: boolean;
+}
+
+export interface TocConfig {
+  post: boolean;
+  page: boolean;
+  number: boolean;
+  expand: boolean;
+  styleSimple: boolean;
+}
+
+export interface CopyrightConfig {
+  enable: boolean;
+  decode: boolean;
+  authorHref: string;
+  location: string;
+  license: string;
+  licenseUrl: string;
+  avatarSinks: boolean;
+  authorImgBack: string;
+  authorImgFront: string;
+  authorLink: string;
+}
+
+export interface QRCodeItem {
+  img: string;
+  link: string;
+  text: string;
+}
+
+export interface RewardConfig {
+  enable: boolean;
+  qrCodes: QRCodeItem[];
+}
+
+export interface PostEditConfig {
+  enable: boolean;
+  github: string | false;
+}
+
 export interface UserConfig {
   avatar?: string;
 }
@@ -79,6 +183,19 @@ export interface AppConfig {
   access: AccessConfig;
   auth: AuthConfig;
   nav?: NavConfig;
+  mourn?: MournConfig;
+  highlight?: HighlightConfig;
+  copy?: CopyConfig;
+  social?: SocialConfig;
+  authorStatus?: AuthorStatusConfig;
+  cover?: CoverConfig;
+  errorImg?: ErrorImgConfig;
+  postMeta?: PostMetaConfig;
+  wordcount?: WordCountConfig;
+  toc?: TocConfig;
+  copyright?: CopyrightConfig;
+  reward?: RewardConfig;
+  postEdit?: PostEditConfig;
   users?: Record<string, UserConfig>;
 }
 

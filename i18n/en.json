@@ -390,7 +390,20 @@
     "accessDiary": "Diary Access",
     "accessPublic": "Public",
     "accessPrivate": "Private (all by default)",
-    "nav": "Navigation Bar"
+    "nav": "Navigation Bar",
+    "mourn": "Mourn Mode",
+    "highlight": "Code Highlight",
+    "copy": "Copy Settings",
+    "social": "Social Links",
+    "authorStatus": "Author Card",
+    "cover": "Cover Settings",
+    "errorImg": "Error Images",
+    "postMeta": "Post Meta",
+    "wordcount": "Word Count",
+    "toc": "Table of Contents",
+    "copyright": "Copyright",
+    "reward": "Reward",
+    "postEdit": "Post Edit"
   },
   "editor": {
     "slugPlaceholder": "Article slug (URL-friendly)",

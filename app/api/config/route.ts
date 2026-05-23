@@ -130,6 +130,111 @@ function mergeNav(
   return { ...(base ?? { enable: false, travelling: false, clock: false, menu: [] }), ...overrideNav };
 }
 
+function mergeMourn(
+  base: AppConfig['mourn'],
+  overrideMourn: Partial<AppConfig['mourn']> | undefined,
+): AppConfig['mourn'] | undefined {
+  if (!overrideMourn) return base;
+  return { ...(base ?? { enable: false, days: [] }), ...overrideMourn };
+}
+
+function mergeHighlight(
+  base: AppConfig['highlight'],
+  overrideHighlight: Partial<AppConfig['highlight']> | undefined,
+): AppConfig['highlight'] | undefined {
+  if (!overrideHighlight) return base;
+  return { ...(base ?? { theme: 'light', copy: true, lang: true, shrink: false, heightLimit: 330, wordWrap: true }), ...overrideHighlight };
+}
+
+function mergeCopy(
+  base: AppConfig['copy'],
+  overrideCopy: Partial<AppConfig['copy']> | undefined,
+): AppConfig['copy'] | undefined {
+  if (!overrideCopy) return base;
+  return { ...(base ?? { enable: true, copyright: { enable: false, limitCount: 50 } }), ...overrideCopy };
+}
+
+function mergeSocial(
+  base: AppConfig['social'],
+  overrideSocial: Partial<AppConfig['social']> | undefined,
+): AppConfig['social'] | undefined {
+  if (!overrideSocial) return base;
+  return { ...(base ?? {}), ...overrideSocial };
+}
+
+function mergeAuthorStatus(
+  base: AppConfig['authorStatus'],
+  overrideAuthorStatus: Partial<AppConfig['authorStatus']> | undefined,
+): AppConfig['authorStatus'] | undefined {
+  if (!overrideAuthorStatus) return base;
+  return { ...(base ?? { enable: false, statusImg: '', skills: [] }), ...overrideAuthorStatus };
+}
+
+function mergeCover(
+  base: AppConfig['cover'],
+  overrideCover: Partial<AppConfig['cover']> | undefined,
+): AppConfig['cover'] | undefined {
+  if (!overrideCover) return base;
+  return { ...(base ?? { indexEnable: true, asideEnable: true, archivesEnable: true, position: 'left', defaultCover: [] }), ...overrideCover };
+}
+
+function mergeErrorImg(
+  base: AppConfig['errorImg'],
+  overrideErrorImg: Partial<AppConfig['errorImg']> | undefined,
+): AppConfig['errorImg'] | undefined {
+  if (!overrideErrorImg) return base;
+  return { ...(base ?? { flink: '/img/friend_404.gif', postPage: '/img/404.jpg' }), ...overrideErrorImg };
+}
+
+function mergePostMeta(
+  base: AppConfig['postMeta'],
+  overridePostMeta: Partial<AppConfig['postMeta']> | undefined,
+): AppConfig['postMeta'] | undefined {
+  if (!overridePostMeta) return base;
+  const def = { page: { dateType: 'created', dateFormat: 'simple', categories: true, tags: true, label: false }, post: { dateType: 'both', dateFormat: 'date', categories: true, tags: true, label: true, unread: false } };
+  return { ...def, ...base, ...overridePostMeta };
+}
+
+function mergeWordCount(
+  base: AppConfig['wordcount'],
+  overrideWordCount: Partial<AppConfig['wordcount']> | undefined,
+): AppConfig['wordcount'] | undefined {
+  if (!overrideWordCount) return base;
+  return { ...(base ?? { enable: false, postWordcount: false, min2read: true, totalWordcount: false }), ...overrideWordCount };
+}
+
+function mergeToc(
+  base: AppConfig['toc'],
+  overrideToc: Partial<AppConfig['toc']> | undefined,
+): AppConfig['toc'] | undefined {
+  if (!overrideToc) return base;
+  return { ...(base ?? { post: true, page: false, number: true, expand: false, styleSimple: false }), ...overrideToc };
+}
+
+function mergeCopyright(
+  base: AppConfig['copyright'],
+  overrideCopyright: Partial<AppConfig['copyright']> | undefined,
+): AppConfig['copyright'] | undefined {
+  if (!overrideCopyright) return base;
+  return { ...(base ?? { enable: true, decode: false, authorHref: '', location: '中国', license: 'CC BY-NC-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/', avatarSinks: true, authorImgBack: '', authorImgFront: '', authorLink: '/' }), ...overrideCopyright };
+}
+
+function mergeReward(
+  base: AppConfig['reward'],
+  overrideReward: Partial<AppConfig['reward']> | undefined,
+): AppConfig['reward'] | undefined {
+  if (!overrideReward) return base;
+  return { ...(base ?? { enable: true, qrCodes: [] }), ...overrideReward };
+}
+
+function mergePostEdit(
+  base: AppConfig['postEdit'],
+  overridePostEdit: Partial<AppConfig['postEdit']> | undefined,
+): AppConfig['postEdit'] | undefined {
+  if (!overridePostEdit) return base;
+  return { ...(base ?? { enable: false, github: false }), ...overridePostEdit };
+}
+
 function mergeAppConfig(
   base: AppConfig,
   override: Partial<AppConfig>,
@@ -140,6 +245,19 @@ function mergeAppConfig(
     access: mergeAccess(base.access, override.access),
     auth: mergeAuth(base.auth, override.auth),
     nav: mergeNav(base.nav, override.nav),
+    mourn: mergeMourn(base.mourn, override.mourn),
+    highlight: mergeHighlight(base.highlight, override.highlight),
+    copy: mergeCopy(base.copy, override.copy),
+    social: mergeSocial(base.social, override.social),
+    authorStatus: mergeAuthorStatus(base.authorStatus, override.authorStatus),
+    cover: mergeCover(base.cover, override.cover),
+    errorImg: mergeErrorImg(base.errorImg, override.errorImg),
+    postMeta: mergePostMeta(base.postMeta, override.postMeta),
+    wordcount: mergeWordCount(base.wordcount, override.wordcount),
+    toc: mergeToc(base.toc, override.toc),
+    copyright: mergeCopyright(base.copyright, override.copyright),
+    reward: mergeReward(base.reward, override.reward),
+    postEdit: mergePostEdit(base.postEdit, override.postEdit),
   };
 }
 

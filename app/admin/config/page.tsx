@@ -15,6 +15,19 @@ import LoadingAnimationConfig from '@/components/ui/LoadingAnimationConfig';
 import AccessControlSection from '@/components/ui/AccessControlSection';
 import BackgroundConfig from '@/components/ui/BackgroundConfig';
 import NavConfig from '@/components/ui/NavConfig';
+import MournConfig from '@/components/ui/MournConfig';
+import CodeBlockConfig from '@/components/ui/CodeBlockConfig';
+import CopyConfig from '@/components/ui/CopyConfig';
+import SocialConfig from '@/components/ui/SocialConfig';
+import AuthorStatusConfig from '@/components/ui/AuthorStatusConfig';
+import CoverConfig from '@/components/ui/CoverConfig';
+import ErrorImgConfig from '@/components/ui/ErrorImgConfig';
+import PostMetaConfig from '@/components/ui/PostMetaConfig';
+import WordCountConfig from '@/components/ui/WordCountConfig';
+import TocConfig from '@/components/ui/TocConfig';
+import CopyrightConfig from '@/components/ui/CopyrightConfig';
+import RewardConfig from '@/components/ui/RewardConfig';
+import PostEditConfig from '@/components/ui/PostEditConfig';
 import GitHubStatus from '@/components/ui/GitHubStatus';
 type LoadingType = 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
 type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -79,6 +92,22 @@ interface ConfigState {
     admin?: { avatar?: string };
   };
   nav: NavConfigData;
+  mourn: { enable: boolean; days: string[] };
+  highlight: { theme: string; copy: boolean; lang: boolean; shrink: boolean; heightLimit: number; wordWrap: boolean };
+  copy: { enable: boolean; copyright: { enable: boolean; limitCount: number } };
+  social: Record<string, string>;
+  authorStatus: { enable: boolean; statusImg: string; skills: string[] };
+  cover: { indexEnable: boolean; asideEnable: boolean; archivesEnable: boolean; position: string; defaultCover: string[] };
+  errorImg: { flink: string; postPage: string };
+  postMeta: {
+    page: { dateType: string; dateFormat: string; categories: boolean; tags: boolean; label: boolean };
+    post: { dateType: string; dateFormat: string; categories: boolean; tags: boolean; label: boolean; unread: boolean };
+  };
+  wordcount: { enable: boolean; postWordcount: boolean; min2read: boolean; totalWordcount: boolean };
+  toc: { post: boolean; page: boolean; number: boolean; expand: boolean; styleSimple: boolean };
+  copyright: { enable: boolean; decode: boolean; authorHref: string; location: string; license: string; licenseUrl: string; avatarSinks: boolean; authorImgBack: string; authorImgFront: string; authorLink: string };
+  reward: { enable: boolean; qrCodes: { img: string; link: string; text: string }[] };
+  postEdit: { enable: boolean; github: string | false };
   users?: Record<string, UserConfig>;
 }
 
@@ -131,6 +160,143 @@ function buildNavConfig(data: Record<string, unknown>): ConfigState['nav'] {
   };
 }
 
+function buildMournConfig(data: Record<string, unknown>): ConfigState['mourn'] {
+  const d = data.mourn as Record<string, unknown> | undefined;
+  return { enable: (d?.enable as boolean) ?? false, days: (d?.days as string[]) ?? [] };
+}
+
+function buildHighlightConfig(data: Record<string, unknown>): ConfigState['highlight'] {
+  const d = data.highlight as Record<string, unknown> | undefined;
+  return {
+    theme: (d?.theme as string) ?? 'light',
+    copy: (d?.copy as boolean) ?? true,
+    lang: (d?.lang as boolean) ?? true,
+    shrink: (d?.shrink as boolean) ?? false,
+    heightLimit: (d?.heightLimit as number) ?? 330,
+    wordWrap: (d?.wordWrap as boolean) ?? true,
+  };
+}
+
+function buildCopyConfig(data: Record<string, unknown>): ConfigState['copy'] {
+  const d = data.copy as Record<string, unknown> | undefined;
+  const cr = d?.copyright as Record<string, unknown> | undefined;
+  return {
+    enable: (d?.enable as boolean) ?? true,
+    copyright: {
+      enable: (cr?.enable as boolean) ?? false,
+      limitCount: (cr?.limitCount as number) ?? 50,
+    },
+  };
+}
+
+function buildSocialConfig(data: Record<string, unknown>): ConfigState['social'] {
+  return (data.social as Record<string, string>) ?? {};
+}
+
+function buildAuthorStatusConfig(data: Record<string, unknown>): ConfigState['authorStatus'] {
+  const d = data.authorStatus as Record<string, unknown> | undefined;
+  return {
+    enable: (d?.enable as boolean) ?? false,
+    statusImg: (d?.statusImg as string) ?? '',
+    skills: (d?.skills as string[]) ?? [],
+  };
+}
+
+function buildCoverConfig(data: Record<string, unknown>): ConfigState['cover'] {
+  const d = data.cover as Record<string, unknown> | undefined;
+  return {
+    indexEnable: (d?.indexEnable as boolean) ?? true,
+    asideEnable: (d?.asideEnable as boolean) ?? true,
+    archivesEnable: (d?.archivesEnable as boolean) ?? true,
+    position: (d?.position as string) ?? 'left',
+    defaultCover: (d?.defaultCover as string[]) ?? [],
+  };
+}
+
+function buildErrorImgConfig(data: Record<string, unknown>): ConfigState['errorImg'] {
+  const d = data.errorImg as Record<string, unknown> | undefined;
+  return {
+    flink: (d?.flink as string) ?? '/img/friend_404.gif',
+    postPage: (d?.postPage as string) ?? '/img/404.jpg',
+  };
+}
+
+function buildPostMetaConfig(data: Record<string, unknown>): ConfigState['postMeta'] {
+  const d = data.postMeta as Record<string, unknown> | undefined;
+  const page = d?.page as Record<string, unknown> | undefined;
+  const post = d?.post as Record<string, unknown> | undefined;
+  return {
+    page: {
+      dateType: (page?.dateType as string) ?? 'created',
+      dateFormat: (page?.dateFormat as string) ?? 'simple',
+      categories: (page?.categories as boolean) ?? true,
+      tags: (page?.tags as boolean) ?? true,
+      label: (page?.label as boolean) ?? false,
+    },
+    post: {
+      dateType: (post?.dateType as string) ?? 'both',
+      dateFormat: (post?.dateFormat as string) ?? 'date',
+      categories: (post?.categories as boolean) ?? true,
+      tags: (post?.tags as boolean) ?? true,
+      label: (post?.label as boolean) ?? true,
+      unread: (post?.unread as boolean) ?? false,
+    },
+  };
+}
+
+function buildWordCountConfig(data: Record<string, unknown>): ConfigState['wordcount'] {
+  const d = data.wordcount as Record<string, unknown> | undefined;
+  return {
+    enable: (d?.enable as boolean) ?? false,
+    postWordcount: (d?.postWordcount as boolean) ?? false,
+    min2read: (d?.min2read as boolean) ?? true,
+    totalWordcount: (d?.totalWordcount as boolean) ?? false,
+  };
+}
+
+function buildTocConfig(data: Record<string, unknown>): ConfigState['toc'] {
+  const d = data.toc as Record<string, unknown> | undefined;
+  return {
+    post: (d?.post as boolean) ?? true,
+    page: (d?.page as boolean) ?? false,
+    number: (d?.number as boolean) ?? true,
+    expand: (d?.expand as boolean) ?? false,
+    styleSimple: (d?.styleSimple as boolean) ?? false,
+  };
+}
+
+function buildCopyrightConfig(data: Record<string, unknown>): ConfigState['copyright'] {
+  const d = data.copyright as Record<string, unknown> | undefined;
+  return {
+    enable: (d?.enable as boolean) ?? true,
+    decode: (d?.decode as boolean) ?? false,
+    authorHref: (d?.authorHref as string) ?? '',
+    location: (d?.location as string) ?? '中国',
+    license: (d?.license as string) ?? 'CC BY-NC-SA 4.0',
+    licenseUrl: (d?.licenseUrl as string) ?? 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+    avatarSinks: (d?.avatarSinks as boolean) ?? true,
+    authorImgBack: (d?.authorImgBack as string) ?? '',
+    authorImgFront: (d?.authorImgFront as string) ?? '',
+    authorLink: (d?.authorLink as string) ?? '/',
+  };
+}
+
+function buildRewardConfig(data: Record<string, unknown>): ConfigState['reward'] {
+  const d = data.reward as Record<string, unknown> | undefined;
+  return {
+    enable: (d?.enable as boolean) ?? true,
+    qrCodes: (d?.qrCodes as ConfigState['reward']['qrCodes']) ?? [],
+  };
+}
+
+function buildPostEditConfig(data: Record<string, unknown>): ConfigState['postEdit'] {
+  const d = data.postEdit as Record<string, unknown> | undefined;
+  return {
+    enable: (d?.enable as boolean) ?? false,
+    github: (d?.github as string | false) ?? false,
+  };
+}
+
 function buildConfigState(data: Record<string, unknown>): ConfigState {
   return {
     site: buildSiteConfig(data),
@@ -138,6 +304,19 @@ function buildConfigState(data: Record<string, unknown>): ConfigState {
     access: buildAccessConfig(data),
     auth: buildAuthConfig(data),
     nav: buildNavConfig(data),
+    mourn: buildMournConfig(data),
+    highlight: buildHighlightConfig(data),
+    copy: buildCopyConfig(data),
+    social: buildSocialConfig(data),
+    authorStatus: buildAuthorStatusConfig(data),
+    cover: buildCoverConfig(data),
+    errorImg: buildErrorImgConfig(data),
+    postMeta: buildPostMetaConfig(data),
+    wordcount: buildWordCountConfig(data),
+    toc: buildTocConfig(data),
+    copyright: buildCopyrightConfig(data),
+    reward: buildRewardConfig(data),
+    postEdit: buildPostEditConfig(data),
     users: (data.users as Record<string, UserConfig>) || {},
   };
 }
@@ -415,6 +594,97 @@ function ConfigFormBody({
         />
       </ConfigSection>
 
+      <ConfigSection title={t('config.mourn') || '哀悼日'} color="bg-zinc-500">
+        <MournConfig
+          config={config.mourn}
+          onChange={v => onConfigChange({ ...config, mourn: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.highlight') || '代码高亮'} color="bg-emerald-600">
+        <CodeBlockConfig
+          config={config.highlight}
+          onChange={v => onConfigChange({ ...config, highlight: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.copy') || '复制设置'} color="bg-cyan-600">
+        <CopyConfig
+          config={config.copy}
+          onChange={v => onConfigChange({ ...config, copy: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.social') || '社交链接'} color="bg-pink-500">
+        <SocialConfig
+          config={config.social}
+          onChange={v => onConfigChange({ ...config, social: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.authorStatus') || '作者卡片'} color="bg-rose-500">
+        <AuthorStatusConfig
+          config={config.authorStatus}
+          onChange={v => onConfigChange({ ...config, authorStatus: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.cover') || '封面设置'} color="bg-teal-500">
+        <CoverConfig
+          config={config.cover}
+          onChange={v => onConfigChange({ ...config, cover: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.errorImg') || '错误图片'} color="bg-red-500">
+        <ErrorImgConfig
+          config={config.errorImg}
+          onChange={v => onConfigChange({ ...config, errorImg: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.postMeta') || '文章元信息'} color="bg-violet-500">
+        <PostMetaConfig
+          config={config.postMeta}
+          onChange={v => onConfigChange({ ...config, postMeta: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.wordcount') || '字数统计'} color="bg-orange-600">
+        <WordCountConfig
+          config={config.wordcount}
+          onChange={v => onConfigChange({ ...config, wordcount: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.toc') || '目录'} color="bg-lime-600">
+        <TocConfig
+          config={config.toc}
+          onChange={v => onConfigChange({ ...config, toc: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.copyright') || '版权信息'} color="bg-blue-600">
+        <CopyrightConfig
+          config={config.copyright}
+          onChange={v => onConfigChange({ ...config, copyright: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.reward') || '打赏'} color="bg-yellow-600">
+        <RewardConfig
+          config={config.reward}
+          onChange={v => onConfigChange({ ...config, reward: v })}
+        />
+      </ConfigSection>
+
+      <ConfigSection title={t('config.postEdit') || '在线编辑'} color="bg-sky-600">
+        <PostEditConfig
+          config={config.postEdit}
+          onChange={v => onConfigChange({ ...config, postEdit: v })}
+        />
+      </ConfigSection>
+
       <LoadingAnimationsSection
         config={config}
         onPageLoadingChange={handlePageLoadingChange}
@@ -513,6 +783,22 @@ export default function ConfigPage() {
       clock: false,
       menu: [],
     },
+    mourn: { enable: false, days: [] },
+    highlight: { theme: 'light', copy: true, lang: true, shrink: false, heightLimit: 330, wordWrap: true },
+    copy: { enable: true, copyright: { enable: false, limitCount: 50 } },
+    social: {},
+    authorStatus: { enable: false, statusImg: '', skills: [] },
+    cover: { indexEnable: true, asideEnable: true, archivesEnable: true, position: 'left', defaultCover: [] },
+    errorImg: { flink: '/img/friend_404.gif', postPage: '/img/404.jpg' },
+    postMeta: {
+      page: { dateType: 'created', dateFormat: 'simple', categories: true, tags: true, label: false },
+      post: { dateType: 'both', dateFormat: 'date', categories: true, tags: true, label: true, unread: false },
+    },
+    wordcount: { enable: false, postWordcount: false, min2read: true, totalWordcount: false },
+    toc: { post: true, page: false, number: true, expand: false, styleSimple: false },
+    copyright: { enable: true, decode: false, authorHref: '', location: '中国', license: 'CC BY-NC-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/', avatarSinks: true, authorImgBack: '', authorImgFront: '', authorLink: '/' },
+    reward: { enable: true, qrCodes: [] },
+    postEdit: { enable: false, github: false },
     users: {},
   });
   const [loading, setLoading] = useState(true);
@@ -528,7 +814,7 @@ export default function ConfigPage() {
     repo: githubRepo,
     remoteConfig,
     currentConfig: config,
-    managedFields: ['site', 'appearance', 'access', 'auth', 'nav'],
+    managedFields: ['site', 'appearance', 'access', 'auth', 'nav', 'mourn', 'highlight', 'copy', 'social', 'authorStatus', 'cover', 'errorImg', 'postMeta', 'wordcount', 'toc', 'copyright', 'reward', 'postEdit'],
     onSyncStart: () => setSaving(true),
     onSyncComplete: (yamlContent) => {
       setRemoteConfig(yamlContent);

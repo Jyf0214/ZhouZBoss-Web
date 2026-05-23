@@ -63,6 +63,85 @@ nav:
         - name: Jyf0214
           link: /Jyf0214
           icon: /Jyf0214
+mourn:
+  enable: true
+  days: [4-5, 5-12, 7-7, 9-18, 12-13]
+highlight:
+  theme: light
+  copy: true
+  lang: true
+  shrink: false
+  heightLimit: 330
+  wordWrap: true
+copy:
+  enable: true
+  copyright:
+    enable: false
+    limitCount: 50
+social:
+  Github: https://github.com/Jyf0214
+authorStatus:
+  enable: false
+  statusImg: ''
+  skills: []
+cover:
+  indexEnable: true
+  asideEnable: true
+  archivesEnable: true
+  position: left
+  defaultCover:
+    - /img/default_cover.jpg
+errorImg:
+  flink: /img/friend_404.gif
+  postPage: /img/404.jpg
+postMeta:
+  page:
+    dateType: created
+    dateFormat: simple
+    categories: true
+    tags: true
+    label: false
+  post:
+    dateType: both
+    dateFormat: date
+    categories: true
+    tags: true
+    label: true
+    unread: false
+wordcount:
+  enable: false
+  postWordcount: false
+  min2read: true
+  totalWordcount: false
+toc:
+  post: true
+  page: false
+  number: true
+  expand: false
+  styleSimple: false
+copyright:
+  enable: true
+  decode: false
+  authorHref: ''
+  location: 中国
+  license: CC BY-NC-SA 4.0
+  licenseUrl: https://creativecommons.org/licenses/by-nc-sa/4.0/
+  avatarSinks: true
+  authorImgBack: ''
+  authorImgFront: ''
+  authorLink: /
+reward:
+  enable: true
+  qrCodes:
+    - img: ''
+      link: ''
+      text: 微信
+    - img: ''
+      link: ''
+      text: 支付宝
+postEdit:
+  enable: false
+  github: false
 _testField: this-should-be-preserved-by-surgical-save-2026
 users:
   '169313142':

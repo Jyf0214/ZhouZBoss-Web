@@ -62,8 +62,14 @@ export default async function HomePage() {
   // 仅管理员可以看到 facesCount
   const displayFacesCount = isAdmin ? facesCount : 0;
 
+  // 哀悼日检测
+  const today = new Date();
+  const dateStr = `${today.getMonth() + 1}-${today.getDate()}`;
+  const isMournDay = config.mourn?.enable && config.mourn.days?.includes(dateStr);
+
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50">
+    <div className={`min-h-screen flex flex-col bg-zinc-50 ${isMournDay ? 'mourn-mode' : ''}`}
+      style={isMournDay ? { filter: 'grayscale(1)' } : undefined}>
       <Navbar />
       <HomePostGrid
         posts={posts}
