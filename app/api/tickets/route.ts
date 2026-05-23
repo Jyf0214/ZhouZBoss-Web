@@ -146,10 +146,11 @@ export async function GET(_req: NextRequest) {
     logger.info('GET', '工单列表获取成功', { count: tickets.filter(Boolean).length });
     return NextResponse.json(tickets.filter(Boolean));
   } catch (error: unknown) {
-    if (error.status === 404) {
+    const err = error as { status?: number } & Error;
+    if (err.status === 404) {
       return NextResponse.json([]);
     }
-    logger.error('GET', '获取工单列表失败', { error: (error as Error).message });
+    logger.error('GET', '获取工单列表失败', { error: err.message ?? String(error) });
     return NextResponse.json({ error: '获取工单列表失败' }, { status: 500 });
   }
 }

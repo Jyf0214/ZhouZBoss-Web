@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { loadConfigAsync, type AppConfig } from '@/lib/config';
+import { loadConfigAsync, type AppConfig, type SocialConfig } from '@/lib/config';
 import { getFileFromGithub } from '@/lib/github';
 import { createApiLogger } from '@/lib/api-logger';
 import yaml from 'js-yaml';
@@ -159,7 +159,7 @@ function mergeSocial(
   overrideSocial: Partial<AppConfig['social']> | undefined,
 ): AppConfig['social'] | undefined {
   if (!overrideSocial) return base;
-  return { ...(base ?? {}), ...overrideSocial };
+  return { ...(base ?? {}), ...overrideSocial } as SocialConfig;
 }
 
 function mergeAuthorStatus(
@@ -191,7 +191,7 @@ function mergePostMeta(
   overridePostMeta: Partial<AppConfig['postMeta']> | undefined,
 ): AppConfig['postMeta'] | undefined {
   if (!overridePostMeta) return base;
-  const def = { page: { dateType: 'created', dateFormat: 'simple', categories: true, tags: true, label: false }, post: { dateType: 'both', dateFormat: 'date', categories: true, tags: true, label: true, unread: false } };
+  const def: AppConfig['postMeta'] = { page: { dateType: 'created', dateFormat: 'simple', categories: true, tags: true, label: false }, post: { dateType: 'both', dateFormat: 'date', categories: true, tags: true, label: true, unread: false } };
   return { ...def, ...base, ...overridePostMeta };
 }
 

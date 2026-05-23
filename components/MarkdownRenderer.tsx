@@ -282,7 +282,7 @@ export function MarkdownRenderer({ content, highlight: highlightProp }: Markdown
       import('react-syntax-highlighter/dist/esm/styles/prism'),
     ]).then(([prismMod, stylesMod]) => {
       const mod = stylesMod as Record<string, Record<string, React.CSSProperties>>;
-      const style = mod[themeName] ?? mod.vscDarkPlus;
+      const style: Record<string, React.CSSProperties> = mod[themeName] ?? mod.vscDarkPlus ?? {};
       setHighlighter({
         Component: prismMod.default as ComponentType<HighlighterProps>,
         style,
@@ -299,7 +299,7 @@ export function MarkdownRenderer({ content, highlight: highlightProp }: Markdown
         return (
           <CodeBlock
             children={String(children).replace(/\n$/, '')}
-            language={match[1]}
+            language={match[1] ?? ''}
             highlighter={highlighter}
             cfg={cfg}
           />

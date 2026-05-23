@@ -25,7 +25,7 @@ export default function SocialConfig({ config, onChange }: SocialConfigProps) {
 
   const updateKey = (oldKey: string, newKey: string) => {
     const next = { ...config };
-    next[newKey] = next[oldKey];
+    next[newKey] = next[oldKey] ?? '';
     if (newKey !== oldKey) delete next[oldKey];
     onChange(next);
   };

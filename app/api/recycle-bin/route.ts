@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     const periodMs = DELETION_PERIOD_DAYS * 24 * 60 * 60 * 1000;
     
     const enrichedPending = pendingDeletion.map(article => {
-      const requestedAt = new Date(article.deletionRequestedAt).getTime();
+      const requestedAt = new Date(article.deletionRequestedAt as string).getTime();
       const expiresAt = requestedAt + periodMs;
       const daysRemaining = Math.max(0, Math.ceil((expiresAt - now) / (24 * 60 * 60 * 1000)));
       const canRestore = daysRemaining > 0;

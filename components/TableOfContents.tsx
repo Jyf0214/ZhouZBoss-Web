@@ -29,8 +29,8 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
     const headings: TocItem[] = [];
     let match: RegExpExecArray | null;
     while ((match = headingRegex.exec(content)) !== null) {
-      const level = match[1].length;
-      const text = match[2].replace(/[`*_~\[\]()]/g, '').trim();
+      const level = match[1]!.length;
+      const text = match[2]!.replace(/[`*_~\[\]()]/g, '').trim();
       const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fff-]/g, '');
       headings.push({ id, text, level });
     }

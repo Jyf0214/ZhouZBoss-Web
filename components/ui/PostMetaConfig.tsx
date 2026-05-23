@@ -84,7 +84,7 @@ function MetaItemEditor({
         <ToggleField label="显示标签" checked={config.tags} onChange={v => onChange({ ...config, tags: v })} />
         <ToggleField label="显示描述" checked={config.label} onChange={v => onChange({ ...config, label: v })} />
         {showUnread && (
-          <ToggleField label="未读标记" checked={(config as PostMetaPostConfig).unread} onChange={v => onChange({ ...config, unread: v })} />
+          <ToggleField label="未读标记" checked={(config as PostMetaPostConfig).unread} onChange={v => onChange({ ...config, unread: v } as unknown as PostMetaItemConfig)} />
         )}
       </div>
     </div>

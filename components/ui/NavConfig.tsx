@@ -45,17 +45,17 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
   };
 
   const addItem = (gi: number) => {
-    const group = config.menu[gi];
+    const group = config.menu[gi]!;
     updateGroup(gi, { ...group, item: [...group.item, { name: '', link: '', icon: '' }] });
   };
 
   const removeItem = (gi: number, ii: number) => {
-    const group = config.menu[gi];
+    const group = config.menu[gi]!;
     updateGroup(gi, { ...group, item: group.item.filter((_, i) => i !== ii) });
   };
 
   const updateItem = (gi: number, ii: number, item: NavMenuItemData) => {
-    const group = config.menu[gi];
+    const group = config.menu[gi]!;
     const items = [...group.item];
     items[ii] = item;
     updateGroup(gi, { ...group, item: items });

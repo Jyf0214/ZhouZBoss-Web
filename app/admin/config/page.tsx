@@ -76,7 +76,7 @@ export default function ConfigPage() {
   const { handleSave: handleGitHubSave, DiffModal } = useGitHubConfigSync({
     repo: githubRepo,
     remoteConfig,
-    currentConfig: config,
+    currentConfig: config as unknown as Record<string, unknown>,
     managedFields: ['site', 'appearance', 'access', 'auth', 'nav', 'mourn', 'highlight', 'copy', 'social', 'authorStatus', 'cover', 'errorImg', 'postMeta', 'wordcount', 'toc', 'copyright', 'reward', 'postEdit', 'share', 'mainTone', 'footer'],
     onSyncStart: () => setSaving(true),
     onSyncComplete: (yamlContent) => {
@@ -117,7 +117,7 @@ export default function ConfigPage() {
   }, [userRole]);
 
   const handleSave = () => {
-    handleGitHubSave(initialConfigRef.current);
+    handleGitHubSave(initialConfigRef.current as unknown as Record<string, unknown>);
   };
 
   if (loading) {

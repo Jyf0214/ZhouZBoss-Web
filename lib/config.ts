@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig } from '@/next.config';
+import type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig, ShareConfig, MainToneConfig, FooterConfig, FooterOwnerConfig, FooterRuntimeConfig, SharejsConfig, AddtoanyConfig, PostEditConfig, CopyrightConfig, TocConfig, WordCountConfig, PostMetaConfig, PostMetaDisplayConfig, PostMetaPostConfig, ErrorImgConfig, CoverConfig, AuthorStatusConfig, SocialConfig, CopyConfig, HighlightConfig, MournConfig, NavConfig, NavMenuItem, NavMenuGroup, RewardConfig, QRCodeItem } from '@/next.config';
 
 export type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig, ShareConfig, MainToneConfig, FooterConfig, FooterOwnerConfig, FooterRuntimeConfig, SharejsConfig, AddtoanyConfig, PostEditConfig, CopyrightConfig, TocConfig, WordCountConfig, PostMetaConfig, PostMetaDisplayConfig, PostMetaPostConfig, ErrorImgConfig, CoverConfig, AuthorStatusConfig, SocialConfig, CopyConfig, HighlightConfig, MournConfig, NavConfig, NavMenuItem, NavMenuGroup, RewardConfig, QRCodeItem };
 

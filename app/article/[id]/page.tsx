@@ -14,6 +14,15 @@ import { showError } from '@/lib/error';
 /**
  * 文章详情页 — 通过 API 获取内容（草稿从数据库，已发布从 GitHub）
  */
+interface ArticleData {
+  title?: string;
+  content?: string;
+  tags?: string[];
+  authorName?: string;
+  author?: string;
+  date?: string;
+}
+
 export default function ArticlePage() {
   const params = useParams();
   const id = params?.id as string;
@@ -51,6 +60,8 @@ export default function ArticlePage() {
     </div>
   );
 
+  const articleData = article as ArticleData;
+
   if (!article) return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
@@ -78,9 +89,9 @@ export default function ArticlePage() {
 
         <article>
           <header className="mb-12">
-            {article.tags && article.tags.length > 0 && (
+            {articleData.tags && articleData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
-                {article.tags.map((tag: string) => (
+                {articleData.tags.map((tag: string) => (
                   <span key={tag} className="px-3 py-1 bg-zinc-100 text-zinc-600 text-xs font-bold uppercase tracking-wider rounded-full">
                     {tag}
                   </span>
@@ -88,7 +99,7 @@ export default function ArticlePage() {
               </div>
             )}
             <h1 className="text-4xl md:text-6xl font-display font-black tracking-tight text-zinc-900 mb-6 leading-tight">
-              {article.title}
+              {articleData.title}
             </h1>
             <div className="flex items-center gap-4 text-zinc-500 border-b border-zinc-100 pb-8">
               <div className="flex items-center gap-2">
@@ -96,14 +107,14 @@ export default function ArticlePage() {
                   <User size={20} />
                 </div>
                 <div>
-                  <div className="font-bold text-zinc-900 leading-none mb-1">{article.authorName ?? article.author ?? 'Anonymous'}</div>
+                  <div className="font-bold text-zinc-900 leading-none mb-1">{articleData.authorName ?? articleData.author ?? 'Anonymous'}</div>
                 </div>
               </div>
-              {article.date && (
+              {articleData.date && (
                 <>
                   <span className="text-zinc-200">|</span>
-                  <time className="text-sm font-medium" dateTime={article.date}>
-                    {new Date(article.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  <time className="text-sm font-medium" dateTime={articleData.date}>
+                    {new Date(articleData.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </time>
                 </>
               )}
@@ -111,7 +122,7 @@ export default function ArticlePage() {
           </header>
 
           <div className="max-w-3xl mx-auto prose prose-zinc lg:prose-xl">
-            <MarkdownRenderer content={article.content ?? ''} highlight={siteConfig?.highlight} />
+            <MarkdownRenderer content={articleData.content ?? ''} highlight={siteConfig?.highlight} />
           </div>
         </article>
       </main>

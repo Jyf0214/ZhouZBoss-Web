@@ -49,8 +49,8 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
     const q = searchTerm.toLowerCase();
     return (
       p.title.toLowerCase().includes(q) ||
-      p.description?.toLowerCase().includes(q) ??
-      p.tags?.some((tag) => tag.toLowerCase().includes(q))
+      (p.description?.toLowerCase().includes(q) ?? false) ||
+      (p.tags?.some((tag) => tag.toLowerCase().includes(q)) ?? false)
     );
   });
 

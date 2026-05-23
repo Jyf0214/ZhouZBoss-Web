@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     logger.info('POST', '模板创建成功', { slug: `/${slug}` });
     return NextResponse.json({ success: true, slug: `/${slug}` });
   } catch (error: unknown) {
-    logger.error('POST', '创建模板失败', { error: error.message });
+    logger.error('POST', '创建模板失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '创建模板失败' }, { status: 500 });
   }
 }

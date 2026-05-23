@@ -5,8 +5,8 @@ import { GlobalLoading } from '@/components/Loading';
 
 export default function Loading() {
   const [loadingConfig, setLoadingConfig] = useState<{
-    page?: { type: string; color: string; position: string };
-    navigation?: { type: string; color: string };
+    page?: { type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd'; color: string; position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' };
+    navigation?: { type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd'; color: string };
     slogans?: string[];
   } | undefined>(undefined);
 

@@ -51,6 +51,7 @@ export interface FrontendConfig {
   };
   wordcount?: { enable: boolean; postWordcount: boolean; min2read: boolean; totalWordcount: boolean };
   toc?: { post: boolean; page: boolean; number: boolean; expand: boolean; styleSimple: boolean };
+  copy?: { enable: boolean; copyright: { enable: boolean; limitCount: number } };
   copyright?: {
     enable: boolean; decode: boolean; authorHref: string; location: string;
     license: string; licenseUrl: string; avatarSinks: boolean;

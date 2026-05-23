@@ -124,17 +124,17 @@ export default function UsersPage() {
         {users.length > 0 ? (
           <div className="divide-y divide-zinc-50">
             {users.map((u) => (
-              <div key={u.uid ?? u.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-zinc-50/50 transition-colors">
+              <div key={String(u.uid ?? u.id)} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-zinc-50/50 transition-colors">
                 {/* 用户 */}
                 <div className="col-span-3 flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 bg-zinc-100 rounded-full flex items-center justify-center shrink-0">
                     <User size={14} className="text-zinc-400" />
                   </div>
-                  <span className="font-medium text-sm text-zinc-900 truncate">{u.name ?? u.username ?? t('admin.noRole')}</span>
+                  <span className="font-medium text-sm text-zinc-900 truncate">{String(u.name ?? u.username ?? t('admin.noRole'))}</span>
                 </div>
 
                 {/* 邮箱 */}
-                <div className="col-span-4 text-sm text-zinc-400 truncate">{u.email}</div>
+                <div className="col-span-4 text-sm text-zinc-400 truncate">{String(u.email)}</div>
 
                 {/* 角色 */}
                 <div className="col-span-3">
@@ -161,15 +161,15 @@ export default function UsersPage() {
                 <div className="col-span-2 flex items-center gap-1 justify-end">
                   {editingId === u.uid ? (
                     <>
-                      <Button size="small" type="text" icon={<Check size={14} className="text-emerald-500" />} onClick={() => handleUpdateRole(u.uid)} disabled={operating === u.uid} />
+                      <Button size="small" type="text" icon={<Check size={14} className="text-emerald-500" />} onClick={() => handleUpdateRole(String(u.uid))} disabled={operating === u.uid} />
                       <Button size="small" type="text" icon={<X size={14} className="text-zinc-400" />} onClick={() => setEditingId(null)} disabled={operating === u.uid} />
                     </>
                   ) : (
                     <>
-                      <Button size="small" type="text" icon={<Edit2 size={14} className="text-blue-500" />} onClick={() => { setEditingId(u.uid); setEditRole(u.role); }} disabled={operating === u.uid} title={t('common.edit')} />
+                      <Button size="small" type="text" icon={<Edit2 size={14} className="text-blue-500" />} onClick={() => { setEditingId(String(u.uid)); setEditRole(String(u.role)); }} disabled={operating === u.uid} title={t('common.edit')} />
                       <Popconfirm
                         title={t('admin.deleteConfirm')}
-                        onConfirm={() => handleDelete(u.uid)}
+                        onConfirm={() => handleDelete(String(u.uid))}
                         okButtonProps={{ danger: true }}
                       >
                         <Button size="small" type="text" danger icon={<Trash2 size={14} />} disabled={operating === u.uid} title={t('common.delete')} />
