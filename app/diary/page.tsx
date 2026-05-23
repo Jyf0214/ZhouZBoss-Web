@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { Plus, Edit3, Trash2, Calendar, Tag, Eye, X, Loader2, Search } from 'lucide-react';
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
-import { Modal } from 'antd';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 
 interface DiaryEntry {
@@ -33,24 +32,16 @@ function formatDate(iso: string): string {
 export default function DiaryPage() {
   const [diaries, setDiaries] = React.useState<DiaryEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [modalOpen, setModalOpen] = React.useState(false);
-  const [editingId, setEditingId] = React.useState<string | null>(null);
   const [viewingId, setViewingId] = React.useState<string | null>(null);
   const [viewContent, setViewContent] = React.useState<string>('');
   const [viewLoading, setViewLoading] = React.useState(false);
-  const [saving, setSaving] = React.useState(false);
   const [deleting, setDeleting] = React.useState<string | null>(null);
-
   const [searchText, setSearchText] = React.useState('');
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
 
   const { user, isSudo, loading: authLoading } = useAuth();
   const router = useRouter();
-
-  const [formTitle, setFormTitle] = React.useState('');
-  const [formContent, setFormContent] = React.useState('');
-  const [formTags, setFormTags] = React.useState('');
 
   const buildQuery = React.useCallback(() => {
     const params = new URLSearchParams();
@@ -82,49 +73,6 @@ export default function DiaryPage() {
     }
     void fetchDiaries();
   }, [user, isSudo, authLoading, router, fetchDiaries]);
-
-  const openCreate = () => {
-    setEditingId(null);
-    setFormTitle('');
-    setFormContent('');
-    setFormTags('');
-    setModalOpen(true);
-  };
-
-  const openEdit = (d: DiaryEntry) => {
-    setEditingId(d.id);
-    setFormTitle(d.title);
-    setFormContent(d.content ?? '');
-    setFormTags((d.tags ?? []).join(', '));
-    setModalOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!formTitle.trim()) { showError('请输入标题'); return; }
-    if (!formContent.trim()) { showError('请输入内容'); return; }
-
-    setSaving(true);
-    try {
-      const tags = formTags.split(',').map(t => t.trim()).filter(Boolean);
-      const url = editingId ? `/api/diary/${editingId}` : '/api/diary';
-      const method = editingId ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: formTitle.trim(), content: formContent.trim(), tags }),
-      });
-
-      if (!res.ok) throw new Error('保存失败');
-
-      setModalOpen(false);
-      setSaving(false);
-      await fetchDiaries();
-    } catch {
-      showError('保存失败');
-      setSaving(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     setDeleting(id);
@@ -178,7 +126,7 @@ export default function DiaryPage() {
             <p className="text-zinc-400 text-lg">仅管理员可查看 · 全部存储于数据库</p>
           </div>
           <button
-            onClick={openCreate}
+            onClick={() => router.push('/diary/new')}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium"
           >
             <Plus size={18} />
@@ -221,7 +169,7 @@ export default function DiaryPage() {
           <div className="py-32 text-center bg-white rounded-2xl border border-zinc-100">
             <p className="text-zinc-400 text-lg mb-4">暂无日记</p>
             <button
-              onClick={openCreate}
+              onClick={() => router.push('/diary/new')}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium"
             >
               <Plus size={18} />
@@ -260,7 +208,7 @@ export default function DiaryPage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button
-                        onClick={() => openEdit(d)}
+                        onClick={() => router.push(`/diary/${d.id}/edit`)}
                         className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
                         title="编辑"
                       >
@@ -299,60 +247,6 @@ export default function DiaryPage() {
           </div>
         )}
       </main>
-
-      <Modal
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        title={editingId ? '编辑日记' : '新建日记'}
-        footer={null}
-      >
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1.5">标题</label>
-            <input
-              value={formTitle}
-              onChange={(e) => setFormTitle(e.target.value)}
-              placeholder="日记标题"
-              className="w-full px-4 py-2.5 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 transition-all text-zinc-900 placeholder-zinc-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1.5">内容 (Markdown)</label>
-            <textarea
-              value={formContent}
-              onChange={(e) => setFormContent(e.target.value)}
-              placeholder="写下你的日记..."
-              rows={12}
-              className="w-full px-4 py-2.5 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 transition-all text-zinc-900 placeholder-zinc-400 resize-y font-mono text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1.5">标签 (逗号分隔)</label>
-            <input
-              value={formTags}
-              onChange={(e) => setFormTags(e.target.value)}
-              placeholder="生活, 工作, 随笔"
-              className="w-full px-4 py-2.5 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 transition-all text-zinc-900 placeholder-zinc-400"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button
-              onClick={() => setModalOpen(false)}
-              className="px-5 py-2.5 text-zinc-600 hover:text-zinc-900 font-medium transition-colors"
-            >
-              取消
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium disabled:opacity-50"
-            >
-              {saving && <Loader2 size={16} className="animate-spin" />}
-              {saving ? '保存中...' : '保存'}
-            </button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }
