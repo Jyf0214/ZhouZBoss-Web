@@ -244,6 +244,27 @@ export async function PATCH(
   }
 }
 
+async function deleteFromGithub(origin: string, slug: string, title: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${origin}/api/github`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete',
+        path: `posts${slug}.md`,
+        message: `delete: remove post "${title}"`,
+      }),
+    });
+    if (res.ok) return { ok: true };
+    const body = await res.json().catch(() => ({ error: '未知错误' }));
+    if (res.status === 404) return { ok: true };
+    if (res.status === 500 && body.error === 'GitHub 配置缺失') return { ok: true, error: 'GitHub 未配置' };
+    return { ok: false, error: body.error || `GitHub 删除失败 (${res.status})` };
+  } catch {
+    return { ok: false, error: 'GitHub 请求异常' };
+  }
+}
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -260,7 +281,7 @@ export async function DELETE(
     const db = getDb();
     const metaStr = await db.get(`article:data:${id}`);
 
-    // 数据库无记录 → 可能是文件系统发布的文章 → 从 GitHub 删除
+    // 数据库无记录 → 文件系统发布的文章 → 从 GitHub 删除
     if (!metaStr) {
       const { getContentFile } = await import('@/lib/content');
       const slug = id.startsWith('/') ? id : `/${id}`;
@@ -270,16 +291,8 @@ export async function DELETE(
         return NextResponse.json({ error: '文章不存在' }, { status: 404 });
       }
 
-      // 从 GitHub 删除
-      fetch(`${req.nextUrl.origin}/api/github`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'delete',
-          path: `posts${slug}.md`,
-          message: `delete: remove post "${file.meta.title}"`,
-        }),
-      }).catch(() => logger.warn('DELETE', 'GitHub 文件删除失败（已忽略）', { slug }));
+      const gh = await deleteFromGithub(req.nextUrl.origin, slug, file.meta.title);
+      if (!gh.ok) return NextResponse.json({ error: gh.error }, { status: 502 });
 
       return NextResponse.json({ success: true, message: '已删除' });
     }
@@ -288,17 +301,12 @@ export async function DELETE(
 
     // 管理员直接永久删除
     if (session.role === 'admin' || session.role === 'sudo') {
-      // 删除 GitHub 文件（失败不影响本地删除）
+      // 删除 GitHub 文件
       if (meta.status === 'published' && meta.slug) {
-        fetch(`${req.nextUrl.origin}/api/github`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'delete',
-            path: `posts${meta.slug}.md`,
-            message: `delete: remove post "${meta.title}"`,
-          }),
-        }).catch(() => logger.warn('DELETE', 'GitHub 文件删除失败（已忽略）', { slug: meta.slug }));
+        const gh = await deleteFromGithub(req.nextUrl.origin, meta.slug, meta.title);
+        if (!gh.ok && gh.error !== 'GitHub 未配置') {
+          return NextResponse.json({ error: gh.error }, { status: 502 });
+        }
       }
 
       // 删除数据库记录
