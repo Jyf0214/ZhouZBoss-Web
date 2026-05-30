@@ -121,7 +121,7 @@ export default function DiaryPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div>
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black tracking-tighter text-zinc-900 mb-1 sm:mb-2">
-              私密日记
+              日记
             </h1>
             <p className="text-sm sm:text-base text-zinc-400">仅管理员可查看 · 全部存储于数据库</p>
           </div>
