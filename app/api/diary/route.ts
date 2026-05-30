@@ -41,12 +41,16 @@ export async function GET(req: NextRequest) {
 
     const diaries = await prisma.diary.findMany({
       where,
-      orderBy: { date: 'desc' },
+      orderBy: [
+        { pinned: 'desc' },
+        { date: 'desc' },
+      ],
       select: {
         id: true,
         title: true,
         tags: true,
         date: true,
+        pinned: true,
         createdAt: true,
         updatedAt: true,
       },

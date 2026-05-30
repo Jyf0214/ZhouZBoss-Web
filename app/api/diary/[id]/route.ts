@@ -68,6 +68,34 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getSession();
+    const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
+    if (!isAdmin) {
+      return NextResponse.json({ error: '无权限访问' }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const existing = await prisma.diary.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: '日记不存在' }, { status: 404 });
+    }
+
+    const diary = await prisma.diary.update({
+      where: { id },
+      data: { pinned: !existing.pinned },
+      select: { id: true, pinned: true },
+    });
+
+    logger.info('PATCH', `${diary.pinned ? '置顶' : '取消置顶'}日记成功`, { id });
+    return NextResponse.json({ diary });
+  } catch {
+    logger.error('PATCH', '切换置顶状态失败');
+    return NextResponse.json({ error: '切换置顶状态失败' }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();

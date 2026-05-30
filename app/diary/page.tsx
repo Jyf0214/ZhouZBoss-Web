@@ -4,7 +4,7 @@ import React from 'react';
 import { Navbar } from '@/components/Navbar';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit3, Trash2, Calendar, Tag, Eye, X, Loader2, Search, FileText } from 'lucide-react';
+import { Plus, Edit3, Trash2, Calendar, Tag, Eye, X, Loader2, Search, FileText, Pin } from 'lucide-react';
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
@@ -15,6 +15,7 @@ interface DiaryEntry {
   content?: string;
   tags: string[];
   date: string;
+  pinned: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +37,7 @@ export default function DiaryPage() {
   const [viewContent, setViewContent] = React.useState<string>('');
   const [viewLoading, setViewLoading] = React.useState(false);
   const [deleting, setDeleting] = React.useState<string | null>(null);
+  const [pinning, setPinning] = React.useState<string | null>(null);
   const [searchText, setSearchText] = React.useState('');
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
@@ -88,6 +90,19 @@ export default function DiaryPage() {
       showError('删除失败');
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleTogglePin = async (id: string) => {
+    setPinning(id);
+    try {
+      const res = await fetch(`/api/diary/${id}`, { method: 'PATCH' });
+      if (!res.ok) throw new Error('切换置顶失败');
+      await fetchDiaries();
+    } catch {
+      showError('切换置顶状态失败');
+    } finally {
+      setPinning(null);
     }
   };
 
@@ -196,7 +211,10 @@ export default function DiaryPage() {
                 >
                   <div className="flex items-start justify-between gap-3 sm:gap-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base sm:text-xl font-bold text-zinc-900 mb-1 sm:mb-2">{d.title}</h3>
+                      <h3 className="text-base sm:text-xl font-bold text-zinc-900 mb-1 sm:mb-2 flex items-center gap-2">
+                        {d.pinned && <Pin size={16} className="text-amber-500 shrink-0 fill-amber-500" />}
+                        {d.title}
+                      </h3>
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-zinc-400">
                         <div className="flex items-center gap-1 sm:gap-1.5">
                           <Calendar size={12} className="sm:size-[14]" />
@@ -211,6 +229,21 @@ export default function DiaryPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => handleTogglePin(d.id)}
+                        disabled={pinning === d.id}
+                        className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                          d.pinned
+                            ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'
+                            : 'text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100'
+                        } disabled:opacity-50`}
+                        title={d.pinned ? '取消置顶' : '置顶'}
+                      >
+                        {pinning === d.id
+                          ? <Loader2 size={14} className="sm:size-4 animate-spin" />
+                          : <Pin size={14} className={`sm:size-4 ${d.pinned ? 'fill-amber-500' : ''}`} />
+                        }
+                      </button>
                       <button
                         onClick={() => router.push(`/diary/${d.id}/edit`)}
                         className="p-1.5 sm:p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"

@@ -61,12 +61,14 @@ model Diary {
   content   String
   tags      String[] @default([])
   date      DateTime @default(now()) @map("diary_date")
+  pinned    Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("diaries")
   @@index([date])
   @@index([createdAt])
+  @@index([pinned])
 }
 
 // 文章删除申请表
