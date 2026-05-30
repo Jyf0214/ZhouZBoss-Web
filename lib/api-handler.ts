@@ -6,7 +6,7 @@ interface ApiHandlerContext { params: Promise<Record<string, string>> }
 type ApiHandler = (
   req: NextRequest,
   context?: ApiHandlerContext,
-) => Promise<NextResponse>;
+) => NextResponse | Promise<NextResponse>;
 
 interface ApiHandlerOptions {
   label: string;
