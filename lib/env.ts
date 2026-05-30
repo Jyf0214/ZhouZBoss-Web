@@ -4,7 +4,7 @@
  */
 
 export interface EnvConfig {
-  databaseUrl: string;
+  databaseUrl: string | undefined;
   authSecret: string;
   appUrl?: string;
   githubRepo?: string;
@@ -20,10 +20,9 @@ export function getEnvConfig(): EnvConfig {
     process.env.DATABASE_URL ??
     process.env.POSTGRES_URL ??
     process.env.POSTGRES_PRISMA_URL ??
-    process.env.POSTGRES_URL_NON_POOLING ??
-    '';
+    process.env.POSTGRES_URL_NON_POOLING;
 
-  const authSecret = process.env.AUTH_SECRET ?? (process.env.NODE_ENV === 'production' ? '' : 'fallback-secret-at-least-32-chars-long');
+  const authSecret = process.env.AUTH_SECRET ?? '';
   const appUrl = process.env.APP_URL;
   const githubRepo = process.env.GITHUB_REPO;
   const githubToken = process.env.GITHUB_TOKEN;

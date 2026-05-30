@@ -114,7 +114,7 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
             />
             <div className="flex items-center gap-1.5 shrink-0 text-xs text-zinc-400">
               {saveStatus === 'saving' && (
-                <><div className="w-3 h-3 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" /><span>保存中...</span></>
+                <div className="w-3 h-3 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
               )}
               {saveStatus === 'saved' && (
                 <><Cloud size={14} className="text-green-500" /><span>{agoLabel() || '已保存'}</span></>

@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { loadConfig, canAccess, hasDatabase, type AppConfig } from '@/lib/config';
 import { getDraft, saveDraft, deleteDraft } from '@/lib/draft-storage';
 import { createApiLogger } from '@/lib/api-logger';
+import { apiHandler, getParam } from '@/lib/api-handler';
 
 const logger = createApiLogger('/api/articles/[id]');
 
@@ -81,45 +82,36 @@ async function handleFileSystemLookup(
   });
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
+export const GET = apiHandler('GET', { label: '获取文章详情' }, async (req, context) => {
+  const id = await getParam(context, 'id');
   logger.info('GET', '获取文章详情', { id });
+  logger.info('GET', '读取文章详情', { id });
+  const db = getDb();
 
-  try {
-    logger.info('GET', '读取文章详情', { id });
-    const db = getDb();
-
-    const metaStr = await db.get(`article:data:${id}`);
-    if (metaStr) {
-      const meta = JSON.parse(metaStr) as Record<string, unknown>;
-      if (meta.status === 'draft') {
-        return handleDraftArticleResponse(id, meta);
-      }
-      const publishedResponse = await handlePublishedArticleResponse(meta, req);
-      if (publishedResponse) {
-        return publishedResponse;
-      }
-      return NextResponse.json(meta);
+  const metaStr = await db.get(`article:data:${id}`);
+  if (metaStr) {
+    const meta = JSON.parse(metaStr) as Record<string, unknown>;
+    if (meta.status === 'draft') {
+      return handleDraftArticleResponse(id, meta);
     }
-
-    const session = await getSession();
-    const isAuthenticated = !!session;
-    const config = loadConfig();
-    const dbAvailable = hasDatabase();
-    const fileResponse = await handleFileSystemLookup(id, isAuthenticated, dbAvailable, config);
-    if (fileResponse) {
-      return fileResponse;
+    const publishedResponse = await handlePublishedArticleResponse(meta, req);
+    if (publishedResponse) {
+      return publishedResponse;
     }
-
-    return NextResponse.json({ error: '文章不存在' }, { status: 404 });
-  } catch (error) {
-    logger.error('GET', '获取文章失败', { error: (error as Error).message });
-    return NextResponse.json({ error: '获取文章失败' }, { status: 500 });
+    return NextResponse.json(meta);
   }
-}
+
+  const session = await getSession();
+  const isAuthenticated = !!session;
+  const config = loadConfig();
+  const dbAvailable = hasDatabase();
+  const fileResponse = await handleFileSystemLookup(id, isAuthenticated, dbAvailable, config);
+  if (fileResponse) {
+    return fileResponse;
+  }
+
+  return NextResponse.json({ error: '文章不存在' }, { status: 404 });
+});
 
 function checkArticlePermission(
   meta: Record<string, unknown>,
@@ -199,50 +191,37 @@ async function handleDraftSave(
   return NextResponse.json({ success: true });
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getSession();
-  if (!session) {
-    logger.warn('PATCH', '未登录');
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+export const PATCH = apiHandler('PATCH', { label: '更新文章', requireAuth: true }, async (req, context) => {
+  const id = await getParam(context, 'id');
+  const session = (await getSession())!;
+  const body = await req.json() as Record<string, unknown>;
+  logger.info('PATCH', '更新文章', { id });
+  const db = getDb();
+  const metaStr = await db.get(`article:data:${id}`);
+
+  if (!metaStr) {
+    logger.warn('PATCH', '文章不存在', { id });
+    return NextResponse.json({ error: '文章不存在' }, { status: 404 });
   }
 
-  try {
-    const body = await req.json() as Record<string, unknown>;
-    logger.info('PATCH', '更新文章', { id });
-    const db = getDb();
-    const metaStr = await db.get(`article:data:${id}`);
+  const meta = JSON.parse(metaStr) as Record<string, unknown>;
 
-    if (!metaStr) {
-      logger.warn('PATCH', '文章不存在', { id });
-      return NextResponse.json({ error: '文章不存在' }, { status: 404 });
-    }
-
-    const meta = JSON.parse(metaStr) as Record<string, unknown>;
-
-    if (!checkArticlePermission(meta, session)) {
-      return NextResponse.json({ error: '无权限' }, { status: 403 });
-    }
-
-    if (body.status === 'published') {
-      const updated = {
-        ...meta,
-        ...body,
-        content: body.content !== undefined ? body.content : meta.content,
-        updatedAt: new Date().toISOString(),
-      };
-      return handlePublishArticle(body, updated, id, req, db);
-    }
-
-    return handleDraftSave(body, meta, id, db);
-  } catch (error) {
-    logger.error('PATCH', '更新文章失败', { error: (error as Error).message });
-    return NextResponse.json({ error: '更新文章失败' }, { status: 500 });
+  if (!checkArticlePermission(meta, session)) {
+    return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
-}
+
+  if (body.status === 'published') {
+    const updated = {
+      ...meta,
+      ...body,
+      content: body.content !== undefined ? body.content : meta.content,
+      updatedAt: new Date().toISOString(),
+    };
+    return handlePublishArticle(body, updated, id, req, db);
+  }
+
+  return handleDraftSave(body, meta, id, db);
+});
 
 async function deleteFromGithub(origin: string, slug: string, title: string): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -265,83 +244,70 @@ async function deleteFromGithub(origin: string, slug: string, title: string): Pr
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const session = await getSession();
-  if (!session) {
-    logger.warn('DELETE', '未登录');
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+export const DELETE = apiHandler('DELETE', { label: '删除文章', requireAuth: true }, async (req, context) => {
+  const id = await getParam(context, 'id');
+  const session = (await getSession())!;
+  logger.info('DELETE', '删除文章', { id });
+  const db = getDb();
+  const metaStr = await db.get(`article:data:${id}`);
+
+  // 数据库无记录 → 文件系统发布的文章 → 从 GitHub 删除
+  if (!metaStr) {
+    const { getContentFile } = await import('@/lib/content');
+    const slug = id.startsWith('/') ? id : `/${id}`;
+    const file = getContentFile('posts', slug);
+    if (!file) {
+      logger.warn('DELETE', '文章不存在', { id });
+      return NextResponse.json({ error: '文章不存在' }, { status: 404 });
+    }
+
+    const gh = await deleteFromGithub(req.nextUrl.origin, slug, file.meta.title);
+    if (!gh.ok) return NextResponse.json({ error: gh.error }, { status: 502 });
+
+    return NextResponse.json({ success: true, message: '已删除' });
   }
 
-  try {
-    logger.info('DELETE', '删除文章', { id });
-    const db = getDb();
-    const metaStr = await db.get(`article:data:${id}`);
+  const meta = JSON.parse(metaStr);
 
-    // 数据库无记录 → 文件系统发布的文章 → 从 GitHub 删除
-    if (!metaStr) {
-      const { getContentFile } = await import('@/lib/content');
-      const slug = id.startsWith('/') ? id : `/${id}`;
-      const file = getContentFile('posts', slug);
-      if (!file) {
-        logger.warn('DELETE', '文章不存在', { id });
-        return NextResponse.json({ error: '文章不存在' }, { status: 404 });
+  // 管理员直接永久删除
+  if (session.role === 'admin' || session.role === 'sudo') {
+    // 删除 GitHub 文件
+    if (meta.status === 'published' && meta.slug) {
+      const gh = await deleteFromGithub(req.nextUrl.origin, meta.slug, meta.title);
+      if (!gh.ok && gh.error !== 'GitHub 未配置') {
+        return NextResponse.json({ error: gh.error }, { status: 502 });
       }
-
-      const gh = await deleteFromGithub(req.nextUrl.origin, slug, file.meta.title);
-      if (!gh.ok) return NextResponse.json({ error: gh.error }, { status: 502 });
-
-      return NextResponse.json({ success: true, message: '已删除' });
     }
 
-    const meta = JSON.parse(metaStr);
-
-    // 管理员直接永久删除
-    if (session.role === 'admin' || session.role === 'sudo') {
-      // 删除 GitHub 文件
-      if (meta.status === 'published' && meta.slug) {
-        const gh = await deleteFromGithub(req.nextUrl.origin, meta.slug, meta.title);
-        if (!gh.ok && gh.error !== 'GitHub 未配置') {
-          return NextResponse.json({ error: gh.error }, { status: 502 });
-        }
-      }
-
-      // 删除数据库记录
-      await db.del(`article:data:${id}`);
-      await db.hdel('articles:drafts', id);
-      await db.hdel('articles:published', id);
-
-      // 清理草稿文件
-      try {
-        await deleteDraft(id);
-      } catch {
-        // 文件清理失败不影响删除流程
-      }
-
-      return NextResponse.json({ success: true, message: '已永久删除' });
-    }
-
-    // 普通用户：进入删除队列
-    if (meta.authorId !== session.uid) {
-      logger.warn('DELETE', '无权限', { id, authorId: meta.authorId, uid: session.uid });
-      return NextResponse.json({ error: '无权限' }, { status: 403 });
-    }
-
-    const deletionInfo = {
-      ...meta,
-      status: 'pending_deletion',
-      deletionRequestedAt: new Date().toISOString(),
-    };
-    await db.set(`article:data:${id}`, JSON.stringify(deletionInfo));
+    // 删除数据库记录
+    await db.del(`article:data:${id}`);
     await db.hdel('articles:drafts', id);
-    await db.hset('articles:drafts', id, JSON.stringify(deletionInfo));
+    await db.hdel('articles:published', id);
 
-    return NextResponse.json({ success: true, message: '已提交删除申请，30天后自动删除' });
-  } catch (error) {
-    logger.error('DELETE', '删除文章失败', { error: (error as Error).message });
-    return NextResponse.json({ error: '删除文章失败' }, { status: 500 });
+    // 清理草稿文件
+    try {
+      await deleteDraft(id);
+    } catch {
+      // 文件清理失败不影响删除流程
+    }
+
+    return NextResponse.json({ success: true, message: '已永久删除' });
   }
-}
+
+  // 普通用户：进入删除队列
+  if (meta.authorId !== session.uid) {
+    logger.warn('DELETE', '无权限', { id, authorId: meta.authorId, uid: session.uid });
+    return NextResponse.json({ error: '无权限' }, { status: 403 });
+  }
+
+  const deletionInfo = {
+    ...meta,
+    status: 'pending_deletion',
+    deletionRequestedAt: new Date().toISOString(),
+  };
+  await db.set(`article:data:${id}`, JSON.stringify(deletionInfo));
+  await db.hdel('articles:drafts', id);
+  await db.hset('articles:drafts', id, JSON.stringify(deletionInfo));
+
+  return NextResponse.json({ success: true, message: '已提交删除申请，30天后自动删除' });
+});

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
+import { apiHandler } from '@/lib/api-handler';
 
 const logger = createApiLogger('/api/env-status');
 
@@ -8,15 +8,8 @@ const logger = createApiLogger('/api/env-status');
  * 环境变量状态检查 API
  * 仅管理员可访问
  */
-export async function GET() {
-  const session = await getSession();
-  if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
-    logger.warn('GET', '无权限访问', { role: session?.role });
-    return NextResponse.json({ error: '无权限' }, { status: 403 });
-  }
-
+export const GET = apiHandler('GET', { label: '获取环境变量状态', requireAdmin: true }, () => {
   logger.info('GET', '获取环境变量状态');
-
   logger.info('GET', '检查环境变量状态');
 
   const envStatus = {
@@ -134,4 +127,4 @@ export async function GET() {
       isReady: missingRequired.length === 0,
     },
   });
-}
+});

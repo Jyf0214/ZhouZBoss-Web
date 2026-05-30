@@ -1,8 +1,8 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getTicketTemplates } from '@/lib/tickets';
-import { getSession } from '@/lib/auth';
 import yaml from 'js-yaml';
 import { createApiLogger } from '@/lib/api-logger';
+import { apiHandler } from '@/lib/api-handler';
 
 const logger = createApiLogger('/api/ticket-templates');
 
@@ -14,88 +14,61 @@ const logger = createApiLogger('/api/ticket-templates');
  */
 
 // 获取所有模板
-export async function GET() {
-  const session = await getSession();
-  if (!session) {
-    logger.warn('GET', '未登录');
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
-  try {
-    logger.info('GET', '获取模板列表');
-    const templates = getTicketTemplates();
-    logger.info('GET', '获取模板列表成功', { count: templates.length });
-    return NextResponse.json(templates);
-  } catch (error) {
-    logger.error('GET', '获取模板失败', { error: (error as Error).message });
-    return NextResponse.json({ error: '获取模板失败' }, { status: 500 });
-  }
-}
+export const GET = apiHandler('GET', { label: '获取模板列表', requireAuth: true }, () => {
+  logger.info('GET', '获取模板列表');
+  const templates = getTicketTemplates();
+  logger.info('GET', '获取模板列表成功', { count: templates.length });
+  return NextResponse.json(templates);
+});
 
 // 创建新模板（仅 admin/sudo）
-export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    logger.warn('POST', '未登录');
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+export const POST = apiHandler('POST', { label: '创建模板', requireAdmin: true }, async (req) => {
+  const body = await req.json();
+  const { name, description, title, labels, assignees, fields, body: templateBody } = body;
+
+  if (!name || !templateBody) {
+    logger.warn('POST', '缺少必需字段');
+    return NextResponse.json({ error: '缺少必需字段' }, { status: 400 });
   }
 
-  if (session.role !== 'admin' && session.role !== 'sudo') {
-    logger.warn('POST', '需要管理员权限', { role: session.role });
-    return NextResponse.json({ error: '需要管理员权限' }, { status: 403 });
+  logger.info('POST', '创建模板', { name });
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const fileName = `${slug}.md`;
+  const filePath = `tickets/${fileName}`;
+
+  const frontMatter: Record<string, unknown> = {
+    name,
+    description: description ?? '',
+    title: title ?? `[${name}] `,
+    labels: labels ?? [],
+    assignees: assignees ?? [],
+    fields: (fields ?? []).map((f: Record<string, unknown>) => ({
+      name: f.name,
+      label: f.label,
+      type: f.type ?? 'input',
+      ...(f.options ? { options: f.options } : {}),
+      required: f.required !== false,
+    })),
+  };
+
+  const fileContent = `---\n${yaml.dump(frontMatter)}---\n\n${templateBody}`;
+
+  const githubRes = await fetch(`${new URL(req.url).origin}/api/github`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'create',
+      path: filePath,
+      content: fileContent,
+      message: `feat: add ticket template ${name}`,
+    }),
+  });
+
+  if (!githubRes.ok) {
+    const err = await githubRes.json();
+    return NextResponse.json({ error: err.error ?? '创建模板失败' }, { status: 500 });
   }
 
-  try {
-    const body = await req.json();
-    const { name, description, title, labels, assignees, fields, body: templateBody } = body;
-
-    if (!name || !templateBody) {
-      logger.warn('POST', '缺少必需字段');
-      return NextResponse.json({ error: '缺少必需字段' }, { status: 400 });
-    }
-
-    logger.info('POST', '创建模板', { name });
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const fileName = `${slug}.md`;
-    const filePath = `tickets/${fileName}`;
-
-    const frontMatter: Record<string, unknown> = {
-      name,
-      description: description ?? '',
-      title: title ?? `[${name}] `,
-      labels: labels ?? [],
-      assignees: assignees ?? [],
-      fields: (fields ?? []).map((f: Record<string, unknown>) => ({
-        name: f.name,
-        label: f.label,
-        type: f.type ?? 'input',
-        ...(f.options ? { options: f.options } : {}),
-        required: f.required !== false,
-      })),
-    };
-
-    const fileContent = `---\n${yaml.dump(frontMatter)}---\n\n${templateBody}`;
-
-    const githubRes = await fetch(`${new URL(req.url).origin}/api/github`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'create',
-        path: filePath,
-        content: fileContent,
-        message: `feat: add ticket template ${name}`,
-      }),
-    });
-
-    if (!githubRes.ok) {
-      const err = await githubRes.json();
-      return NextResponse.json({ error: err.error ?? '创建模板失败' }, { status: 500 });
-    }
-
-    logger.info('POST', '模板创建成功', { slug: `/${slug}` });
-    return NextResponse.json({ success: true, slug: `/${slug}` });
-  } catch (error: unknown) {
-    logger.error('POST', '创建模板失败', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: '创建模板失败' }, { status: 500 });
-  }
-}
+  logger.info('POST', '模板创建成功', { slug: `/${slug}` });
+  return NextResponse.json({ success: true, slug: `/${slug}` });
+});

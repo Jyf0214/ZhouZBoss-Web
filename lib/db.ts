@@ -9,13 +9,12 @@ process.env.PRISMA_HIDE_PREVIEW_FLAG_WARNINGS = 'true'
 process.env.PRISMA_HIDE_UPDATE_MESSAGE = 'true'
 
 // 获取数据库 URL
-function getDatabaseUrl(): string {
+function getDatabaseUrl(): string | undefined {
   return (
     process.env.DATABASE_URL ??
     process.env.POSTGRES_URL ??
     process.env.POSTGRES_PRISMA_URL ??
-    process.env.POSTGRES_URL_NON_POOLING ??
-    ''
+    process.env.POSTGRES_URL_NON_POOLING
   )
 }
 

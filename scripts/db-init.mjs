@@ -65,7 +65,11 @@ async function main() {
   }
 
   try {
-    const authSecret = process.env.AUTH_SECRET || 'fallback-secret-at-least-32-chars-long';
+    const authSecret = process.env.AUTH_SECRET;
+    if (!authSecret) {
+      console.error('[数据库初始化] 错误: AUTH_SECRET 环境变量未配置，无法初始化管理员密码');
+      process.exit(1);
+    }
     const adminPassword = process.env.ADMIN_PASSWORD;
     const adminEmail = process.env.ADMIN_EMAIL;
 

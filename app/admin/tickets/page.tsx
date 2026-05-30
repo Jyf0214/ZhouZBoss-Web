@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
-import { Plus, Trash2, Edit2, FileText, X, Save } from 'lucide-react';
+import { Plus, Trash2, Edit2, FileText, X, Save, Loader2 } from 'lucide-react';
 import { Button, Modal, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
@@ -31,6 +31,7 @@ export default function TicketsPage() {
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<TicketTemplate | null>(null);
   const [formData, setFormData] = useState({
@@ -123,6 +124,7 @@ export default function TicketsPage() {
 
 const handleDelete = async (id: string) => {
     if (!confirm(t('tickets.deleteConfirm'))) return;
+    setDeleting(id);
     const originalTemplates = [...templates];
     setTemplates(templates.filter(tmpl => tmpl.id !== id));
     try {
@@ -140,6 +142,8 @@ const handleDelete = async (id: string) => {
 		console.error('Failed to delete template:', error);
 		showError(`${t('tickets.deleteFailed')}: ${error instanceof Error ? error.message : ''}`);
       setTemplates(originalTemplates);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -199,7 +203,7 @@ const handleDelete = async (id: string) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="small" icon={<Edit2 size={13} />} onClick={() => handleEdit(template)} className="rounded-lg">{t('tickets.edit')}</Button>
-                  <Button size="small" danger icon={<Trash2 size={13} />} onClick={() => handleDelete(template.id)} className="rounded-lg">{t('tickets.delete')}</Button>
+                  <Button size="small" danger icon={deleting === template.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} onClick={() => handleDelete(template.id)} disabled={deleting === template.id} className="rounded-lg">{t('tickets.delete')}</Button>
                 </div>
               </div>
             ))}

@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { message } from 'antd';
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
-import { X, Clock, FileText, Trash2 } from 'lucide-react';
+import { X, Clock, FileText, Trash2, Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/ui/PageContainer';
 
 interface Request {
@@ -162,7 +162,7 @@ export default function RequestsPage() {
                           className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors disabled:opacity-50"
                           title="批准删除"
                         >
-                          <Trash2 size={18} />
+                          {operating === req.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                         </button>
                         <button
                           onClick={() => handleReject(req.id)}
@@ -170,7 +170,7 @@ export default function RequestsPage() {
                           className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
                           title="拒绝"
                         >
-                          <X size={18} />
+                          {operating === req.id ? <Loader2 size={18} className="animate-spin" /> : <X size={18} />}
                         </button>
                       </div>
                     )}

@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { loadConfig, canAccess, hasDatabase } from '@/lib/config';
 import { getDraft, saveDraft } from '@/lib/draft-storage';
 import { createApiLogger } from '@/lib/api-logger';
+import { apiHandler } from '@/lib/api-handler';
 
 const logger = createApiLogger('/api/articles');
 
@@ -148,48 +149,38 @@ async function handlePublishedPost(
   return NextResponse.json({ success: true, id: articleMeta.id, slug: postSlug });
 }
 
-export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    logger.warn('POST', '未登录');
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+export const POST = apiHandler('POST', { label: '创建文章', requireAuth: true }, async (req) => {
+  const session = (await getSession())!;
+  const { title, content, tags, coverImage, status, slug, description } = await req.json();
+  logger.info('POST', '创建文章', { title, status });
+  const id = `draft-${Date.now().toString(36)}`;
+  const now = new Date().toISOString();
+
+  const articleMeta = {
+    id,
+    title,
+    content: content ?? '',
+    authorId: session.uid,
+    authorName: session.email.split('@')[0] ?? 'unknown',
+    tags: tags ?? [],
+    coverImage: coverImage ?? '',
+    description: description ?? '',
+    status: status ?? 'draft',
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  if (status === 'published') {
+    return handlePublishedPost(req, articleMeta, content, { coverImage, description, slug, now });
   }
 
-  try {
-    const { title, content, tags, coverImage, status, slug, description } = await req.json();
-    logger.info('POST', '创建文章', { title, status });
-    const id = `draft-${Date.now().toString(36)}`;
-    const now = new Date().toISOString();
-
-    const articleMeta = {
-      id,
-      title,
-      content: content ?? '',
-      authorId: session.uid,
-      authorName: session.email.split('@')[0] ?? 'unknown',
-      tags: tags ?? [],
-      coverImage: coverImage ?? '',
-      description: description ?? '',
-      status: status ?? 'draft',
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    if (status === 'published') {
-      return handlePublishedPost(req, articleMeta, content, { coverImage, description, slug, now });
-    }
-
-    const db = getDb();
-    if (content) {
-      await saveDraft(id, content);
-    }
-    const draftMeta = { ...articleMeta, content: '' };
-    await db.set(`article:data:${id}`, JSON.stringify(draftMeta));
-    await db.hset('articles:drafts', id, JSON.stringify(draftMeta));
-
-    return NextResponse.json({ success: true, id });
-  } catch (error) {
-    logger.error('POST', '创建文章失败', { error: (error as Error).message });
-    return NextResponse.json({ error: '创建文章失败' }, { status: 500 });
+  const db = getDb();
+  if (content) {
+    await saveDraft(id, content);
   }
-}
+  const draftMeta = { ...articleMeta, content: '' };
+  await db.set(`article:data:${id}`, JSON.stringify(draftMeta));
+  await db.hset('articles:drafts', id, JSON.stringify(draftMeta));
+
+  return NextResponse.json({ success: true, id });
+});

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -13,8 +14,8 @@ export function getSecret(): string {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('AUTH_SECRET 环境变量未配置，生产环境必须设置');
     }
-    console.warn('⚠️ AUTH_SECRET 未配置，使用不安全的默认值，请尽快设置环境变量');
-    return 'fallback-secret-at-least-32-chars-long';
+    console.warn('[auth] AUTH_SECRET 未配置，使用随机临时密钥（仅开发环境，会话重启后失效）');
+    return crypto.randomBytes(32).toString('hex');
   }
   return secret;
 }

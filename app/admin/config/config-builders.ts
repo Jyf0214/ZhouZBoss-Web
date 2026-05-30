@@ -153,7 +153,7 @@ export function buildCopyConfig(data: Record<string, unknown>): ConfigState['cop
   const d = data.copy as Record<string, unknown> | undefined;
   const cr = d?.copyright as Record<string, unknown> | undefined;
   return {
-    enable: (d?.enable as boolean) ?? true,
+    enable: (d?.enable as boolean) ?? false,
     copyright: {
       enable: (cr?.enable as boolean) ?? false,
       limitCount: (cr?.limitCount as number) ?? 50,
@@ -197,8 +197,8 @@ function buildPageMeta(data: Record<string, unknown> | undefined): ConfigState['
   return {
     dateType: (data?.dateType as string) ?? 'created',
     dateFormat: (data?.dateFormat as string) ?? 'simple',
-    categories: (data?.categories as boolean) ?? true,
-    tags: (data?.tags as boolean) ?? true,
+    categories: (data?.categories as boolean) ?? false,
+    tags: (data?.tags as boolean) ?? false,
     label: (data?.label as boolean) ?? false,
   };
 }
@@ -207,9 +207,9 @@ function buildPostMeta(data: Record<string, unknown> | undefined): ConfigState['
   return {
     dateType: (data?.dateType as string) ?? 'both',
     dateFormat: (data?.dateFormat as string) ?? 'date',
-    categories: (data?.categories as boolean) ?? true,
-    tags: (data?.tags as boolean) ?? true,
-    label: (data?.label as boolean) ?? true,
+    categories: (data?.categories as boolean) ?? false,
+    tags: (data?.tags as boolean) ?? false,
+    label: (data?.label as boolean) ?? false,
     unread: (data?.unread as boolean) ?? false,
   };
 }
@@ -227,7 +227,7 @@ export function buildWordCountConfig(data: Record<string, unknown>): ConfigState
   return {
     enable: (d?.enable as boolean) ?? false,
     postWordcount: (d?.postWordcount as boolean) ?? false,
-    min2read: (d?.min2read as boolean) ?? true,
+    min2read: (d?.min2read as boolean) ?? false,
     totalWordcount: (d?.totalWordcount as boolean) ?? false,
   };
 }
@@ -235,16 +235,16 @@ export function buildWordCountConfig(data: Record<string, unknown>): ConfigState
 export function buildTocConfig(data: Record<string, unknown>): ConfigState['toc'] {
   const d = data.toc as Record<string, unknown> | undefined;
   return {
-    post: (d?.post as boolean) ?? true,
+    post: (d?.post as boolean) ?? false,
     page: (d?.page as boolean) ?? false,
-    number: (d?.number as boolean) ?? true,
+    number: (d?.number as boolean) ?? false,
     expand: (d?.expand as boolean) ?? false,
     styleSimple: (d?.styleSimple as boolean) ?? false,
   };
 }
 
 const COPYRIGHT_DEFAULTS: ConfigState['copyright'] = {
-  enable: true,
+  enable: false,
   decode: false,
   authorHref: '',
   location: '中国',
@@ -265,7 +265,7 @@ export function buildCopyrightConfig(data: Record<string, unknown>): ConfigState
 export function buildRewardConfig(data: Record<string, unknown>): ConfigState['reward'] {
   const d = data.reward as Record<string, unknown> | undefined;
   return {
-    enable: (d?.enable as boolean) ?? true,
+    enable: (d?.enable as boolean) ?? false,
     qrCodes: (d?.qrCodes as ConfigState['reward']['qrCodes']) ?? [],
   };
 }
@@ -284,7 +284,7 @@ export function buildShareConfig(data: Record<string, unknown>): ConfigState['sh
   const addtoany = d?.addtoany as Record<string, unknown> | undefined;
   return {
     sharejs: {
-      enable: (sharejs?.enable as boolean) ?? true,
+      enable: (sharejs?.enable as boolean) ?? false,
       sites: (sharejs?.sites as string) ?? 'facebook,twitter,wechat,weibo,qq',
     },
     addtoany: {
@@ -308,7 +308,7 @@ export function buildFooterConfig(data: Record<string, unknown>): ConfigState['f
   const runtime = d?.runtime as Record<string, unknown> | undefined;
   return {
     owner: {
-      enable: (owner?.enable as boolean) ?? true,
+      enable: (owner?.enable as boolean) ?? false,
       since: (owner?.since as number) ?? 2020,
     },
     customText: (d?.customText as string) ?? '',

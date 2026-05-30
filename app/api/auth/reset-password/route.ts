@@ -34,7 +34,10 @@ export async function POST(req: NextRequest) {
 
     await db.set(`reset:${token}`, JSON.stringify({ uid, email, expiresAt }), 3600);
 
-    const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
+    const appUrl = process.env.APP_URL;
+    if (!appUrl) {
+      return NextResponse.json({ error: '服务器配置错误：未设置 APP_URL' }, { status: 500 });
+    }
     const resetLink = `${appUrl}/reset-password?token=${token}`;
 
     const sent = await sendMail({

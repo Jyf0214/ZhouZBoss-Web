@@ -1,7 +1,8 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
+import { apiHandler } from '@/lib/api-handler';
 
 const logger = createApiLogger('/api/users');
 
@@ -89,48 +90,38 @@ async function listAllUsers(
   return allUsers;
 }
 
-export async function GET(req: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session) {
-      logger.warn('GET', '未授权');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export const GET = apiHandler('GET', { label: '获取用户列表', requireAuth: true }, async (req) => {
+  const session = (await getSession())!;
+  logger.info('GET', '获取用户列表');
+  const db = getDb();
+  const { searchParams } = new URL(req.url);
+  const username = searchParams.get('username');
+  const uid = searchParams.get('uid');
+
+  if (username) {
+    const userData = await getUserByUsernameSearch(db, username);
+    if (!userData) {
+      logger.warn('GET', '用户不存在', { username });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-
-    logger.info('GET', '获取用户列表');
-    const db = getDb();
-    const { searchParams } = new URL(req.url);
-    const username = searchParams.get('username');
-    const uid = searchParams.get('uid');
-
-    if (username) {
-      const userData = await getUserByUsernameSearch(db, username);
-      if (!userData) {
-        logger.warn('GET', '用户不存在', { username });
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-      return NextResponse.json(userData);
-    }
-
-    if (uid) {
-      const userData = await getUserByUidSearch(db, uid);
-      if (!userData) {
-        logger.warn('GET', '用户不存在', { uid });
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-      return NextResponse.json(userData);
-    }
-
-    if (session.role !== 'sudo' && session.role !== 'admin') {
-      logger.warn('GET', '禁止访问', { role: session.role });
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const allUsers = await listAllUsers(db);
-    logger.info('GET', '获取用户列表成功', { count: allUsers.length });
-    return NextResponse.json(allUsers);
-  } catch (error) {
-    logger.error('GET', '获取用户列表失败', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(userData);
   }
-}
+
+  if (uid) {
+    const userData = await getUserByUidSearch(db, uid);
+    if (!userData) {
+      logger.warn('GET', '用户不存在', { uid });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    return NextResponse.json(userData);
+  }
+
+  if (session.role !== 'sudo' && session.role !== 'admin') {
+    logger.warn('GET', '禁止访问', { role: session.role });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const allUsers = await listAllUsers(db);
+  logger.info('GET', '获取用户列表成功', { count: allUsers.length });
+  return NextResponse.json(allUsers);
+});

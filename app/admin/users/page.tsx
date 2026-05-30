@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
-import { Trash2, Edit2, Check, X, User } from 'lucide-react';
+import { Trash2, Edit2, Check, X, User, Loader2 } from 'lucide-react';
 import { Button, Tag, Popconfirm, Select, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
@@ -173,9 +173,9 @@ export default function UsersPage() {
                       <Popconfirm
                         title={t('admin.deleteConfirm')}
                         onConfirm={() => handleDelete(String(u.uid))}
-                        okButtonProps={{ danger: true }}
+                        okButtonProps={{ danger: true, loading: operating === u.uid }}
                       >
-                        <Button size="small" type="text" danger icon={<Trash2 size={14} />} disabled={operating === u.uid} title={t('common.delete')} />
+                        <Button size="small" type="text" danger icon={operating === u.uid ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} disabled={operating === u.uid} title={t('common.delete')} />
                       </Popconfirm>
                     </>
                   )}

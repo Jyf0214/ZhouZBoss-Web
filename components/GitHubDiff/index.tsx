@@ -120,7 +120,7 @@ export function GitHubDiffModal({
             className="bg-zinc-900 hover:bg-zinc-800"
             icon={loading ? null : <CheckCircle2 size={14} />}
           >
-            {loading ? '提交中...' : '确认提交'}
+            '确认提交'
           </Button>
         </div>
       </div>
