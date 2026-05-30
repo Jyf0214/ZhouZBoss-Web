@@ -3,7 +3,7 @@
 import React from 'react';
 import { Github, CheckCircle, XCircle } from 'lucide-react';
 import { useI18n } from '@/hooks/use-i18n';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 
 /** GitHub 状态卡片属性 */
 export interface GitHubStatusCardProps {

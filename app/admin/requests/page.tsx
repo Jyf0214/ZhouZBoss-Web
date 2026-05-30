@@ -6,6 +6,7 @@ import { message } from 'antd';
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
 import { X, Clock, FileText, Trash2 } from 'lucide-react';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface Request {
   id: string;
@@ -111,7 +112,7 @@ export default function RequestsPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto">
+    <PageContainer maxWidth="7xl">
       <h1 className="text-3xl font-display font-bold text-zinc-900 mb-8">文章删除申请</h1>
 
       <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
@@ -187,6 +188,6 @@ export default function RequestsPage() {
           </table>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

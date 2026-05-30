@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 /**
  * 文章详情页 — 通过 API 获取内容（草稿从数据库，已发布从 GitHub）
@@ -83,7 +84,7 @@ export default function ArticlePage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
+      <PageContainer maxWidth="4xl" padding="wide">
         <Link href="/" className="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-900 mb-10 transition-colors group">
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-medium">Back to articles</span>
@@ -127,7 +128,7 @@ export default function ArticlePage() {
             <MarkdownRenderer content={articleData.content ?? ''} highlight={siteConfig?.highlight} />
           </div>
         </article>
-      </main>
+      </PageContainer>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { Button, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { useI18n } from '@/hooks/use-i18n';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface Ticket {
   slug: string;
@@ -186,7 +187,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-3xl mx-auto">
+    <PageContainer maxWidth="3xl">
       <div className="flex items-center gap-3 mb-8">
         <Button size="small" icon={<ArrowLeft size={14} />} onClick={() => router.push('/tickets')} className="rounded-lg" />
         <h1 className="text-2xl font-bold text-zinc-900">{t('tickets.details')}</h1>
@@ -232,6 +233,6 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
           t={t}
         />
       </div>
-    </div>
+    </PageContainer>
   );
 }

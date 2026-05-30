@@ -8,6 +8,7 @@ import { Button, Input, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { useI18n } from '@/hooks/use-i18n';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface TicketField {
   name: string;
@@ -85,7 +86,7 @@ export default function NewTicketPage() {
   if (!user) return null;
 
   return (
-    <div className="p-6 md:p-10 max-w-3xl mx-auto">
+    <PageContainer maxWidth="3xl">
       <div className="flex items-center gap-3 mb-8">
         <Button size="small" icon={<ArrowLeft size={14} />} onClick={() => router.back()} className="rounded-lg" />
         <h1 className="text-2xl font-bold text-zinc-900">{selectedTemplate ? t('tickets.fillTicket') : t('tickets.selectTemplate')}</h1>
@@ -158,6 +159,6 @@ export default function NewTicketPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

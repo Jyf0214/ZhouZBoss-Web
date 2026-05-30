@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Loader2 } from 'lucide-react';
 import { Input, Tag, Popconfirm, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import ProCard from '@/components/ui/ProCard';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface ArticleItem {
   id: string;
@@ -113,7 +114,7 @@ export default function ArticlesPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-6xl mx-auto">
+    <PageContainer maxWidth="6xl">
       {/* 标题栏 */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
         <div>
@@ -183,9 +184,9 @@ export default function ArticlesPage() {
                       <button
                         onClick={() => handleRestore(article.id)}
                         disabled={operating === article.id}
-                        className="px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
                       >
-                        {t('common.restore')}
+                        {operating === article.id ? <Loader2 size={12} className="animate-spin" style={{ color: '#c084fc' }} /> : t('common.restore')}
                       </button>
                       <Popconfirm
                         title={t('article.permanentlyDeleteConfirm')}
@@ -194,8 +195,8 @@ export default function ArticlesPage() {
                         cancelText={t('common.cancel')}
                         okButtonProps={{ danger: true }}
                       >
-                        <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                          {t('common.delete')}
+                        <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
+                          {operating === article.id ? <Loader2 size={12} className="animate-spin" style={{ color: '#c084fc' }} /> : t('common.delete')}
                         </button>
                       </Popconfirm>
                     </>
@@ -220,8 +221,8 @@ export default function ArticlesPage() {
                         cancelText={t('common.cancel')}
                         okButtonProps={{ danger: true }}
                       >
-                        <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                          {t('common.delete')}
+                        <button disabled={operating === article.id} className="px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
+                          {operating === article.id ? <Loader2 size={12} className="animate-spin" style={{ color: '#c084fc' }} /> : t('common.delete')}
                         </button>
                       </Popconfirm>
                     </>
@@ -247,6 +248,6 @@ export default function ArticlesPage() {
           </div>
         )}
       </ProCard>
-    </div>
+    </PageContainer>
   );
 }

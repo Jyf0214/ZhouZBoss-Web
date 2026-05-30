@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { GlobalLoading } from '@/components/Loading';
 import ProCard from '@/components/ui/ProCard';
 import { Settings, Eye, Activity, FileText, Users, Plus, ArrowRight } from 'lucide-react';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 const adminSections = [
   { key: 'sidebar.systemConfig', icon: Settings, href: '/admin/config', color: 'bg-zinc-900', desc: '系统配置' },
@@ -24,7 +25,7 @@ export default function AdminPage() {
   if (authLoading) return <GlobalLoading />;
 
   return (
-    <div className="p-6 md:p-10 max-w-6xl mx-auto">
+    <PageContainer maxWidth="6xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-zinc-900">
           {t('dashboard.adminConsole') || '管理控制台'}
@@ -61,6 +62,6 @@ export default function AdminPage() {
           );
         })}
       </div>
-    </div>
+    </PageContainer>
   );
 }

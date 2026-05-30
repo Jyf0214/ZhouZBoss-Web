@@ -7,6 +7,7 @@ import { Trash2, Edit2, Check, X, User } from 'lucide-react';
 import { Button, Tag, Popconfirm, Select, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 export default function UsersPage() {
   const { userRole } = useAuth();
@@ -111,7 +112,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto">
+    <PageContainer maxWidth="5xl">
       <h1 className="text-2xl font-bold text-zinc-900 mb-6">{t('admin.users')}</h1>
 
       <div className="bg-white rounded-2xl border border-zinc-100 overflow-hidden">
@@ -163,7 +164,7 @@ export default function UsersPage() {
                 <div className="col-span-2 flex items-center gap-1 justify-end">
                   {editingId === u.uid ? (
                     <>
-                      <Button size="small" type="text" icon={<Check size={14} className="text-emerald-500" />} onClick={() => handleUpdateRole(String(u.uid))} disabled={operating === u.uid} />
+                      <Button size="small" type="text" icon={<Check size={14} className="text-emerald-500" />} onClick={() => handleUpdateRole(String(u.uid))} loading={operating === u.uid} />
                       <Button size="small" type="text" icon={<X size={14} className="text-zinc-400" />} onClick={() => setEditingId(null)} disabled={operating === u.uid} />
                     </>
                   ) : (
@@ -188,6 +189,6 @@ export default function UsersPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
-import { Save, Send, ArrowLeft, Image as ImageIcon, XCircle } from 'lucide-react';
+import { Save, Send, ArrowLeft, Image as ImageIcon, XCircle, Loader2 } from 'lucide-react';
 import { message } from 'antd';
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
@@ -184,8 +184,8 @@ if (res.ok) {
             disabled={loading}
             className="bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 flex items-center gap-2 px-4 py-2 rounded-lg"
           >
-            <Save size={18} />
-            <span>{t('editor.saveDraft')}</span>
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            <span>{loading ? '' : t('editor.saveDraft')}</span>
           </button>
           {githubConfigured ? (
             <button
@@ -193,8 +193,8 @@ if (res.ok) {
               disabled={loading}
               className="bg-zinc-900 text-white hover:bg-zinc-800 flex items-center gap-2 px-4 py-2 rounded-lg"
             >
-              <Send size={18} />
-              <span>{t('editor.publish')}</span>
+              {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+              <span>{loading ? '' : t('editor.publish')}</span>
             </button>
           ) : (
             <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">

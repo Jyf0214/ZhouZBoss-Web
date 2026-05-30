@@ -18,6 +18,7 @@ import {
 import { Card, Tag, Progress, Button } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface EnvVar {
   name: string;
@@ -178,7 +179,7 @@ function EnvStatusContent({
   const progressPercent = summary.total > 0 ? Math.round((summary.set / summary.total) * 100) : 0;
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto bg-zinc-50">
+    <PageContainer maxWidth="4xl" className="bg-zinc-50">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center">
@@ -271,7 +272,7 @@ function EnvStatusContent({
           <p className="text-blue-600 text-xs mt-1">修改后需要重新部署才能生效。</p>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }
 

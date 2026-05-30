@@ -1,5 +1,5 @@
 import { type ReactNode, memo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 
 export interface ButtonGroupProps {
   /** 主按钮内容 */

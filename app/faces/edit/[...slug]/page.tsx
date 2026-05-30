@@ -13,6 +13,7 @@ import type { ContentFile } from '@/types/content';
 import { GlobalLoading } from '@/components/Loading';
 import { Navbar } from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 const { TextArea } = Input;
 
@@ -169,7 +170,7 @@ export default function EditFacePage() {
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
+      <PageContainer maxWidth="4xl">
         {/* 面包屑导航 */}
         <nav className="flex items-center gap-2 text-sm text-zinc-400 mb-8 flex-wrap">
           <Link
@@ -339,7 +340,7 @@ export default function EditFacePage() {
             </div>
           </Form>
         </div>
-      </main>
+      </PageContainer>
 
       <Footer />
     </div>

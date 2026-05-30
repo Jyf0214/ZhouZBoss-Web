@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Search, Users, UserCircle } from 'lucide-react';
 import { Input } from 'antd';
 import { useI18n } from '@/hooks/use-i18n';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export interface FaceItem {
   slug: string;
@@ -165,13 +166,17 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="py-20 text-center bg-white rounded-2xl border border-zinc-100 p-6"
           >
-            <div className="w-24 h-24 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-zinc-300">
-              <Users size={40} />
-            </div>
-            <h3 className="text-xl font-bold text-zinc-900 mb-2">{t('faces.noFaces')}</h3>
-            <p className="text-zinc-400">{t('faces.noFacesHint')}</p>
+            <EmptyState
+              variant="card"
+              icon={
+                <div className="w-24 h-24 bg-gradient-to-br from-zinc-50 to-zinc-100 rounded-2xl flex items-center justify-center text-zinc-300">
+                  <Users size={40} />
+                </div>
+              }
+              title={t('faces.noFaces')}
+              description={t('faces.noFacesHint')}
+            />
           </motion.div>
         )}
       </AnimatePresence>

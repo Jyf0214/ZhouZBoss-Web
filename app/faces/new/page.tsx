@@ -11,6 +11,7 @@ import { generateMarkdown, type FrontMatter } from '@/lib/markdown';
 import { showError } from '@/lib/error';
 import { Navbar } from '@/components/Navbar';
 import { GlobalLoading } from '@/components/Loading';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 const { TextArea } = Input;
 
@@ -104,7 +105,7 @@ export default function NewFacePage() {
     return (
       <div className="min-h-screen flex flex-col bg-zinc-50">
         <Navbar />
-        <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
+        <PageContainer maxWidth="4xl">
           <div className="bg-white rounded-2xl border border-zinc-100 p-6 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 bg-zinc-50 rounded-xl flex items-center justify-center mb-6">
               <Lock size={28} className="text-zinc-400" />
@@ -121,7 +122,7 @@ export default function NewFacePage() {
               </Button>
             </Link>
           </div>
-        </main>
+        </PageContainer>
       </div>
     );
   }
@@ -129,7 +130,7 @@ export default function NewFacePage() {
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
+      <PageContainer maxWidth="4xl">
         <div className="flex flex-col gap-3 mb-8">
           <h1 className="text-2xl font-bold text-zinc-900">
             新建联系人
@@ -224,7 +225,7 @@ export default function NewFacePage() {
             </div>
           </Form>
         </div>
-      </main>
+      </PageContainer>
     </div>
   );
 }

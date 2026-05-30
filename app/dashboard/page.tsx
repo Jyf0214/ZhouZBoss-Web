@@ -14,6 +14,8 @@ import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import ProCard from '@/components/ui/ProCard';
 import Link from 'next/link';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface Stats {
   totalArticles: number;
@@ -207,7 +209,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-6xl mx-auto">
+    <PageContainer maxWidth="6xl">
       {/* 欢迎区域 */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-2">
@@ -317,20 +319,25 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <div className="py-20 text-center">
-              <div className="w-16 h-16 bg-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-zinc-300">
-                <Sparkles size={28} />
-              </div>
-              <p className="text-zinc-400 mb-4">{t('dashboard.noArticles')}</p>
-              <Link href="/editor">
-                <Button type="primary" icon={<Plus size={14} />} className="bg-zinc-900 rounded-xl h-10">
-                  {t('dashboard.writeFirstArticle')}
-                </Button>
-              </Link>
-            </div>
+            <EmptyState
+              variant="minimal"
+              icon={
+                <div className="w-16 h-16 bg-zinc-50 rounded-2xl flex items-center justify-center text-zinc-300">
+                  <Sparkles size={28} />
+                </div>
+              }
+              description={t('dashboard.noArticles')}
+              action={
+                <Link href="/editor">
+                  <Button type="primary" icon={<Plus size={14} />} className="bg-zinc-900 rounded-xl h-10">
+                    {t('dashboard.writeFirstArticle')}
+                  </Button>
+                </Link>
+              }
+            />
           )}
         </ProCard>
       </div>
-    </div>
+    </PageContainer>
   );
 }

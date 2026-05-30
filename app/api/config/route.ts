@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { loadConfigAsync, type AppConfig, type SocialConfig } from '@/lib/config';
+import { loadConfig, type AppConfig, type SocialConfig } from '@/lib/config';
 import { getFileFromGithub } from '@/lib/github';
 import { createApiLogger } from '@/lib/api-logger';
 import yaml from 'js-yaml';
@@ -22,7 +22,7 @@ export async function GET() {
   const githubToken = process.env.GITHUB_TOKEN;
 
   // 默认从本地 config.yaml 加载
-  let config = await loadConfigAsync();
+  let config = loadConfig();
   let remoteConfigRaw = '';
   let remoteConfigStatus = '';
   let remoteConfigError = '';
@@ -301,7 +301,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const newConfig = await req.json() as Partial<AppConfig>;
-    const currentConfig = await loadConfigAsync();
+    const currentConfig = loadConfig();
     const mergedConfig = mergeAppConfig(currentConfig, newConfig);
 
     logger.info('POST', '配置已合并');
@@ -331,7 +331,7 @@ export async function PUT() {
       return NextResponse.json({ error: 'config.yaml 不存在' }, { status: 404 });
     }
     const parsed = JSON.parse(remote.content) as Partial<AppConfig>;
-    const currentConfig = await loadConfigAsync();
+    const currentConfig = loadConfig();
     const mergedConfig = mergeAppConfig(currentConfig, parsed);
 
     logger.info('PUT', '从 GitHub 同步配置成功');

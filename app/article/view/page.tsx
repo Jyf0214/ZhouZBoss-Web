@@ -11,6 +11,7 @@ import { GlobalLoading } from '@/components/Loading';
 import Footer from '@/components/Footer';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface ArticleData {
   title?: string;
@@ -134,7 +135,7 @@ function ArticleViewContent() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
+      <PageContainer maxWidth="4xl" padding="wide">
         <Link href="/" className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 mb-12 transition-all group">
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-medium">Back to Home</span>
@@ -160,7 +161,7 @@ function ArticleViewContent() {
             <MarkdownRenderer content={articleData.content ?? ''} highlight={siteConfig?.highlight} />
           </div>
         </article>
-      </main>
+      </PageContainer>
 
       <Footer />
     </div>

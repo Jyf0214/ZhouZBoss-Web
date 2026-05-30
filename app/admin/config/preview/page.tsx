@@ -5,6 +5,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { Card } from 'antd';
 import { Loader2, Palette, Server } from 'lucide-react';
 import Link from 'next/link';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface CategoryItem {
   key: string;
@@ -61,7 +62,7 @@ export default function ConfigPreviewPage() {
   const { t } = useI18n();
 
   return (
-    <div className="p-6 md:p-10 max-w-5xl mx-auto">
+    <PageContainer maxWidth="5xl">
       {/* 页面标题 */}
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-lg shadow-zinc-200">
@@ -104,6 +105,6 @@ export default function ConfigPreviewPage() {
           ))}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

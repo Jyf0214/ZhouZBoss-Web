@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getContentFile } from '@/lib/content';
-import { loadConfigAsync, canAccess, hasDatabase } from '@/lib/config';
+import { loadConfig, canAccess, hasDatabase } from '@/lib/config';
 import { getSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
 
@@ -14,7 +14,7 @@ export async function GET(
   const fullPath = '/' + slug.join('/');
   logger.info('GET', '读取联系人详情', { fullPath });
   
-  const config = await loadConfigAsync();
+  const config = loadConfig();
   const session = await getSession();
   const isAuthenticated = !!session;
   const dbAvailable = hasDatabase();

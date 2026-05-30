@@ -1,5 +1,5 @@
 import { getContentFiles, getContentIndexes } from '@/lib/content';
-import { loadConfigAsync, canAccess, hasDatabase } from '@/lib/config';
+import { loadConfig, canAccess, hasDatabase } from '@/lib/config';
 import { getSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
 
@@ -13,7 +13,7 @@ export async function GET() {
   logger.info('GET', '读取帖子列表');
   const session = await getSession();
   const isAuthenticated = !!session;
-  const config = await loadConfigAsync();
+  const config = loadConfig();
   const dbAvailable = hasDatabase();
   const allFiles = getContentFiles('posts');
   const indexes = getContentIndexes('posts');

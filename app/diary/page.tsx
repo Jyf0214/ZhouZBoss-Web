@@ -8,6 +8,8 @@ import { Plus, Edit3, Trash2, Calendar, Tag, Eye, X, Loader2, Search, FileText, 
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { PageContainer } from '@/components/ui/PageContainer';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface DiaryEntry {
   id: string;
@@ -132,7 +134,7 @@ export default function DiaryPage() {
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 md:py-20">
+      <PageContainer maxWidth="4xl" padding="compact">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div>
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black tracking-tighter text-zinc-900 mb-1 sm:mb-2">
@@ -191,16 +193,18 @@ export default function DiaryPage() {
             <Loader2 size={24} className="sm:size-8 text-zinc-300 animate-spin" />
           </div>
         ) : diaries.length === 0 ? (
-          <div className="py-20 sm:py-32 text-center bg-white rounded-2xl border border-zinc-100">
-            <p className="text-zinc-400 text-base sm:text-lg mb-4">暂无日记</p>
-            <button
-              onClick={() => router.push('/diary/new')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm sm:text-base"
-            >
-              <Plus size={18} />
-              写下第一篇日记
-            </button>
-          </div>
+          <EmptyState
+            description="暂无日记"
+            action={
+              <button
+                onClick={() => router.push('/diary/new')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm sm:text-base"
+              >
+                <Plus size={18} />
+                写下第一篇日记
+              </button>
+            }
+          />
         ) : (
           <div className="space-y-3 sm:space-y-4">
             {diaries.map((d) => (
@@ -283,7 +287,7 @@ export default function DiaryPage() {
             ))}
           </div>
         )}
-      </main>
+      </PageContainer>
     </div>
   );
 }

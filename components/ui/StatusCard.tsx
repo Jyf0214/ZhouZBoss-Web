@@ -1,5 +1,5 @@
 import { type ReactNode, memo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/ui';
 
 /** 状态类型映射 */
 export type StatusType = 'success' | 'warning' | 'error' | 'info';

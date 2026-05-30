@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getContentFiles, getContentIndexes } from '@/lib/content';
-import { loadConfigAsync, canAccess, hasDatabase } from '@/lib/config';
+import { loadConfig, canAccess, hasDatabase } from '@/lib/config';
 import { type SessionPayload, getSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
 
@@ -11,7 +11,7 @@ const logger = createApiLogger('/api/faces');
  * 根据认证状态和数据库可用性返回可访问的通讯录条目
  */
 export async function GET() {
-  const config = await loadConfigAsync();
+  const config = loadConfig();
   const session = await getSession();
   const isAuthenticated = !!session;
   const dbAvailable = hasDatabase();

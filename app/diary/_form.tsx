@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Cloud, CloudOff } from 'lucide-react';
+import { ArrowLeft, Cloud, CloudOff, Loader2 } from 'lucide-react';
 import { showError } from '@/lib/error';
 import { useDiaryDraft } from '@/hooks/use-diary-draft';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface DiaryFormProps {
   mode: 'new' | 'edit';
@@ -97,13 +98,12 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
             disabled={saving}
             className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm sm:text-base disabled:opacity-50"
           >
-            {saving && <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
-            {saving ? '保存中...' : '保存'}
+            {saving ? <Loader2 size={16} className="animate-spin" /> : '保存'}
           </button>
         </div>
       </div>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-10">
+      <PageContainer maxWidth="4xl" padding="compact">
         <div className="space-y-4 sm:space-y-6">
           <div className="flex items-center gap-3">
             <input
@@ -144,7 +144,7 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
             className="w-full text-sm sm:text-base text-zinc-900 placeholder-zinc-300 bg-transparent border-none outline-none focus:outline-none resize-y font-mono leading-relaxed"
           />
         </div>
-      </main>
+      </PageContainer>
     </div>
   );
 }

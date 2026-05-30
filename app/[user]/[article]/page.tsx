@@ -22,6 +22,7 @@ import CopyInterceptor from '@/components/CopyInterceptor';
 import { useConfig, type FrontendConfig } from '@/hooks/use-config';
 import { useMainTone } from '@/hooks/use-main-tone';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface ArticleData {
   id: string;
@@ -349,7 +350,7 @@ function ArticlePageBody({
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
+      <PageContainer maxWidth="4xl" padding="wide">
         <Link href={`/${username}`} className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 mb-12 transition-all group">
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-medium">Back to {userData?.name}&apos;s Profile</span>
@@ -398,7 +399,7 @@ function ArticlePageBody({
 
         <CopyInterceptor articleRef={articleRef} authorName={articleData.authorName} />
         <TableOfContents content={articleData.content} />
-      </main>
+      </PageContainer>
       <Footer />
     </div>
   );

@@ -7,6 +7,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { Plus, Trash2, Eye, Code } from 'lucide-react';
 import { Button, message } from 'antd';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 const FIELD_TYPES = [
   { value: 'input', labelKey: 'tickets.typeText' },
@@ -150,7 +151,7 @@ export default function NewTicketTemplatePage() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto">
+    <PageContainer maxWidth="4xl">
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center">
           <Plus size={18} className="text-white" />
@@ -355,6 +356,6 @@ export default function NewTicketTemplatePage() {
           {t('tickets.createTemplate')}
         </Button>
       </div>
-    </div>
+    </PageContainer>
   );
 }

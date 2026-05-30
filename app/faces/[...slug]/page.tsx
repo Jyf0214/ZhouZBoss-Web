@@ -14,6 +14,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 function LoadingView() {
   return (
@@ -162,7 +163,7 @@ export default function FaceDetailPage() {
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
+      <PageContainer maxWidth="4xl">
         <BreadcrumbsNav slugArray={slugArray} />
         <article>
           <FaceDetailHeader
@@ -174,7 +175,7 @@ export default function FaceDetailPage() {
           />
           <FaceDetailContent file={file} showRaw={showRaw} rawContent={rawContent} />
         </article>
-      </main>
+      </PageContainer>
       <Footer />
     </div>
   );

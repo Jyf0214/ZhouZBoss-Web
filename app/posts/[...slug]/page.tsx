@@ -1,6 +1,6 @@
 import { getContentFile, getAllSlugs, getContentIndexes } from '@/lib/content';
 import { getSession } from '@/lib/auth';
-import { loadConfigAsync } from '@/lib/config';
+import { loadConfig } from '@/lib/config';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import type { Metadata } from 'next';
@@ -55,7 +55,7 @@ export default async function PostDetailPage({ params }: PageProps) {
   const file = getContentFile('posts', fullPath);
   if (!file) notFound();
 
-  const appConfig = await loadConfigAsync();
+  const appConfig = loadConfig();
 
   const breadcrumbs = slug.map((segment, index) => ({
     label: segment,

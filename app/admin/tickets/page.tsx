@@ -8,6 +8,7 @@ import { Plus, Trash2, Edit2, FileText, X, Save } from 'lucide-react';
 import { Button, Modal, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 interface TicketTemplate {
   id: string;
@@ -167,7 +168,7 @@ const handleDelete = async (id: string) => {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto">
+    <PageContainer maxWidth="4xl">
       {/* 标题 */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -283,6 +284,6 @@ const handleDelete = async (id: string) => {
           </div>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

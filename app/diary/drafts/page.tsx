@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Trash2, Loader2, FileText, Calendar } from 'lucide-react';
 import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
+import { PageContainer } from '@/components/ui/PageContainer';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface DraftItem {
   id: string;
@@ -85,22 +87,24 @@ export default function DiaryDraftsPage() {
         </div>
       </div>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-10">
+      <PageContainer maxWidth="4xl" padding="compact">
         {loading ? (
           <div className="flex items-center justify-center py-32">
             <Loader2 size={32} className="text-zinc-300 animate-spin" />
           </div>
         ) : drafts.length === 0 ? (
-          <div className="py-32 text-center bg-white rounded-2xl border border-zinc-100">
-            <p className="text-zinc-400 text-base sm:text-lg mb-4">暂无草稿</p>
-            <button
-              onClick={() => router.push('/diary/new')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm sm:text-base"
-            >
-              <FileText size={16} />
-              写新日记
-            </button>
-          </div>
+          <EmptyState
+            description="暂无草稿"
+            action={
+              <button
+                onClick={() => router.push('/diary/new')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm sm:text-base"
+              >
+                <FileText size={16} />
+                写新日记
+              </button>
+            }
+          />
         ) : (
           <div className="space-y-3 sm:space-y-4">
             {drafts.map((d) => (
@@ -148,7 +152,7 @@ export default function DiaryDraftsPage() {
             ))}
           </div>
         )}
-      </main>
+      </PageContainer>
     </div>
   );
 }

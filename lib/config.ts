@@ -35,13 +35,6 @@ export function loadConfig(): AppConfig {
 }
 
 /**
- * 异步加载配置（仅从 config.yaml，无数据库）
- */
-export function loadConfigAsync(): Promise<AppConfig> {
-  return Promise.resolve(loadConfig());
-}
-
-/**
  * 判断路径是否匹配脱字符模式
  */
 export function matchPath(pattern: string, target: string): boolean {
@@ -110,9 +103,3 @@ export function getUserAvatar(uid: string, isAdmin?: boolean): string | null {
   return null;
 }
 
-/**
- * 保存用户头像（已禁用，头像仅从配置文件读取）
- */
-export async function saveUserAvatar(): Promise<void> {
-  // 头像现在仅从配置文件读取，此函数已禁用
-}

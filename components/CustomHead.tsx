@@ -1,4 +1,4 @@
-import { loadConfigAsync } from '@/lib/config';
+import { loadConfig } from '@/lib/config';
 import { HeadInjector } from './HeadInjector';
 
 /**
@@ -7,8 +7,8 @@ import { HeadInjector } from './HeadInjector';
  * customCSS 以内联 style 直接渲染（Server Component）
  * customHead 通过客户端组件注入到 document.head
  */
-export async function CustomHead() {
-  const config = await loadConfigAsync();
+export function CustomHead() {
+  const config = loadConfig();
   const { customCSS, customHead } = config.appearance;
 
   return (

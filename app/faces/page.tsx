@@ -6,6 +6,7 @@ import { FacesListClient, type FaceItem, type GroupItem } from './FacesListClien
 import { useI18n } from '@/hooks/use-i18n';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
+import { PageContainer } from '@/components/ui/PageContainer';
 
 export default function FacesPage() {
   const [data, setData] = React.useState<{faces: FaceItem[], groups: GroupItem[]}>({faces: [], groups: []});
@@ -50,7 +51,7 @@ export default function FacesPage() {
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full p-6 md:p-10">
+      <PageContainer maxWidth="4xl">
         <div className="flex flex-col gap-3 mb-8">
           <h1 className="text-2xl font-bold text-zinc-900">
             {t('nav.faces')}
@@ -58,7 +59,7 @@ export default function FacesPage() {
           <p className="text-sm text-zinc-400">{t('home.facesDesc', { count: data.faces?.length || 0 })}</p>
         </div>
         <FacesListClient faces={data.faces || []} groups={data.groups || []} />
-      </main>
+      </PageContainer>
     </div>
   );
 }
