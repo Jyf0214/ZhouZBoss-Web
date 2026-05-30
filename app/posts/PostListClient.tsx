@@ -256,7 +256,12 @@ export function PostListClient({ posts, groups, coverConfig }: PostListClientPro
     return matchesSearch && matchesGroup;
   });
 
-  const groupNames = [...new Set(groups.map((g) => g.groupName).filter(Boolean))] as string[];
+  // 建立 groupName → slug 的映射，用于按钮显示 groupName，筛选用 slug
+  const groupSlugMap = new Map<string, string>();
+  groups.forEach((g) => {
+    if (g.groupName) groupSlugMap.set(g.groupName, g.slug);
+  });
+  const groupNames = Array.from(groupSlugMap.keys());
 
   return (
     <div>
@@ -280,20 +285,23 @@ export function PostListClient({ posts, groups, coverConfig }: PostListClientPro
           >
             {t('posts.allPosts')}
           </button>
-          {groupNames.map((name) => (
-            <button
-              key={name}
-              onClick={() => setActiveGroup(name)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
-                activeGroup === name
-                  ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20'
-                  : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700'
-              }`}
-            >
-              <Hash size={14} className="opacity-50" />
-              {name}
-            </button>
-          ))}
+          {groupNames.map((name) => {
+            const slug = groupSlugMap.get(name)!;
+            return (
+              <button
+                key={name}
+                onClick={() => setActiveGroup(slug)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  activeGroup === slug
+                    ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20'
+                    : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700'
+                }`}
+              >
+                <Hash size={14} className="opacity-50" />
+                {name}
+              </button>
+            );
+          })}
         </div>
       )}
 
