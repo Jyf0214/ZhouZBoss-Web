@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 
+/** 草稿每 2 秒自动保存的防抖间隔 */
+const AUTOSAVE_DEBOUNCE_MS = 2000;
+
 const LS_KEY_PREFIX = 'diary:draft:';
 
 interface DraftData {
@@ -50,6 +53,12 @@ export function useDiaryDraft({ id, title, content, tags, date, onDraftFound }: 
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
+  // 将回调函数存入 ref，避免 useEffect 依赖重新创建导致无限循环
+  const onDraftFoundRef = useRef(onDraftFound);
+  useEffect(() => {
+    onDraftFoundRef.current = onDraftFound;
+  }, [onDraftFound]);
+
   const autoSave = useCallback(() => {
     setSaveStatus('saving');
     const data: DraftData = { title, content, tags, date };
@@ -74,7 +83,7 @@ export function useDiaryDraft({ id, title, content, tags, date, onDraftFound }: 
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(autoSave, 2000);
+    timerRef.current = setTimeout(autoSave, AUTOSAVE_DEBOUNCE_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
@@ -85,8 +94,8 @@ export function useDiaryDraft({ id, title, content, tags, date, onDraftFound }: 
     hasCheckedRef.current = true;
 
     const local = loadLocalDraft(id);
-    if (local && onDraftFound) {
-      onDraftFound(local);
+    if (local && onDraftFoundRef.current) {
+      onDraftFoundRef.current(local);
       return;
     }
 
@@ -96,12 +105,11 @@ export function useDiaryDraft({ id, title, content, tags, date, onDraftFound }: 
         return res.json();
       })
       .then((json) => {
-        if (json?.draft && onDraftFound) {
-          onDraftFound(json.draft);
+        if (json?.draft && onDraftFoundRef.current) {
+          onDraftFoundRef.current(json.draft);
         }
       })
       .catch((err) => console.warn('草稿加载异常:', err));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   function clearDraft() {
