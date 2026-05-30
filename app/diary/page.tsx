@@ -20,6 +20,15 @@ interface DiaryEntry {
   pinned: boolean;
   createdAt: string;
   updatedAt: string;
+  group?: string;
+  references?: DiaryReference[];
+}
+
+interface DiaryReference {
+  type: string;
+  id?: string;
+  slug?: string;
+  title: string;
 }
 
 function formatShortDate(iso: string): string {
@@ -43,6 +52,8 @@ export default function DiaryPage() {
   const [searchText, setSearchText] = React.useState('');
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
+  const [groups, setGroups] = React.useState<string[]>([]);
+  const [activeGroup, setActiveGroup] = React.useState<string | null>(null);
   const [showSecurityInfo, setShowSecurityInfo] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
   const [exportLoading, setExportLoading] = React.useState(false);
@@ -55,9 +66,10 @@ export default function DiaryPage() {
     if (searchText.trim()) params.set('search', searchText.trim());
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
+    if (activeGroup) params.set('group', activeGroup);
     const qs = params.toString();
     return `/api/diary${qs ? `?${qs}` : ''}`;
-  }, [searchText, startDate, endDate]);
+  }, [searchText, startDate, endDate, activeGroup]);
 
   const fetchDiaries = React.useCallback(async () => {
     try {
@@ -65,6 +77,7 @@ export default function DiaryPage() {
       if (!res.ok) throw new Error('加载失败');
       const json = await res.json();
       setDiaries(Array.isArray(json.diaries) ? json.diaries : []);
+      if (Array.isArray(json.groups)) setGroups(json.groups);
     } catch {
       showError('日记列表加载失败');
     } finally {
@@ -232,6 +245,21 @@ export default function DiaryPage() {
           />
         </div>
 
+        {groups.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            <button onClick={() => setActiveGroup(null)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                activeGroup === null ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-400'
+              }`}>全部</button>
+            {groups.map((g) => (
+              <button key={g} onClick={() => setActiveGroup(g)}
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  activeGroup === g ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-400'
+                }`}>{g}</button>
+            ))}
+          </div>
+        )}
+
         {showSettings && (
           <div className="mb-6 sm:mb-8 bg-white rounded-2xl border border-zinc-100 p-4 sm:p-6">
             <h3 className="text-sm font-bold text-zinc-900 mb-3">日记设置</h3>
@@ -279,6 +307,7 @@ export default function DiaryPage() {
                       <h3 className="text-base sm:text-xl font-bold text-zinc-900 mb-1 sm:mb-2 flex items-center gap-2">
                         {d.pinned && <Pin size={16} className="text-amber-500 shrink-0 fill-amber-500" />}
                         {d.title}
+                        {d.group && d.group !== '默认' && <span className="text-[10px] px-2 py-0.5 bg-zinc-100 text-zinc-500 rounded-full">{d.group}</span>}
                       </h3>
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-zinc-400">
                         <div className="flex items-center gap-1 sm:gap-1.5">
@@ -338,9 +367,26 @@ export default function DiaryPage() {
                         <Loader2 size={20} className="sm:size-6 text-zinc-300 animate-spin" />
                       </div>
                     ) : (
-                      <div className="prose prose-zinc max-w-none prose-sm sm:prose-base">
-                        <MarkdownRenderer content={viewContent} />
-                      </div>
+                      <>
+                        <div className="prose prose-zinc max-w-none prose-sm sm:prose-base">
+                          <MarkdownRenderer content={viewContent} />
+                        </div>
+                        {d.references && d.references.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-zinc-100">
+                            <p className="text-xs font-medium text-zinc-400 mb-2">引用</p>
+                            <div className="flex flex-wrap gap-2">
+                              {d.references.map((ref: DiaryReference, i: number) => (
+                                <a key={i} href={ref.type === 'diary' ? '#' : ref.type === 'face' ? `/faces${ref.slug}` : ref.slug}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-zinc-50 rounded-lg text-xs text-zinc-600 hover:bg-zinc-100 transition-colors"
+                                  target={ref.type === 'diary' ? undefined : '_blank'}
+                                >
+                                  {ref.title}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}

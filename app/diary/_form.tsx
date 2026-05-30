@@ -13,14 +13,16 @@ interface DiaryFormProps {
   initialTitle?: string;
   initialContent?: string;
   initialTags?: string[];
+  initialGroup?: string;
   initialDate?: string;
-  onSave: (title: string, content: string, tags: string[], date: string) => Promise<string | null>;
+  onSave: (title: string, content: string, tags: string[], date: string, group?: string) => Promise<string | null>;
 }
 
-export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialContent, initialTags, initialDate, onSave }: DiaryFormProps) {
+export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialContent, initialTags, initialGroup, initialDate, onSave }: DiaryFormProps) {
   const [title, setTitle] = React.useState(initialTitle ?? '');
   const [content, setContent] = React.useState(initialContent ?? '');
   const [tags, setTags] = React.useState((initialTags ?? []).join(', '));
+  const [diaryGroup, setDiaryGroup] = React.useState(initialGroup ?? '默认');
   const [diaryDate, setDiaryDate] = React.useState(initialDate ?? new Date().toISOString().slice(0, 10));
   const [saving, setSaving] = React.useState(false);
   const [recovered, setRecovered] = React.useState(false);
@@ -37,6 +39,7 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
     title,
     content,
     tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+    group: diaryGroup,
     date: diaryDate,
     onDraftFound: (data) => {
       if (!recovered && (data.title || data.content)) {
@@ -45,6 +48,7 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
           setTitle(data.title ?? '');
           setContent(data.content ?? '');
           setTags((data.tags ?? []).join(', '));
+          if (data.group) setDiaryGroup(data.group);
           if (data.date) setDiaryDate(data.date.slice(0, 10));
           setRecovered(true);
         }
@@ -59,7 +63,7 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
     setSaving(true);
     try {
       const tagsArr = tags.split(',').map(t => t.trim()).filter(Boolean);
-      const result = await onSave(title.trim(), content.trim(), tagsArr, diaryDate);
+      const result = await onSave(title.trim(), content.trim(), tagsArr, diaryDate, diaryGroup);
       if (result !== null) {
         clearDraft();
         router.push('/diary');
@@ -124,6 +128,12 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
               )}
             </div>
           </div>
+          <input
+            value={diaryGroup}
+            onChange={(e) => setDiaryGroup(e.target.value)}
+            placeholder="分类（如：生活, 工作, 技术）"
+            className="w-full text-sm text-zinc-500 placeholder-zinc-300 bg-transparent border border-zinc-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 transition-all"
+          />
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}

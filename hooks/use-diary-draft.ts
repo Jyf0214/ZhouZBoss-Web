@@ -12,6 +12,7 @@ interface DraftData {
   content: string;
   tags: string[];
   date?: string;
+  group?: string;
   savedAt?: string;
 }
 
@@ -44,17 +45,18 @@ export interface UseDiaryDraftOptions {
   content: string;
   tags: string[];
   date?: string;
+  group?: string;
   onDraftFound?: (data: DraftData) => void;
 }
 
-export function useDiaryDraft({ id, title, content, tags, date, onDraftFound }: UseDiaryDraftOptions) {
+export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFound }: UseDiaryDraftOptions) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasCheckedRef = useRef(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   // 用 ref 保存最新 props，避免依赖变化导致定时器不断重置
-  const propsRef = useRef({ id, title, content, tags, date });
-  propsRef.current = { id, title, content, tags, date };
+  const propsRef = useRef({ id, title, content, tags, date, group });
+  propsRef.current = { id, title, content, tags, date, group };
 
   // 将回调函数存入 ref，避免 useEffect 依赖重新创建导致无限循环
   const onDraftFoundRef = useRef(onDraftFound);
@@ -68,12 +70,12 @@ export function useDiaryDraft({ id, title, content, tags, date, onDraftFound }: 
     if (!p.title && !p.content) return;
 
     setSaveStatus('saving');
-    const data: DraftData = { title: p.title, content: p.content, tags: p.tags, date: p.date };
+    const data: DraftData = { title: p.title, content: p.content, tags: p.tags, date: p.date, group: p.group };
     saveLocalDraft(p.id, data);
     fetch('/api/diary/draft', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: p.id, title: p.title, content: p.content, tags: p.tags, date: p.date }),
+      body: JSON.stringify({ id: p.id, title: p.title, content: p.content, tags: p.tags, date: p.date, group: p.group }),
     })
       .then((res) => {
         if (res.ok) {

@@ -33,11 +33,11 @@ export default function NewDiaryPage() {
       mode="new"
       draftId={draftId}
       initialDate={new Date().toISOString().slice(0, 10)}
-      onSave={async (title, content, tags, date) => {
+      onSave={async (title, content, tags, date, group) => {
         const res = await fetch('/api/diary', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content, tags, date }),
+          body: JSON.stringify({ title, content, tags, date, group }),
         });
         if (!res.ok) throw new Error('保存失败');
         return 'ok';
