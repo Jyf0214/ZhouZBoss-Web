@@ -232,20 +232,15 @@ export default function DiaryPage() {
                       <button
                         onClick={() => handleTogglePin(d.id)}
                         disabled={pinning === d.id}
-                        className={`rounded-lg transition-all ${
-                          pinning === d.id
-                            ? 'px-2 sm:px-3 py-1.5 sm:py-2 bg-amber-50 text-amber-600 border border-amber-200'
-                            : d.pinned
-                              ? 'p-1.5 sm:p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50'
-                              : 'p-1.5 sm:p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100'
-                        }`}
+                        className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                          d.pinned
+                            ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'
+                            : 'text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100'
+                        } disabled:opacity-50`}
                         title={d.pinned ? '取消置顶' : '置顶'}
                       >
                         {pinning === d.id
-                          ? <span className="inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap">
-                              <Loader2 size={14} className="animate-spin" />
-                              配置中
-                            </span>
+                          ? <Loader2 size={14} className="sm:size-4 animate-spin" />
                           : <Pin size={14} className={`sm:size-4 ${d.pinned ? 'fill-amber-500' : ''}`} />
                         }
                       </button>
