@@ -60,6 +60,8 @@ model Diary {
   title     String
   content   String
   tags      String[] @default([])
+  group     String?  @default("默认")
+  references Json?   @default("[]")
   date      DateTime @default(now()) @map("diary_date")
   pinned    Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
@@ -69,6 +71,7 @@ model Diary {
   @@index([date])
   @@index([createdAt])
   @@index([pinned])
+  @@index([group])
 }
 
 // 文章删除申请表

@@ -11,6 +11,7 @@ export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin
   const search = searchParams.get('search')?.trim();
   const startDate = searchParams.get('startDate')?.trim();
   const endDate = searchParams.get('endDate')?.trim();
+  const group = searchParams.get('group')?.trim();
 
   const ands: Record<string, unknown>[] = [];
 
@@ -29,6 +30,9 @@ export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin
   if (endDate) {
     ands.push({ date: { lte: new Date(endDate) } });
   }
+  if (group) {
+    ands.push({ group });
+  }
 
   const where = ands.length > 0 ? { AND: ands } : {};
 
@@ -42,6 +46,8 @@ export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin
       id: true,
       title: true,
       tags: true,
+      group: true,
+      references: true,
       date: true,
       pinned: true,
       createdAt: true,
@@ -49,11 +55,18 @@ export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin
     },
   });
 
-  return NextResponse.json({ diaries });
+  // 收集所有已有的分组名
+  const allGroups = await prisma.diary.findMany({
+    select: { group: true },
+    distinct: ['group'],
+    where: { group: { not: null } },
+  });
+
+  return NextResponse.json({ diaries, groups: allGroups.map((g) => g.group).filter(Boolean) });
 });
 
 export const POST = apiHandler('POST', { label: '创建日记', requireAdmin: true }, async (req) => {
-  const { title, content, tags, date } = await req.json();
+  const { title, content, tags, date, group, references } = await req.json();
   if (!title || !content) {
     return NextResponse.json({ error: '标题和内容不能为空' }, { status: 400 });
   }
@@ -65,6 +78,8 @@ export const POST = apiHandler('POST', { label: '创建日记', requireAdmin: tr
       title,
       content: encrypted,
       tags: tags ?? [],
+      group: group ?? '默认',
+      references: references ?? [],
       date: date ? new Date(date) : undefined,
     },
   });

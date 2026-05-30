@@ -20,7 +20,7 @@ export const GET = apiHandler('GET', { label: '获取日记', requireAdmin: true
 
 export const PUT = apiHandler('PUT', { label: '更新日记', requireAdmin: true }, async (req, context) => {
   const id = await getParam(context, 'id');
-  const { title, content, tags, date } = await req.json();
+  const { title, content, tags, date, group, references } = await req.json();
   if (!title || !content) {
     return NextResponse.json({ error: '标题和内容不能为空' }, { status: 400 });
   }
@@ -38,6 +38,8 @@ export const PUT = apiHandler('PUT', { label: '更新日记', requireAdmin: true
       title,
       content: encrypted,
       tags: tags ?? [],
+      group: group ?? '默认',
+      references: references ?? [],
       date: date ? new Date(date) : undefined,
     },
   });
