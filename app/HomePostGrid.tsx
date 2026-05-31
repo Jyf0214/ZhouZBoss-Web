@@ -208,7 +208,7 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
           transition={{ delay: 0.1 }}
           className="text-5xl md:text-7xl font-display font-black tracking-tighter text-zinc-900 mb-8 leading-[0.95]"
         >
-          {heroTitleLine1 ?? t('home.heroTitleLine1')} <br />
+          {heroTitleLine1 ?? t('home.heroTitleLine1')}{' '}
           <span className="text-zinc-300">{heroTitleLine2 ?? t('home.heroTitleLine2')}</span>
         </motion.h1>
 
