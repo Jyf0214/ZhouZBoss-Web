@@ -317,7 +317,7 @@ function ArticleShareSection({
   return (
     <div className="max-w-3xl mx-auto mt-12 pt-8 border-t border-zinc-100 flex items-center justify-between">
       <PostEditLink slug={slug} />
-      {showShare && <ShareButtons config={shareConfig} title={title} />}
+      {showShare && <ShareButtons config={shareConfig} title={title} variant="horizontal" />}
     </div>
   );
 }

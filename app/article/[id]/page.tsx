@@ -11,6 +11,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
+import ShareButtons from '@/components/ShareButtons';
 
 /**
  * 文章详情页 — 通过 API 获取内容（草稿从数据库，已发布从 GitHub）
@@ -126,6 +127,10 @@ export default function ArticlePage() {
 
           <div className="max-w-3xl mx-auto prose prose-zinc lg:prose-xl">
             <MarkdownRenderer content={articleData.content ?? ''} highlight={siteConfig?.highlight} />
+          </div>
+
+          <div className="max-w-3xl mx-auto mt-12 pt-8 border-t border-zinc-100">
+            <ShareButtons config={siteConfig?.share} title={articleData.title} variant="horizontal" />
           </div>
         </article>
       </PageContainer>
