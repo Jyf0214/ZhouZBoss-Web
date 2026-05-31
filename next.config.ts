@@ -9,6 +9,8 @@ export interface SiteConfig {
 }
 
 export interface AppearanceConfig {
+  /** 全局基础字号（px），默认 16，可在网页端配置 */
+  fontSize?: number;
   background: {
     url: string;
     opacity: number;

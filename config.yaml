@@ -5,6 +5,7 @@ site:
   heroTitleLine2: ''
   lang: zh-CN
 appearance:
+  fontSize: 15
   background:
     url: ''
     opacity: 0.8

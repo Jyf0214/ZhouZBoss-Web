@@ -191,6 +191,16 @@ export default function ConfigFormBody({
     appearance: { ...config.appearance, background: newBg },
   });
 
+  const handleFontSizeChange = (v: string) => {
+    const num = parseInt(v, 10);
+    if (!isNaN(num) && num >= 10 && num <= 30) {
+      onConfigChange({
+        ...config,
+        appearance: { ...config.appearance, fontSize: num },
+      });
+    }
+  };
+
   const handleCssChange = (v: string) => onConfigChange({
     ...config,
     appearance: { ...config.appearance, customCSS: v },
@@ -275,6 +285,16 @@ export default function ConfigFormBody({
           urlLabel={t('config.backgroundUrl')}
           opacityLabel={t('config.overlayOpacity')}
         />
+        <div className="mt-4 pt-4 border-t border-zinc-100">
+          <FormField
+            label="全局基础字号（px）"
+            value={String(config.appearance.fontSize ?? 15)}
+            onChange={handleFontSizeChange}
+            type="text"
+            placeholder="15"
+          />
+          <p className="text-xs text-zinc-400 mt-1">设置 10-30 之间的值，默认 15。保存后刷新页面生效。</p>
+        </div>
       </ConfigSection>
 
       {simpleSections.map(renderSimpleSection)}

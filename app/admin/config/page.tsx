@@ -24,6 +24,7 @@ export default function ConfigPage() {
       background: { url: '', opacity: 0.8 },
       customCSS: '',
       customHead: '',
+      fontSize: 15,
       loading: {
         page: { type: 'waves', color: '#c084fc', position: 'center' },
         navigation: { type: 'antd', color: '#c084fc' },

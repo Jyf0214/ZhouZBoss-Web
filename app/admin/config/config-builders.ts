@@ -32,6 +32,7 @@ export interface ConfigState {
     lang: string;
   };
   appearance: {
+    fontSize?: number;
     background: {
       url: string;
       opacity: number;
@@ -97,6 +98,7 @@ export function buildSiteConfig(data: Record<string, unknown>): ConfigState['sit
 export function buildAppearanceConfig(data: Record<string, unknown>): ConfigState['appearance'] {
   const appearanceData = data.appearance as Record<string, unknown> | undefined;
   return {
+    fontSize: (appearanceData?.fontSize as number) ?? 15,
     background: (appearanceData?.background as ConfigState['appearance']['background']) ?? { url: '', opacity: 0.8 },
     customCSS: (appearanceData?.customCSS as string) ?? '',
     customHead: (appearanceData?.customHead as string) ?? '',

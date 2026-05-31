@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* 全局基础字号：由 CSS 变量控制，FontSizeProvider 从配置读取并动态设置 */
+html {
+  font-size: var(--base-font-size, 15px);
+}
+
 /* 文章主色调：使用封面提取的主色调 */
 article header h1 {
   color: var(--main-tone, #18181b) !important;
