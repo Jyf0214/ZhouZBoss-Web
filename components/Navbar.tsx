@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { UserMenu } from '@/components/UserMenu';
 import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
@@ -10,7 +10,8 @@ import { Button } from 'antd';
 import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
 import { useConfig } from '@/hooks/use-config';
-import { Clock, MapPin } from 'lucide-react';
+import { SearchDialog } from '@/components/SearchDialog';
+import { Clock, MapPin, Search } from 'lucide-react';
 
 interface NavMenuItem {
   name: string;
@@ -104,6 +105,20 @@ export function Navbar() {
   const [navConfig, setNavConfig] = useState<NavConfig | null>(null);
   const [time, setTime] = useState('');
   const allowRegistration = siteConfig?.auth?.allowRegistration !== false;
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // 键盘快捷键：Ctrl+K / Cmd+K 打开搜索
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      setSearchOpen((prev) => !prev);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   useEffect(() => {
     const fetchNav = async () => {
@@ -149,11 +164,24 @@ export function Navbar() {
             <NavMenuGroup config={navConfig} />
           </div>
           <div className="flex items-center gap-3">
+            {/* 搜索按钮 */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              type="button"
+              className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition-colors"
+              aria-label="搜索"
+            >
+              <Search size={18} />
+            </button>
             <NavClock travelling={navConfig?.travelling} clock={navConfig?.clock} time={time} />
             <NavAuthSection user={user} allowRegistration={allowRegistration} clerkAvailable={clerkAvailable} t={t} />
           </div>
         </div>
       </div>
+      <SearchDialog
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </nav>
   );
 }

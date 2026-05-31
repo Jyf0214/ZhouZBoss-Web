@@ -196,6 +196,7 @@ export interface MainToneConfig {
 export interface FooterOwnerConfig {
   enable: boolean;
   since: number;
+  author?: string;
 }
 
 export interface FooterRuntimeConfig {
@@ -203,10 +204,36 @@ export interface FooterRuntimeConfig {
   launchTime: string;
 }
 
+export interface FooterSocialLink {
+  name: string;
+  icon: string;
+}
+
+export interface FooterLinkItem {
+  name: string;
+  url: string;
+}
+
+export interface FooterLinkGroup {
+  group: string;
+  items: FooterLinkItem[];
+}
+
+export interface FooterBadge {
+  name: string;
+  url: string;
+}
+
 export interface FooterConfig {
   owner: FooterOwnerConfig;
   customText: string;
   runtime: FooterRuntimeConfig;
+  avatar?: string;
+  socialLinks?: FooterSocialLink[];
+  links?: FooterLinkGroup[];
+  badges?: FooterBadge[];
+  typedTextPrefix?: string;
+  typedText?: string[];
 }
 
 export interface UserConfig {

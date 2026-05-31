@@ -161,10 +161,25 @@ footer:
   owner:
     enable: true
     since: 2020
+    author: ''
   customText: ''
   runtime:
     enable: false
     launchTime: 04/01/2021 00:00:00
+  avatar: ''
+  socialLinks:
+    - name: Github
+      icon: Github
+    - name: Twitter
+      icon: Twitter
+    - name: Weibo
+      icon: Globe
+    - name: Email
+      icon: Mail
+  links: []
+  badges: []
+  typedTextPrefix: ''
+  typedText: []
 _testField: this-should-be-preserved-by-surgical-save-2026
 users:
   '169313142':

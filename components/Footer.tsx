@@ -1,10 +1,22 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { motion } from 'motion/react';
+import {
+  Github,
+  Twitter,
+  Globe,
+  Mail,
+  Heart,
+  type LucideIcon,
+} from 'lucide-react';
+
+// ─── Types ───────────────────────────────────────────
 
 interface FooterOwnerConfig {
   enable: boolean;
   since: number;
+  author?: string;
 }
 
 interface FooterRuntimeConfig {
@@ -12,23 +24,440 @@ interface FooterRuntimeConfig {
   launchTime: string;
 }
 
+interface FooterSocialLink {
+  name: string;
+  icon: string;
+}
+
+interface FooterLinkItem {
+  name: string;
+  url: string;
+}
+
+interface FooterLinkGroup {
+  group: string;
+  items: FooterLinkItem[];
+}
+
+interface FooterBadge {
+  name: string;
+  url: string;
+}
+
 interface FooterConfigData {
   owner: FooterOwnerConfig;
   customText: string;
   runtime: FooterRuntimeConfig;
+  avatar?: string;
+  socialLinks?: FooterSocialLink[];
+  links?: FooterLinkGroup[];
+  badges?: FooterBadge[];
+  typedTextPrefix?: string;
+  typedText?: string[];
 }
 
-const socialIcons: Record<string, string> = {
-  Github: 'M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z',
-  Twitter: 'M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z',
-  Weibo: 'M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-1-11.5c-.276 0-.5.224-.5.5v5c0 .276.224.5.5.5s.5-.224.5-.5V9c0-.276-.224-.5-.5-.5zm4 0c-.276 0-.5.224-.5.5v5c0 .276.224.5.5.5s.5-.224.5-.5V9c0-.276-.224-.5-.5-.5z',
-  Email: 'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z',
+// ─── Icon Mapping ────────────────────────────────────
+// Maps config icon names to lucide-react components
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Github,
+  GitHub: Github,
+  Twitter,
+  Weibo: Globe,
+  Email: Mail,
+  Mail,
+  Globe,
 };
+
+function resolveIcon(name: string): LucideIcon {
+  return ICON_MAP[name] ?? Globe;
+}
+
+// ─── Default Data (fallback when config is empty) ────
+
+const DEFAULT_LINKS: FooterLinkGroup[] = [
+  {
+    group: '服务',
+    items: [
+      { name: '关于我们', url: '/about' },
+      { name: '隐私政策', url: '/privacy' },
+      { name: '服务条款', url: '/terms' },
+    ],
+  },
+  {
+    group: '社交',
+    items: [
+      { name: 'GitHub', url: 'https://github.com/Jyf0214' },
+      { name: 'Twitter', url: '#' },
+      { name: '微博', url: '#' },
+    ],
+  },
+  {
+    group: '导航',
+    items: [
+      { name: '首页', url: '/' },
+      { name: '文章', url: '/posts' },
+      { name: '日记', url: '/diary' },
+      { name: '通讯录', url: '/faces' },
+    ],
+  },
+  {
+    group: '协议',
+    items: [
+      { name: 'CC BY-NC-SA 4.0', url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/' },
+    ],
+  },
+];
+
+const DEFAULT_BADGES: FooterBadge[] = [
+  { name: 'Next.js', url: 'https://nextjs.org/' },
+  { name: 'Prisma', url: 'https://www.prisma.io/' },
+  { name: 'Tailwind CSS', url: 'https://tailwindcss.com/' },
+  { name: 'TypeScript', url: 'https://www.typescriptlang.org/' },
+];
+
+const DEFAULT_TYPED_TEXTS = ['Next.js 驱动', 'TypeScript 构建', '用心守护'];
+
+// ─── Sub-components ──────────────────────────────────
+
+/**
+ * Social bar with centered avatar and social icon buttons on both sides.
+ * Avatar click scrolls to top.
+ */
+function SocialBar({
+  socialData,
+  avatarUrl,
+  socialLinksConfig,
+}: {
+  socialData: Record<string, string>;
+  avatarUrl?: string;
+  socialLinksConfig?: FooterSocialLink[];
+}) {
+  // Build ordered entries from config or fallback to top-level social data
+  const entries = socialLinksConfig && socialLinksConfig.length > 0
+    ? socialLinksConfig
+        .filter((sl) => socialData[sl.name])
+        .map((sl) => ({ name: sl.name, url: socialData[sl.name], icon: sl.icon }))
+    : Object.entries(socialData)
+        .filter(([, url]) => url)
+        .map(([name, url]) => ({ name, url, icon: name }));
+
+  const handleScrollTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const hasContent = entries.length > 0 || avatarUrl;
+  if (!hasContent) return null;
+
+  const mid = Math.ceil(entries.length / 2);
+  const leftItems = entries.slice(0, mid);
+  const rightItems = entries.slice(mid);
+
+  return (
+    <div className="flex items-center justify-center">
+      {/* Left icons */}
+      {leftItems.length > 0 && (
+        <div className="flex items-center gap-3">
+          {leftItems.map((item) => {
+            const Icon = resolveIcon(item.icon);
+            return (
+              <a
+                key={item.name}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-zinc-800 text-white flex items-center justify-center hover:bg-zinc-900 transition-all duration-300"
+                title={item.name}
+              >
+                <Icon className="w-4 h-4" />
+              </a>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Center avatar / logo */}
+      <button
+        onClick={handleScrollTop}
+        className={`${entries.length > 0 ? 'mx-6' : ''} focus:outline-none`}
+        title="回到顶部"
+      >
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt="Logo"
+            className="w-16 h-16 rounded-full border-2 border-zinc-200 object-cover hover:border-zinc-400 transition-colors duration-300"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full border-2 border-zinc-200 bg-zinc-100 flex items-center justify-center text-zinc-400 hover:border-zinc-400 transition-colors duration-300">
+            <Globe className="w-6 h-6" />
+          </div>
+        )}
+      </button>
+
+      {/* Right icons */}
+      {rightItems.length > 0 && (
+        <div className="flex items-center gap-3">
+          {rightItems.map((item) => {
+            const Icon = resolveIcon(item.icon);
+            return (
+              <a
+                key={item.name}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-zinc-800 text-white flex items-center justify-center hover:bg-zinc-900 transition-all duration-300"
+                title={item.name}
+              >
+                <Icon className="w-4 h-4" />
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Link groups displayed in a responsive grid.
+ */
+function LinkGroups({ groups }: { groups: FooterLinkGroup[] }) {
+  if (!groups.length) return null;
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {groups.map((group) => (
+        <div key={group.group}>
+          <h3 className="font-semibold text-sm text-zinc-500 mb-3">{group.group}</h3>
+          <ul className="flex flex-col gap-2">
+            {group.items.map((item) => (
+              <li key={item.name}>
+                <a
+                  href={item.url}
+                  className="text-sm text-zinc-400 hover:text-zinc-900 transition-colors duration-300"
+                  {...(item.url.startsWith('http')
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                >
+                  {item.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Tech stack badges as clickable pill-shaped tags.
+ */
+function Badges({ badges }: { badges: FooterBadge[] }) {
+  if (!badges.length) return null;
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      {badges.map((badge) => (
+        <a
+          key={badge.name}
+          href={badge.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex px-3 py-1 rounded-full bg-zinc-800 text-white text-xs font-mono hover:bg-zinc-700 transition-all duration-300"
+        >
+          {badge.name}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Running time counter with heartbeat icon and online/resting status.
+ * Updates every second via setInterval.
+ */
+function RuntimeStatus({
+  launchTime,
+  enable,
+}: {
+  launchTime: string;
+  enable: boolean;
+}) {
+  const [text, setText] = useState('');
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    if (!enable || !launchTime) return;
+    const launch = new Date(launchTime);
+    if (isNaN(launch.getTime())) return;
+
+    const update = () => {
+      const now = new Date();
+      const diff = now.getTime() - launch.getTime();
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      setText(`本站已运行 ${days} 天 ${hours} 小时 ${minutes} 分 ${seconds} 秒`);
+
+      const hour = now.getHours();
+      setIsOnline(hour >= 9 && hour < 18);
+    };
+
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [enable, launchTime]);
+
+  if (!text) return null;
+
+  return (
+    <div className="flex items-center justify-center text-sm text-zinc-400 gap-2">
+      <Heart className="w-4 h-4 text-red-400 animate-pulse" />
+      <span>{text}</span>
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+          isOnline
+            ? 'bg-green-100 text-green-700'
+            : 'bg-zinc-100 text-zinc-500'
+        }`}
+      >
+        {isOnline ? '在线' : '休息中'}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Typed text effect: character-by-character display with
+ * typewriter-style typing and deleting cycle.
+ */
+function TypedText({
+  prefix,
+  texts,
+}: {
+  prefix?: string;
+  texts: string[];
+}) {
+  const [displayed, setDisplayed] = useState('');
+  const [textIndex, setTextIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const currentPauseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!texts.length) return;
+    const currentText = texts[textIndex];
+    if (!currentText) return;
+
+    const timeout = setTimeout(
+      () => {
+        if (!isDeleting) {
+          if (charIndex < currentText.length) {
+            setDisplayed(currentText.slice(0, charIndex + 1));
+            setCharIndex((prev) => prev + 1);
+          } else {
+            // Pause before deleting
+            const pause = setTimeout(() => setIsDeleting(true), 2000);
+            currentPauseRef.current = pause;
+          }
+        } else {
+          if (charIndex > 0) {
+            setDisplayed(currentText.slice(0, charIndex - 1));
+            setCharIndex((prev) => prev - 1);
+          } else {
+            setIsDeleting(false);
+            setTextIndex((prev) => (prev + 1) % texts.length);
+          }
+        }
+      },
+      isDeleting ? 50 : 100,
+    );
+
+    return () => {
+      clearTimeout(timeout);
+      if (currentPauseRef.current) {
+        clearTimeout(currentPauseRef.current);
+        currentPauseRef.current = null;
+      }
+    };
+  }, [charIndex, isDeleting, textIndex, texts]);
+
+  if (!texts.length) return null;
+
+  return (
+    <span>
+      {prefix && <span>{prefix}</span>}
+      <span className="text-zinc-900 font-medium">{displayed}</span>
+      <span className="animate-pulse">|</span>
+    </span>
+  );
+}
+
+/**
+ * Bottom footer bar with copyright, license info, typed text, and custom text.
+ */
+function FooterBar({
+  owner,
+  author,
+  customText,
+  typedTextPrefix,
+  typedText,
+}: {
+  owner: FooterOwnerConfig;
+  author: string;
+  customText: string;
+  typedTextPrefix?: string;
+  typedText?: string[];
+}) {
+  const year = new Date().getFullYear();
+
+  return (
+    <div className="border-t border-zinc-100 bg-zinc-50">
+      <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        {/* Left: copyright + CC license */}
+        <div className="text-sm text-zinc-400 flex items-center gap-2">
+          {owner.enable && (
+            <span>
+              &copy; {owner.since}&mdash;{year} {author}
+            </span>
+          )}
+          <a
+            href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-zinc-900 transition-colors duration-300 text-xs"
+            title="CC BY-NC-SA 4.0"
+          >
+            CC BY-NC-SA 4.0
+          </a>
+        </div>
+
+        {/* Right: typed text + custom text */}
+        <div className="text-sm text-zinc-400 flex items-center gap-4">
+          {typedText && typedText.length > 0 && (
+            <TypedText prefix={typedTextPrefix} texts={typedText} />
+          )}
+          {customText && <span>{customText}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Motion Animations ───────────────────────────────
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } },
+};
+
+// ─── Main Footer Component ───────────────────────────
 
 export default function Footer() {
   const [config, setConfig] = useState<FooterConfigData | null>(null);
   const [socialData, setSocialData] = useState<Record<string, string> | null>(null);
-  const [runtimeText, setRuntimeText] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -39,77 +468,103 @@ export default function Footer() {
           if (data.footer) setConfig(data.footer);
           if (data.social) setSocialData(data.social);
         } else {
-          console.warn('页脚配置获取失败:', res.status);
+          const errMsg = `页脚配置获取失败: ${res.status}`;
+          console.warn(errMsg);
+          setError(errMsg);
         }
-      } catch {
-        console.warn('页脚配置请求异常');
+      } catch (e) {
+        const errMsg = '页脚配置请求异常';
+        console.warn(errMsg, e);
+        setError(errMsg);
       }
     };
     void fetchConfig();
   }, []);
 
-  useEffect(() => {
-    if (!config?.runtime?.enable || !config?.runtime?.launchTime) return;
-    const launch = new Date(config.runtime.launchTime);
-    const update = () => {
-      const now = new Date();
-      const diff = now.getTime() - launch.getTime();
-      const days = Math.floor(diff / 86400000);
-      const hours = Math.floor((diff % 86400000) / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      setRuntimeText(`已运行 ${days} 天 ${hours} 小时 ${minutes} 分钟`);
-    };
-    update();
-    const timer = setInterval(update, 60000);
-    return () => clearInterval(timer);
-  }, [config?.runtime?.enable, config?.runtime?.launchTime]);
-
-  const socialEntries = socialData ? Object.entries(socialData).filter(([, url]) => url) : [];
+  // Resolve effective data: prefer config, fall back to defaults
+  const effectiveSocialData = socialData ?? {};
+  const avatarUrl = config?.avatar;
+  const socialLinksConfig = config?.socialLinks;
+  const links = config?.links && config.links.length > 0 ? config.links : DEFAULT_LINKS;
+  const badges = config?.badges && config.badges.length > 0 ? config.badges : DEFAULT_BADGES;
+  const typedText =
+    config?.typedText && config.typedText.length > 0 ? config.typedText : DEFAULT_TYPED_TEXTS;
+  const typedTextPrefix = config?.typedTextPrefix ?? '本站由 ';
+  const owner = config?.owner ?? { enable: true, since: 2020 };
+  const author = config?.owner?.author || 'Originium Kernel';
+  const customText = config?.customText ?? '';
+  const runtimeEnable = config?.runtime?.enable ?? false;
+  const launchTime = config?.runtime?.launchTime ?? '';
 
   return (
-    <footer className="border-t border-zinc-100 py-12 bg-zinc-50/50">
-      <div className="max-w-4xl mx-auto px-6 text-center space-y-4">
-        {socialEntries.length > 0 && (
-          <div className="flex items-center justify-center gap-4">
-            {socialEntries.map(([name, url]) => (
-              <a
-                key={name}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-400 hover:text-zinc-900 transition-colors"
-                title={name}
-              >
-                {socialIcons[name] ? (
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                    <path d={socialIcons[name]} />
-                  </svg>
-                ) : (
-                  <span className="text-xs font-bold uppercase tracking-wider">{name}</span>
-                )}
-              </a>
-            ))}
-          </div>
-        )}
+    <footer className="relative">
+      {/* Gradient background: transparent → bg-zinc-50 */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-50/80 to-zinc-50 pointer-events-none" />
 
-        {config?.owner?.enable && (
-          <p className="text-zinc-400 text-sm font-medium">
-            &copy; {config.owner.since}—{new Date().getFullYear()} Originium Kernel
-          </p>
-        )}
+      <div className="relative max-w-5xl mx-auto px-6 pt-16 pb-0 space-y-8">
+        {/* 1. Social Bar */}
+        <motion.div
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+        >
+          <SocialBar
+            socialData={effectiveSocialData}
+            avatarUrl={avatarUrl}
+            socialLinksConfig={socialLinksConfig}
+          />
+        </motion.div>
 
-        {config?.customText && (
-          <p className="text-zinc-400 text-sm">{config.customText}</p>
-        )}
+        {/* 2. Link Groups */}
+        <motion.div
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+        >
+          <LinkGroups groups={links} />
+        </motion.div>
 
-        {runtimeText && (
-          <p className="text-zinc-400 text-xs">{runtimeText}</p>
-        )}
+        {/* 3. Badges */}
+        <motion.div
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+        >
+          <Badges badges={badges} />
+        </motion.div>
 
-        {!config && (
-          <p className="text-zinc-400 text-sm font-medium">Powered by Originium Kernel</p>
-        )}
+        {/* 4. Runtime Status */}
+        <motion.div
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+        >
+          <RuntimeStatus launchTime={launchTime} enable={runtimeEnable} />
+        </motion.div>
+
+        {/* Spacer */}
+        <div className="pb-8" />
       </div>
+
+      {/* 5. Footer Bar */}
+      <FooterBar
+        owner={owner}
+        author={author}
+        customText={customText}
+        typedTextPrefix={typedTextPrefix}
+        typedText={typedText}
+      />
+
+      {/* Error status: only show when no config could be loaded at all */}
+      {error && !config && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-red-400">
+          {error}
+        </div>
+      )}
     </footer>
   );
 }

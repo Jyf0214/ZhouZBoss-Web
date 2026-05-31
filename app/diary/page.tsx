@@ -10,6 +10,7 @@ import { GlobalLoading } from '@/components/Loading';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { PageContainer } from '@/components/ui/PageContainer';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { HeroBanner } from '@/components/ui/HeroBanner';
 
 interface DiaryEntry {
   id: string;
@@ -172,50 +173,51 @@ export default function DiaryPage() {
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <Navbar />
       <PageContainer maxWidth="4xl" padding="compact">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black tracking-tighter text-zinc-900 mb-1 sm:mb-2">
-              日记
-            </h1>
-            <p className="text-sm sm:text-base text-zinc-400">
-              安全 · 隐私
-              <button
-                onClick={() => setShowSecurityInfo(true)}
-                className="inline-flex items-center ml-1 text-amber-500 hover:text-amber-600 transition-colors"
-                title="查看详情"
-              >
-                <ShieldAlert size={16} className="sm:size-[18]" />
-              </button>
-            </p>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border rounded-xl transition-colors font-medium text-sm ${
-                showSettings
-                  ? 'border-zinc-900 bg-zinc-900 text-white'
-                  : 'border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-              }`}
-              title="日记设置"
-            >
-              <Settings size={14} className="sm:size-4" />
-            </button>
-            <button
-              onClick={() => router.push('/diary/drafts')}
-              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-zinc-200 text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors font-medium text-sm"
-            >
-              <FileText size={14} className="sm:size-4" />
-              <span className="hidden sm:inline">草稿箱</span>
-            </button>
-            <button
-              onClick={() => router.push('/diary/new')}
-              className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm sm:text-base"
-            >
-              <Plus size={16} className="sm:size-[18]" />
-              <span className="hidden sm:inline">新建日记</span>
-              <span className="sm:hidden">新建</span>
-            </button>
-          </div>
+        <HeroBanner
+          title="日记"
+          description="安全 · 隐私 · 加密存储"
+          tips="管理员"
+          align="left"
+          size="compact"
+          buttons={[
+            {
+              label: '新建日记',
+              variant: 'primary',
+              icon: <Plus size={16} />,
+              onClick: () => router.push('/diary/new'),
+            },
+          ]}
+          className="mb-6 sm:mb-8"
+        />
+
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border rounded-xl transition-colors font-medium text-sm ${
+              showSettings
+                ? 'border-zinc-900 bg-zinc-900 text-white'
+                : 'border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+            }`}
+            title="日记设置"
+          >
+            <Settings size={14} className="sm:size-4" />
+            <span className="hidden sm:inline">设置</span>
+          </button>
+          <button
+            onClick={() => router.push('/diary/drafts')}
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-zinc-200 text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors font-medium text-sm"
+          >
+            <FileText size={14} className="sm:size-4" />
+            <span className="hidden sm:inline">草稿箱</span>
+          </button>
+          <button
+            onClick={() => setShowSecurityInfo(true)}
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-zinc-200 text-amber-600 rounded-xl hover:bg-amber-50 transition-colors font-medium text-sm"
+            title="安全与隐私说明"
+          >
+            <ShieldAlert size={14} className="sm:size-4" />
+            <span className="hidden sm:inline">安全与隐私</span>
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 sm:mb-8">

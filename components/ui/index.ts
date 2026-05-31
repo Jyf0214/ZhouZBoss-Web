@@ -11,3 +11,4 @@ export { default as GitHubStatus } from './GitHubStatus';
 export { default as ProCard, type ProCardProps } from './ProCard';
 export { PageContainer } from './PageContainer';
 export { EmptyState } from './EmptyState';
+export { HeroBanner, type HeroBannerProps, type HeroButton } from './HeroBanner';
