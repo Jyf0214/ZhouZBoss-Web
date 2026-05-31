@@ -126,24 +126,26 @@ export function HeroBanner({
 
   return (
     <>
-      {hasGradient && (
-        <style>{`
-          @keyframes hero-gradient-shift {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}</style>
-      )}
-      <section
+      <motion.section
         className={`relative w-full overflow-hidden rounded-2xl sm:rounded-3xl ${sizeStyle.padding} px-6 sm:px-8 ${className}`}
         style={
           hasGradient
             ? {
                 background: gradient || DEFAULT_GRADIENT,
                 backgroundSize: '400% 400%',
-                animation: 'hero-gradient-shift 18s ease infinite',
               }
+            : undefined
+        }
+        animate={
+          hasGradient
+            ? {
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }
+            : undefined
+        }
+        transition={
+          hasGradient
+            ? { duration: 18, ease: 'easeInOut', repeat: Infinity }
             : undefined
         }
       >
@@ -178,7 +180,7 @@ export function HeroBanner({
             )}
           </div>
         </div>
-      </section>
+      </motion.section>
     </>
   );
 }
