@@ -206,10 +206,10 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-5xl md:text-7xl font-display font-black tracking-tighter text-zinc-900 mb-8 leading-[0.95]"
+          className="text-5xl md:text-7xl font-display font-black tracking-tighter text-zinc-900 mb-8"
         >
-          {heroTitleLine1 ?? t('home.heroTitleLine1')} <br />
-          <span className="text-zinc-300">{heroTitleLine2 ?? t('home.heroTitleLine2')}</span>
+          <div>{heroTitleLine1 ?? t('home.heroTitleLine1')}</div>
+          <div className="text-zinc-300 -mt-4 md:-mt-6">{heroTitleLine2 ?? t('home.heroTitleLine2')}</div>
         </motion.h1>
 
         {/* 增强横幅 — 促销/推荐卡片 */}
