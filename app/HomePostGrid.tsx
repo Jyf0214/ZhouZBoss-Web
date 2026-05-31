@@ -7,6 +7,9 @@ import { Search, Filter, Sparkles, BookOpen, Users, ArrowRight, Calendar, User a
 import { Input, Button } from 'antd';
 import Image from 'next/image';
 import { useI18n } from '@/hooks/use-i18n';
+import { CategoryBar } from './CategoryBar';
+import { HeroBanner } from './HeroBanner';
+import { RecentUpdatesBar } from './RecentUpdatesBar';
 
 interface PostItem {
   slug: string;
@@ -150,12 +153,28 @@ function PostCardBody({
 export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, heroTitleLine1, heroTitleLine2, defaultCover, coverConfig }: HomePostGridProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { t, locale } = useI18n();
+
+  // 硬编码分类列表（未来从 config.yaml 加载）
+  const categories = ['技术', '生活', '随笔', '旅行', '读书'];
+
+  // 硬编码最新动态列表
+  const recentUpdates = [
+    { text: '新功能：暗色模式上线', link: '/updates' },
+    { text: '欢迎使用 Originium Kernel', link: '/about' },
+    { text: '日记功能已更新，支持 Markdown 编辑', link: '/updates' },
+    { text: '新增文章搜索与标签筛选功能', link: '/posts' },
+  ];
 
   // 获取所有标签
   const allTags = Array.from(new Set(posts.flatMap(p => p.tags || []))).sort();
 
   const filteredPosts = posts.filter((p) => {
+    // 分类筛选 — 匹配文章标签
+    if (selectedCategory && !p.tags?.some((tag) => tag === selectedCategory)) {
+      return false;
+    }
     // 标签筛选
     if (selectedTag && !p.tags?.includes(selectedTag)) {
       return false;
@@ -193,6 +212,11 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
           <span className="text-zinc-300">{heroTitleLine2 ?? t('home.heroTitleLine2')}</span>
         </motion.h1>
 
+        {/* 增强横幅 — 促销/推荐卡片 */}
+        <div className="mb-8">
+          <HeroBanner />
+        </div>
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -216,6 +240,20 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
           </div>
         </motion.div>
       </section>
+
+      {/* 分类快捷导航栏 — sticky on mobile */}
+      <div className="mb-6 sticky top-[72px] z-30 md:relative md:top-0">
+        <CategoryBar
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+      </div>
+
+      {/* 最新动态滚动条 */}
+      <div className="mb-8">
+        <RecentUpdatesBar updates={recentUpdates} viewAllLink="/posts" />
+      </div>
 
       {/* 标签筛选 */}
       {allTags.length > 0 && (
