@@ -1,4 +1,4 @@
-q# Originium Kernel
+# Originium Kernel
 
 一个基于 Next.js 16 构建的现代内容发布平台，支持文章管理、GitHub 同步、用户系统、工单系统、人脸画廊等功能。
 

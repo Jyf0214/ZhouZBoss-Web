@@ -1,52 +1,51 @@
 'use client';
 
-import { ClerkProvider, useClerk } from '@clerk/nextjs';
-import { useEffect } from 'react';
+import { useEffect, useState, createElement, type ReactNode } from 'react';
+import { isClerkConfigured, loadClerkClient } from '@/lib/clerk-dynamic';
 
 /**
  * Clerk 认证提供者包装器
  * 仅在配置了 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY 时启用
- * 未配置时直接透传 children，不加载任何 Clerk 代码
+ * Clerk 模块通过运行时动态导入加载，不强制依赖
  */
 export function ClerkAuthProvider({
   children,
-  onSignOutReady,
 }: {
-  children: React.ReactNode;
-  onSignOutReady?: (signOut: (() => Promise<void>)) => void;
+  children: ReactNode;
 }) {
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const [ClerkProviderComp, setClerkProviderComp] = useState<React.ComponentType<Record<string, unknown>> | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // 无 key 时不渲染 ClerkProvider，避免运行时报错
-  if (!publishableKey) {
+  useEffect(() => {
+    if (!isClerkConfigured()) {
+      setLoading(false);
+      return;
+    }
+    loadClerkClient()
+      .then((mod) => {
+        if (!mod) return;
+        const Comp = mod.ClerkProvider as React.ComponentType<Record<string, unknown>> | undefined;
+        if (Comp) {
+          setClerkProviderComp(() => Comp);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading || !ClerkProviderComp) {
     return <>{children}</>;
   }
 
-  return (
-    <ClerkProvider
-      publishableKey={publishableKey}
-      signInUrl="/clerk/sign-in"
-      signUpUrl="/clerk/sign-up"
-    >
-      {onSignOutReady && <ClerkSignOutBridge onSignOutReady={onSignOutReady} />}
-      {children}
-    </ClerkProvider>
-  );
-}
+  const providerProps: Record<string, unknown> = {
+    signInUrl: '/clerk/sign-in',
+    signUpUrl: '/clerk/sign-up',
+  };
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    providerProps.publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  }
 
-/** 在 ClerkProvider 内部调用 useClerk，获取 signOut */
-function ClerkSignOutBridge({
-  onSignOutReady,
-}: {
-  onSignOutReady: (signOut: (() => Promise<void>)) => void;
-}) {
-  const { signOut } = useClerk();
-
-  useEffect(() => {
-    if (signOut) {
-      onSignOutReady(signOut);
-    }
-  }, [signOut, onSignOutReady]);
-
-  return null;
+  return createElement(ClerkProviderComp, providerProps, children);
 }

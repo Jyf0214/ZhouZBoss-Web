@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Navbar } from '@/components/Navbar';
@@ -9,13 +8,14 @@ import { Button, Input, Steps, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { Mail, Shield, KeyRound, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { isClerkConfigured } from '@/lib/clerk-dynamic';
 
 /**
  * Clerk 账户绑定页面
  * 流程：输入邮箱 → 发送验证码 → 输入验证码 → 绑定
+ * 使用 API 验证 Clerk 登录状态替代客户端 useUser hook
  */
 export default function ClerkBindPage() {
-  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
@@ -23,6 +23,40 @@ export default function ClerkBindPage() {
   const [loading, setLoading] = useState(false);
   const [, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [checking, setChecking] = useState(true);
+  const [clerkLoggedIn, setClerkLoggedIn] = useState(false);
+
+  // 检查 Clerk 登录状态
+  useEffect(() => {
+    if (!isClerkConfigured()) {
+      router.replace('/login');
+      return;
+    }
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/clerk-check');
+        if (res.ok) {
+          const data = await res.json();
+          // clerk-check 在未绑定时返回 { bound: false, userId: ... }
+          // 在未登录时返回 401 { error: '未登录' }
+          if (data.bound === false && !data.error) {
+            setClerkLoggedIn(true);
+          } else {
+            router.replace('/clerk/sign-in');
+            return;
+          }
+        } else {
+          router.replace('/clerk/sign-in');
+          return;
+        }
+      } catch {
+        router.replace('/clerk/sign-in');
+        return;
+      }
+      setChecking(false);
+    };
+    void checkAuth();
+  }, [router]);
 
   /** 发送验证码 */
   const handleSendCode = async () => {
@@ -88,14 +122,14 @@ export default function ClerkBindPage() {
     }
   };
 
-  if (!isLoaded) return <GlobalLoading />;
+  if (checking) return <GlobalLoading />;
 
-  if (!user) {
+  if (!clerkLoggedIn) {
     return (
       <div className="min-h-screen flex flex-col bg-zinc-50">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-zinc-400">请先通过 Clerk 登录</p>
+          <p className="text-zinc-400">正在检查登录状态...</p>
         </main>
       </div>
     );

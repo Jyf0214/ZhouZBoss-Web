@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
+import { getClerkAuth, isClerkConfigured } from '@/lib/clerk-dynamic';
 
 const logger = createApiLogger('/api/auth/bind-verify');
 
@@ -10,8 +10,17 @@ const logger = createApiLogger('/api/auth/bind-verify');
  * 验证绑定验证码并完成账户绑定
  */
 export async function POST(req: NextRequest) {
+  if (!isClerkConfigured()) {
+    return NextResponse.json({ error: 'Clerk 未配置' }, { status: 400 });
+  }
+
   try {
-    const { userId } = await auth();
+    const authFn = await getClerkAuth();
+    if (!authFn) {
+      return NextResponse.json({ error: 'Clerk 模块不可用' }, { status: 500 });
+    }
+
+    const { userId } = await authFn();
     if (!userId) {
       logger.warn('POST', '未通过 Clerk 登录');
       return NextResponse.json({ error: '请先通过 Clerk 登录' }, { status: 401 });
@@ -99,8 +108,17 @@ export async function POST(req: NextRequest) {
  * 解绑 Clerk 账户
  */
 export async function DELETE() {
+  if (!isClerkConfigured()) {
+    return NextResponse.json({ error: 'Clerk 未配置' }, { status: 400 });
+  }
+
   try {
-    const { userId } = await auth();
+    const authFn = await getClerkAuth();
+    if (!authFn) {
+      return NextResponse.json({ error: 'Clerk 模块不可用' }, { status: 500 });
+    }
+
+    const { userId } = await authFn();
     if (!userId) {
       logger.warn('DELETE', '未通过 Clerk 登录');
       return NextResponse.json({ error: '请先通过 Clerk 登录' }, { status: 401 });

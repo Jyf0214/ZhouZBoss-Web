@@ -1,18 +1,28 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
+import { getClerkAuth, isClerkConfigured } from '@/lib/clerk-dynamic';
 
 const logger = createApiLogger('/api/auth/clerk-check');
 
 /**
  * 检查 Clerk 用户是否已绑定 Originium Kernel 账户
  * 如果已绑定，自动创建 JWT session
+ * Clerk 未配置时返回未登录状态
  */
 export async function GET() {
+  if (!isClerkConfigured()) {
+    return NextResponse.json({ bound: false, error: 'Clerk 未配置' }, { status: 400 });
+  }
+
   try {
-    const { userId } = await auth();
+    const authFn = await getClerkAuth();
+    if (!authFn) {
+      return NextResponse.json({ bound: false, error: 'Clerk 模块不可用' }, { status: 500 });
+    }
+
+    const { userId } = await authFn();
     if (!userId) {
       logger.warn('GET', '未通过 Clerk 登录');
       return NextResponse.json({ bound: false, error: '未登录' }, { status: 401 });

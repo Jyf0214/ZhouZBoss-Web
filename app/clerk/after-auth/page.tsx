@@ -1,28 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { Button } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
-  import { Link } from 'lucide-react';
+import { Link } from 'lucide-react';
+import { isClerkConfigured } from '@/lib/clerk-dynamic';
 
 /**
  * Clerk 登录后处理页面
  * 检查用户是否已绑定 Originium Kernel 账户
- * - 已绑定 → 创建 JWT session → 跳转 dashboard
- * - 未绑定 → 引导绑定
+ * 通过 API 查询绑定状态，无需客户端 Clerk hook
  */
 export default function ClerkAfterAuthPage() {
-  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
-  const [, setIsBound] = useState(false);
 
   useEffect(() => {
-    if (!isLoaded || !user) return;
+    if (!isClerkConfigured()) {
+      router.replace('/login');
+      return;
+    }
 
     const checkBinding = async () => {
       try {
@@ -30,11 +30,14 @@ export default function ClerkAfterAuthPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.bound) {
-            setIsBound(true);
             router.push('/dashboard');
             return;
           }
         } else {
+          if (res.status === 400) {
+            router.replace('/login');
+            return;
+          }
           showError('账户检查失败');
         }
       } catch {
@@ -44,9 +47,9 @@ export default function ClerkAfterAuthPage() {
     };
 
     void checkBinding();
-  }, [isLoaded, user, router]);
+  }, [router]);
 
-  if (!isLoaded || checking) {
+  if (checking) {
     return (
       <div className="min-h-screen flex flex-col bg-zinc-50">
         <Navbar />

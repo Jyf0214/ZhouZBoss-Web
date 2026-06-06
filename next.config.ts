@@ -238,6 +238,10 @@ export interface FooterConfig {
   typedText?: string[];
 }
 
+export interface ClerkConfig {
+  enable: boolean;
+}
+
 export interface UserConfig {
   avatar?: string;
 }
@@ -264,6 +268,7 @@ export interface AppConfig {
   share?: ShareConfig;
   mainTone?: MainToneConfig;
   footer?: FooterConfig;
+  clerk?: ClerkConfig;
   users?: Record<string, UserConfig>;
 }
 
