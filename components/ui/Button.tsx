@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes, type ReactNode, memo, forwardRef } from 'react';
 import { cn } from '@/lib/ui';
 
-type ButtonVariant = 'primary' | 'default' | 'secondary' | 'danger' | 'ghost' | 'link';
+type ButtonVariant = 'primary' | 'default' | 'secondary' | 'danger' | 'ghost' | 'link' | 'success' | 'warning';
 type ButtonSize = 'sm' | 'md' | 'lg';
 type ButtonRounded = 'sm' | 'md' | 'lg' | 'full' | 'none';
 
@@ -12,6 +12,8 @@ const variantStyles: Record<ButtonVariant, string> = {
   danger: 'bg-white border border-red-300 text-red-600 hover:border-red-500 hover:bg-red-50',
   ghost: 'text-zinc-600 hover:bg-zinc-100',
   link: 'text-zinc-900 hover:underline',
+  success: 'bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700',
+  warning: 'bg-amber-500 text-white hover:bg-amber-400 active:bg-amber-600',
 };
 
 const sizePadding: Record<ButtonSize, string> = {
