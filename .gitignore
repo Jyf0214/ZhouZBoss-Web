@@ -41,3 +41,4 @@ next-env.d.ts
 lint-results.json
 bun.lock
 bun.lockb
+.qwen/skills/*
