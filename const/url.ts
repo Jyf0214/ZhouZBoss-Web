@@ -15,7 +15,7 @@ function resolveSiteUrl(): string {
 let _siteUrl: string | undefined;
 
 export function getSiteUrl(): string {
-  if (!_siteUrl) _siteUrl = resolveSiteUrl();
+  _siteUrl ??= resolveSiteUrl();
   return _siteUrl;
 }
 

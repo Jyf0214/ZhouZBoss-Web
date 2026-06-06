@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "type-check": "tsc --noEmit",
-    "lint": "eslint . --max-warnings=500",
+    "lint": "eslint . --max-warnings=0",
     "check": "npm run type-check && npm run lint",
     "db:init": "node scripts/db-init.mjs",
     "db:generate": "PRISMA_HIDE_UPDATE_MESSAGE=true PRISMA_HIDE_PREVIEW_FLAG_WARNINGS=true prisma generate",

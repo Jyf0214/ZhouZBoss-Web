@@ -31,7 +31,7 @@ export default defineConfig([
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/require-await": "error",
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": ["warn", { ignorePrimitives: { boolean: true } }],
+      "@typescript-eslint/prefer-nullish-coalescing": ["error", { ignorePrimitives: { boolean: true } }],
       "@typescript-eslint/prefer-optional-chain": "error",
       "@typescript-eslint/no-shadow": "error",
       "@typescript-eslint/no-unnecessary-boolean-literal-compare": "error",
@@ -58,11 +58,11 @@ export default defineConfig([
       "no-self-compare": "error",
 
       // === 复杂度控制 ===
-      "complexity": ["warn", 15],
-      "max-depth": ["warn", 5],
-      "max-nested-callbacks": ["warn", 4],
-      "max-params": ["warn", 5],
-      "max-lines": ["warn", { max: 500, skipBlankLines: true, skipComments: true }],
+      "complexity": ["error", 15],
+      "max-depth": ["error", 5],
+      "max-nested-callbacks": ["error", 4],
+      "max-params": ["error", 5],
+      "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
     },
   },
   // parserOptions 需要为 @typescript-eslint/no-floating-promises 提供项目服务
