@@ -7,9 +7,9 @@ type ButtonRounded = 'sm' | 'md' | 'lg' | 'full' | 'none';
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700 shadow-sm hover:shadow-md',
-  default: 'bg-white border border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:text-zinc-900',
-  secondary: 'border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800',
-  danger: 'bg-white border border-red-300 text-red-600 hover:border-red-500 hover:bg-red-50',
+  default: 'bg-white border border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-900',
+  secondary: 'border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-800',
+  danger: 'bg-white border border-red-300 text-red-600 hover:border-red-500 hover:bg-red-50 active:bg-red-100',
   ghost: 'text-zinc-600 hover:bg-zinc-100',
   link: 'text-zinc-900 hover:underline',
   success: 'bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700 shadow-sm hover:shadow-md',
@@ -18,15 +18,15 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizePadding: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-xs',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-6 py-3 text-base',
+  sm: 'px-3 py-1 text-xs',
+  md: 'px-4 py-1.5 text-sm',
+  lg: 'px-6 py-2 text-base',
 };
 
 const iconOnlySize: Record<ButtonSize, string> = {
-  sm: 'w-8 h-8',
-  md: 'w-10 h-10',
-  lg: 'w-12 h-12',
+  sm: 'w-7 h-7',
+  md: 'w-9 h-9',
+  lg: 'w-11 h-11',
 };
 
 const roundedStyles: Record<ButtonRounded, string> = {
