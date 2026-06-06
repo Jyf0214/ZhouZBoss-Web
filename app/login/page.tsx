@@ -160,7 +160,6 @@ function LoginForm() {
               <Button
                 icon={<ChevronRight size={14} />}
                 loading={loading}
-                style={{ color: 'var(--ant-color-primary)' }}
                 title={t('auth.login')}
                 variant="filled"
                 onClick={() => form.submit()}
