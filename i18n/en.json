@@ -485,6 +485,20 @@
     "notFound": "Post not found",
     "privateHint": "Login required to view this content"
   },
+  "post": {
+    "copyright": {
+      "original": "Original",
+      "reprint": "Reprint"
+    },
+    "share": {
+      "copyLink": "Copy Link",
+      "copied": "Copied",
+      "shareTo": "Share to"
+    }
+  },
+  "toc": {
+    "title": "Table of Contents"
+  },
   "faces": {
     "title": "Faces",
     "subtitle": "Classmates and Contacts",

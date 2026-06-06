@@ -3,6 +3,10 @@ import { getSession } from '@/lib/auth';
 import { loadConfig } from '@/lib/config';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { TOC } from '@/components/ui/TOC';
+import { CopyrightNotice } from '@/components/ui/CopyrightNotice';
+import ShareButtons from '@/components/ui/ShareButtons';
+import { SITE_URL } from '@/const/url';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -63,6 +67,24 @@ export default async function PostDetailPage({ params }: PageProps) {
   const readingTime = Math.ceil(wordCount / 500);
   const showWordCount = appConfig.wordcount?.enable === true;
 
+  // 标题统计（用于判断是否显示 TOC）
+  const headingCount = (file.content.match(/^#{2,4}\s+.+$/gm) ?? []).length;
+
+  // 完整 URL（用于分享按钮）
+  const fullUrl = `${SITE_URL}/posts${fullPath}`;
+
+  // TOC 配置
+  const tocConfig = {
+    enabled: appConfig.toc?.post ?? false,
+    number: appConfig.toc?.number ?? true,
+    expand: appConfig.toc?.expand ?? false,
+    styleSimple: appConfig.toc?.styleSimple ?? false,
+  };
+
+  // 分享配置：将逗号分隔的 sites 字符串转为数组
+  const sitesStr = appConfig.share?.sharejs?.sites;
+  const sites = sitesStr ? sitesStr.split(',').map((s) => s.trim()).filter(Boolean) : undefined;
+
   // 相关文章
   const pubIndexes = getContentIndexes('posts');
   const allPublicFiles = getContentFiles('posts').filter((f) => {
@@ -96,7 +118,9 @@ export default async function PostDetailPage({ params }: PageProps) {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
-      <main className="flex-1 max-w-3xl mx-auto w-full px-6 pt-8 pb-16">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-6 pt-8 pb-16">
+        <div className="lg:flex lg:gap-12">
+          <div className="flex-1 min-w-0 max-w-3xl">
         {/* 面包屑 */}
         <nav className="flex items-center gap-1.5 text-sm text-zinc-400 mb-10 flex-wrap">
           <Link href="/posts" className="hover:text-zinc-900 transition-colors flex items-center gap-1.5 text-zinc-500">
@@ -120,6 +144,18 @@ export default async function PostDetailPage({ params }: PageProps) {
         {/* 文章头部 */}
         <article>
           <header className="mb-12">
+            {/* 原创/转载标识 */}
+            {(file.meta.type === 'original' || file.meta.type === 'reprint') && (
+              <div className="mb-4">
+                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest ${
+                  file.meta.type === 'original'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}>
+                  {file.meta.type === 'original' ? '原创' : '转载'}
+                </span>
+              </div>
+            )}
             {file.meta.tags && file.meta.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-5">
                 {file.meta.tags.map((tag) => (
@@ -174,6 +210,37 @@ export default async function PostDetailPage({ params }: PageProps) {
             </div>
           </div>
         )}
+
+        {/* 版权声明 */}
+        <div className="mt-12">
+          <CopyrightNotice
+            author={file.meta.author ?? appConfig.footer?.owner?.author ?? ''}
+            title={file.meta.title}
+            slug={fullPath}
+            type={file.meta.type as 'original' | 'reprint' | undefined}
+            config={{
+              enable: appConfig.copyright?.enable ?? true,
+              license: appConfig.copyright?.license ?? 'CC BY-NC-SA 4.0',
+              licenseUrl: appConfig.copyright?.licenseUrl ?? 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+              authorLink: appConfig.copyright?.authorLink ?? '/',
+              authorImgFront: appConfig.copyright?.authorImgFront,
+              location: appConfig.copyright?.location,
+              decode: appConfig.copyright?.decode,
+            }}
+          />
+        </div>
+
+        {/* 分享按钮 */}
+        <div className="mt-8">
+          <ShareButtons
+            title={file.meta.title}
+            url={fullUrl}
+            config={{
+              enable: appConfig.share?.sharejs?.enable ?? false,
+              sites: sites,
+            }}
+          />
+        </div>
 
         {/* 相关文章 */}
         {relatedPosts.length > 0 && (
@@ -246,9 +313,27 @@ export default async function PostDetailPage({ params }: PageProps) {
             {t_posts('backToPosts')}
           </Link>
         </div>
-      </main>
-    </div>
-  );
+      </div>
+
+        {/* TOC 侧边栏 — 桌面端 */}
+        {tocConfig.enabled && headingCount >= 3 && (
+          <aside className="hidden lg:block w-56 shrink-0">
+            <div className="sticky top-24">
+              <TOC
+                content={file.content}
+                config={{
+                  number: appConfig.toc?.number ?? true,
+                  expand: appConfig.toc?.expand ?? false,
+                  styleSimple: appConfig.toc?.styleSimple ?? false,
+                }}
+              />
+            </div>
+          </aside>
+        )}
+      </div>
+    </main>
+  </div>
+);
 }
 
 function t_posts(key: string): string {
