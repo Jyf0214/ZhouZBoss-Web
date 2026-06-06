@@ -131,7 +131,7 @@ export function HeroBanner({
         style={
           hasGradient
             ? {
-                background: gradient || DEFAULT_GRADIENT,
+                background: gradient ?? DEFAULT_GRADIENT,
                 backgroundSize: '400% 400%',
               }
             : undefined

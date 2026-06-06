@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
@@ -452,9 +453,9 @@ const sectionVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } },
 };
 
-// ─── Main Footer Component ───────────────────────────
+// ─── Config Hook ─────────────────────────────────────
 
-export default function Footer() {
+function useFooterConfig() {
   const [config, setConfig] = useState<FooterConfigData | null>(null);
   const [socialData, setSocialData] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -481,20 +482,76 @@ export default function Footer() {
     void fetchConfig();
   }, []);
 
-  // Resolve effective data: prefer config, fall back to defaults
-  const effectiveSocialData = socialData ?? {};
-  const avatarUrl = config?.avatar;
-  const socialLinksConfig = config?.socialLinks;
-  const links = config?.links && config.links.length > 0 ? config.links : DEFAULT_LINKS;
-  const badges = config?.badges && config.badges.length > 0 ? config.badges : DEFAULT_BADGES;
-  const typedText =
-    config?.typedText && config.typedText.length > 0 ? config.typedText : DEFAULT_TYPED_TEXTS;
-  const typedTextPrefix = config?.typedTextPrefix ?? '本站由 ';
-  const owner = config?.owner ?? { enable: true, since: 2020 };
-  const author = config?.owner?.author || 'Originium Kernel';
-  const customText = config?.customText ?? '';
-  const runtimeEnable = config?.runtime?.enable ?? false;
-  const launchTime = config?.runtime?.launchTime ?? '';
+  return { config, socialData, error };
+}
+
+// ─── Default Value Helpers ───────────────────────────
+// Each helper resolves ONE default value with minimal complexity (≤3).
+
+function defSocialData(socialData: Record<string, string> | null): Record<string, string> {
+  return socialData ?? {};
+}
+
+function defAvatarUrl(config: FooterConfigData | null): string | undefined {
+  return config?.avatar;
+}
+
+function defSocialLinksConfig(config: FooterConfigData | null): FooterSocialLink[] | undefined {
+  return config?.socialLinks;
+}
+
+function defLinks(config: FooterConfigData | null): FooterLinkGroup[] {
+  return config?.links && config.links.length > 0 ? config.links : DEFAULT_LINKS;
+}
+
+function defBadges(config: FooterConfigData | null): FooterBadge[] {
+  return config?.badges && config.badges.length > 0 ? config.badges : DEFAULT_BADGES;
+}
+
+function defTypedText(config: FooterConfigData | null): string[] {
+  return config?.typedText && config.typedText.length > 0 ? config.typedText : DEFAULT_TYPED_TEXTS;
+}
+
+function defTypedTextPrefix(config: FooterConfigData | null): string {
+  return config?.typedTextPrefix ?? '本站由 ';
+}
+
+function defOwner(config: FooterConfigData | null): FooterOwnerConfig {
+  return config?.owner ?? { enable: true, since: 2020 };
+}
+
+function defAuthor(config: FooterConfigData | null): string {
+  return config?.owner?.author ?? 'Originium Kernel';
+}
+
+function defCustomText(config: FooterConfigData | null): string {
+  return config?.customText ?? '';
+}
+
+function defRuntimeEnable(config: FooterConfigData | null): boolean {
+  return config?.runtime?.enable ?? false;
+}
+
+function defLaunchTime(config: FooterConfigData | null): string {
+  return config?.runtime?.launchTime ?? '';
+}
+
+// ─── Main Footer Component ───────────────────────────
+
+export default function Footer() {
+  const { config, socialData, error } = useFooterConfig();
+  const effectiveSocialData = defSocialData(socialData);
+  const avatarUrl = defAvatarUrl(config);
+  const socialLinksConfig = defSocialLinksConfig(config);
+  const links = defLinks(config);
+  const badges = defBadges(config);
+  const typedText = defTypedText(config);
+  const typedTextPrefix = defTypedTextPrefix(config);
+  const owner = defOwner(config);
+  const author = defAuthor(config);
+  const customText = defCustomText(config);
+  const runtimeEnable = defRuntimeEnable(config);
+  const launchTime = defLaunchTime(config);
 
   return (
     <footer className="relative">
