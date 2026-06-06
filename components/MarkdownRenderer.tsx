@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, type ComponentType } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Copy, Check, ChevronDown, ChevronUp, WrapText } from 'lucide-react';
+import Button from '@/components/ui/Button';
 
 interface HighlightConfig {
   theme: string;
@@ -78,31 +79,37 @@ function CodeToolbar({
       </div>
       <div className="flex items-center gap-1">
         {cfg.copy && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={copied ? <Check size={14} /> : <Copy size={14} />}
+            className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700"
             onClick={onCopy}
-            className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
             title="复制代码"
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-          </button>
+          />
         )}
         {showWrap && cfg.wordWrap && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<WrapText size={14} />}
+            className={wrap ? 'text-zinc-200 bg-zinc-700' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700'}
             onClick={onToggleWrap}
-            className={`p-1 rounded-md transition-colors ${wrap ? 'text-zinc-200 bg-zinc-700' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700'}`}
             title="自动换行"
-          >
-            <WrapText size={14} />
-          </button>
+          />
         )}
         {exceedsLimit && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700"
             onClick={onToggleCollapse}
-            className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
             title={collapsed ? '展开' : '折叠'}
-          >
-            {collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-          </button>
+          />
         )}
       </div>
     </div>
@@ -259,6 +266,30 @@ function CodeBlock({
   );
 }
 
+/** 从 React children 中提取纯文本，用于生成标题 id */
+function extractTextContent(children: React.ReactNode): string {
+  if (typeof children === 'string' || typeof children === 'number') {
+    return String(children);
+  }
+  if (Array.isArray(children)) {
+    return children.map((child) => extractTextContent(child)).join('');
+  }
+  if (React.isValidElement(children)) {
+    return extractTextContent((children.props as { children?: React.ReactNode }).children);
+  }
+  return '';
+}
+
+/** 将文本转为适合作为 id 的 slug */
+function slugify(text: string): string {
+  return (
+    text
+      .toLowerCase()
+      .replace(/[^\w\u4e00-\u9fff]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'heading'
+  );
+}
+
 export function MarkdownRenderer({ content, highlight: highlightProp }: MarkdownRendererProps) {
   const cfg: HighlightConfig = {
     theme: 'dark',
@@ -292,6 +323,14 @@ export function MarkdownRenderer({ content, highlight: highlightProp }: Markdown
     });
   }, [cfg.theme]);
 
+  function createHeading(level: 1 | 2 | 3 | 4 | 5 | 6) {
+    const tag = `h${level}`;
+    return function Heading({ children, node: _node, inline: _inline, ...props }: CodeProps) {
+      const id = slugify(extractTextContent(children));
+      return React.createElement(tag, { id, ...props }, children);
+    };
+  }
+
   const components: Record<string, ComponentType<CodeProps>> = {
     code({ inline, className, children, ...props }: CodeProps) {
       const match = /language-(\w+)/.exec(className ?? '');
@@ -311,6 +350,12 @@ export function MarkdownRenderer({ content, highlight: highlightProp }: Markdown
         </code>
       );
     },
+    h1: createHeading(1),
+    h2: createHeading(2),
+    h3: createHeading(3),
+    h4: createHeading(4),
+    h5: createHeading(5),
+    h6: createHeading(6),
   };
 
   return (
