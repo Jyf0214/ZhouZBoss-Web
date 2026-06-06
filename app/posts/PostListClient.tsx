@@ -8,6 +8,7 @@ import { Input } from 'antd';
 import Image from 'next/image';
 import { useI18n } from '@/hooks/use-i18n';
 import { Tag } from '@/components/ui/Tag';
+import { Button } from '@/components/ui/Button';
 
 interface PostItem {
   slug: string;
@@ -274,31 +275,27 @@ export function PostListClient({ posts, groups, coverConfig }: PostListClientPro
       {/* 分组标签 */}
       {groupNames.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-8">
-          <button
+          <Button
             onClick={() => setActiveGroup(null)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-              activeGroup === null
-                ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20'
-                : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700'
-            }`}
+            variant={activeGroup === null ? 'primary' : 'ghost'}
+            size="sm"
+            className={activeGroup === null ? 'shadow-lg shadow-zinc-900/20' : ''}
           >
             {t('posts.allPosts')}
-          </button>
+          </Button>
           {groupNames.map((name) => {
             const slug = groupSlugMap.get(name)!;
             return (
-              <button
+              <Button
                 key={name}
                 onClick={() => setActiveGroup(slug)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
-                  activeGroup === slug
-                    ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20'
-                    : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700'
-                }`}
+                variant={activeGroup === slug ? 'primary' : 'ghost'}
+                size="sm"
+                className={activeGroup === slug ? 'shadow-lg shadow-zinc-900/20' : ''}
+                icon={<Hash size={14} className="opacity-50" />}
               >
-                <Hash size={14} className="opacity-50" />
                 {name}
-              </button>
+              </Button>
             );
           })}
         </div>

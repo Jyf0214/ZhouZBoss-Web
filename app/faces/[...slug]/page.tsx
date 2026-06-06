@@ -16,6 +16,7 @@ import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
 import { Tag } from '@/components/ui/Tag';
+import { Button } from '@/components/ui/Button';
 
 function LoadingView() {
   return (
@@ -89,13 +90,14 @@ function FaceDetailHeader({ file, isSudo, rawContent, showRaw, setShowRaw }: {
       )}
       {isSudo && rawContent && (
         <div className="mt-6">
-          <button
+          <Button
             onClick={() => setShowRaw(!showRaw)}
-            className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors"
+            variant="ghost"
+            size="sm"
+            icon={showRaw ? <Eye size={18} /> : <Code size={18} />}
           >
-            {showRaw ? <Eye size={18} /> : <Code size={18} />}
-            <span className="text-sm font-bold">{showRaw ? '预览渲染' : '查看原始文件'}</span>
-          </button>
+            {showRaw ? '预览渲染' : '查看原始文件'}
+          </Button>
         </div>
       )}
     </header>
