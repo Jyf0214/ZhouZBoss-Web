@@ -59,6 +59,11 @@ interface UseStorageState {
     path: string,
     next: boolean
   ) => Promise<StorageFolderMeta | null>;
+  /** 设置/清除子文件夹密码(password=null 表示清除) */
+  setFolderPassword: (
+    path: string,
+    password: string | null
+  ) => Promise<StorageFolderMeta | null>;
 }
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -359,6 +364,39 @@ export function useStorageState(): UseStorageState {
     [configured]
   );
 
+  const setFolderPassword = useCallback(
+    async (path: string, password: string | null) => {
+      if (!configured) {
+        message.error('WebDAV 未配置,无法设置密码');
+        return null;
+      }
+      try {
+        const meta = await patchFolderMeta(path, { password });
+        setFolders((prev) => {
+          const idx = prev.findIndex((f) => f.path === meta.path);
+          if (idx === -1) return [...prev, meta];
+          const nextList = prev.slice();
+          nextList[idx] = meta;
+          return nextList;
+        });
+        message.success('设置已更新');
+        return meta;
+      } catch (err) {
+        if (err instanceof ApiError) {
+          if (err.isNotConfigured) {
+            setConfigured(false);
+            return null;
+          }
+          message.error(err.message);
+        } else {
+          message.error('更新失败');
+        }
+        return null;
+      }
+    },
+    [configured]
+  );
+
   return {
     configured,
     folders,
@@ -377,5 +415,6 @@ export function useStorageState(): UseStorageState {
     removeFile,
     removeFolder,
     toggleFolderPublic,
+    setFolderPassword,
   };
 }

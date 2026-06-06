@@ -6,7 +6,7 @@
  * - 所有方法返回已解析的 JSON,网络/HTTP 失败抛 ApiError
  */
 import type { StorageFolderMeta, WebDavEntry } from '@/lib/storage/types';
-import type { StorageConfig } from './types';
+import type { StorageConfig, UpdateFolderPayload } from './types';
 
 /** 统一 API 错误 */
 export class ApiError extends Error {
@@ -90,7 +90,7 @@ export function fetchFolderMeta(path: string): Promise<StorageFolderMeta> {
 
 export function patchFolderMeta(
   path: string,
-  body: { public?: boolean; description?: string | null }
+  body: UpdateFolderPayload
 ): Promise<StorageFolderMeta> {
   return request<StorageFolderMeta>(
     `/api/storage/folder/${encodePathSegments(path)}`,

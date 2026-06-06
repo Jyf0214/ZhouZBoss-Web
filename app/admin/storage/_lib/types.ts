@@ -35,3 +35,16 @@ export interface StorageState {
   loading: boolean;
   error: string | null;
 }
+
+/** PATCH /api/storage/folder/[...path] 请求体 */
+export interface UpdateFolderPayload {
+  public?: boolean;
+  description?: string | null;
+  /** 显式设置/清除子文件夹访问密码:null 表示清除 */
+  password?: string | null;
+}
+
+/** 扩展的文件夹元数据,包含 hasPassword(由其他 Agent 追加) */
+export interface StorageFolderMetaWithPassword extends StorageFolderMeta {
+  hasPassword?: boolean;
+}

@@ -83,6 +83,14 @@ export function StorageAdminShell() {
     loadFailed: t('storage.loadFailed'),
     refresh: t('storage.refresh'),
     settingsUpdated: t('storage.settingsUpdated'),
+    passwordLabel: t('storage.passwordLabel'),
+    passwordHint: t('storage.passwordHint'),
+    passwordPlaceholder: t('storage.passwordPlaceholder'),
+    hasPassword: t('storage.hasPassword'),
+    noPassword: t('storage.noPassword'),
+    setPassword: t('storage.setPassword'),
+    clearPassword: t('common.delete'),
+    confirmClear: t('common.confirm'),
   };
 
   const handleEntryDelete = (entry: WebDavEntry) => {
@@ -116,6 +124,18 @@ export function StorageAdminShell() {
   const handleTogglePublic = async (next: boolean) => {
     if (!currentFolder) return;
     await state.toggleFolderPublic(currentFolder.path, next);
+  };
+
+  const handleSetPassword = async (password: string): Promise<boolean> => {
+    if (!currentFolder) return false;
+    const meta = await state.setFolderPassword(currentFolder.path, password);
+    return meta !== null;
+  };
+
+  const handleClearPassword = async (): Promise<boolean> => {
+    if (!currentFolder) return false;
+    const meta = await state.setFolderPassword(currentFolder.path, null);
+    return meta !== null;
   };
 
   // 加载态
@@ -202,7 +222,19 @@ export function StorageAdminShell() {
                   privateDesc={labels.privateDesc}
                   settingsTitle={labels.settingsTitle}
                   notApplicableHint={labels.notApplicableHint}
+                  passwordLabel={labels.passwordLabel}
+                  passwordHint={labels.passwordHint}
+                  passwordPlaceholder={labels.passwordPlaceholder}
+                  hasPasswordLabel={labels.hasPassword}
+                  noPasswordLabel={labels.noPassword}
+                  setPasswordLabel={labels.setPassword}
+                  clearPasswordLabel={labels.clearPassword}
+                  confirmClearTitle={labels.confirmClear}
+                  okLabel={labels.confirmClear}
+                  cancelLabel={labels.cancel}
                   onToggle={handleTogglePublic}
+                  onSetPassword={handleSetPassword}
+                  onClearPassword={handleClearPassword}
                   disabled={!state.configured}
                 />
                 <Button
