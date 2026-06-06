@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useCallback } from 'react';
+import { Button } from '@/components/ui/Button';
 import { ChevronRight } from 'lucide-react';
 
 interface CategoryBarProps {
@@ -37,40 +38,41 @@ export function CategoryBar({ categories, selectedCategory, onSelectCategory }: 
         className="flex gap-1.5 overflow-x-auto py-1 px-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <button
+        <Button
           onClick={() => onSelectCategory(null)}
-          className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-            selectedCategory === null
-              ? 'bg-zinc-900 text-white shadow-sm'
-              : 'bg-white text-zinc-600 hover:bg-zinc-100 border border-zinc-200 hover:border-zinc-300'
-          }`}
+          variant={selectedCategory === null ? 'primary' : 'ghost'}
+          size="sm"
+          rounded="full"
+          className={`shrink-0${selectedCategory === null ? ' shadow-sm' : ''}`}
         >
           全部
-        </button>
+        </Button>
         {categories.map((cat) => (
-          <button
+          <Button
             key={cat}
             onClick={() => onSelectCategory(cat === selectedCategory ? null : cat)}
-            className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-              selectedCategory === cat
-                ? 'bg-zinc-900 text-white shadow-sm'
-                : 'bg-white text-zinc-600 hover:bg-zinc-100 border border-zinc-200 hover:border-zinc-300'
-            }`}
+            variant={selectedCategory === cat ? 'primary' : 'ghost'}
+            size="sm"
+            rounded="full"
+            className={`shrink-0${selectedCategory === cat ? ' shadow-sm' : ''}`}
           >
             {cat}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* 右侧渐变遮罩 + "更多"箭头按钮 */}
       <div className="absolute right-0 top-0 bottom-0 w-[72px] pointer-events-none flex items-center justify-end rounded-r-xl bg-gradient-to-l from-white via-white/95 to-transparent">
-        <button
+        <Button
           onClick={scrollRight}
-          className="w-8 h-8 rounded-full bg-white border border-zinc-200 shadow-sm flex items-center justify-center hover:bg-zinc-50 active:scale-95 transition-all pointer-events-auto mr-1.5"
+          variant="default"
+          size="sm"
+          iconOnly
+          rounded="full"
+          icon={<ChevronRight size={16} className="text-zinc-500" />}
           aria-label="向右滚动"
-        >
-          <ChevronRight size={16} className="text-zinc-500" />
-        </button>
+          className="pointer-events-auto mr-1.5 shadow-sm active:scale-95"
+        />
       </div>
     </div>
   );

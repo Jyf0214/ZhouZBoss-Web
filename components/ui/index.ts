@@ -12,3 +12,4 @@ export { default as ProCard, type ProCardProps } from './ProCard';
 export { PageContainer } from './PageContainer';
 export { EmptyState } from './EmptyState';
 export { HeroBanner, type HeroBannerProps, type HeroButton } from './HeroBanner';
+export { Button, type ButtonProps } from './Button';

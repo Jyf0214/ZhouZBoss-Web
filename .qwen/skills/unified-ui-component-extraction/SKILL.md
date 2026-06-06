@@ -45,7 +45,7 @@ extracted_at: '2026-06-06T08:00:31.191Z'
 
 | 组件 | 覆盖样式 | Props |
 |------|---------|-------|
-| `Button.tsx` | 深色/浅色/危险/幽灵按钮 | `variant`, `size`, `loading`, `icon` |
+| `Button.tsx` | 深色/浅色/危险/幽灵/链接按钮 | `variant`, `size`, `rounded`, `iconOnly`, `block`, `loading`, `icon` |
 | `FilterPill.tsx` | 筛选/分类选中/未选中 | `selected`, `onClick`, `icon` |
 | `Tag.tsx` | 标签/徽章 5 种变体 | `variant`, `size` |
 | `Input.tsx` | 统一输入框 | `label`, `error`, `wrapperClassName` |
@@ -55,6 +55,28 @@ extracted_at: '2026-06-06T08:00:31.191Z'
 - 支持 `className` prop 附加到基础样式后
 - 不引入外部依赖（仅 React + 项目已有依赖）
 - 所有组件导出到 `components/ui/index.ts`
+
+### Button 组件关键设计决策
+
+**iconOnly 尺寸必须匹配代码库实际模式：** 扫描所有硬编码按钮中 `w-* h-*` 或 `p-*` 的实际值，统计最常见的尺寸，将 Button 的 iconOnly 尺寸设为这些精确值。
+
+常见模式及映射：
+- 紧凑图标按钮（toolbar）：`w-8 h-8` 对应 `size="sm" iconOnly`
+- 中等图标按钮（操作栏）：`w-10 h-10` 对应 `size="md" iconOnly`
+- 大图标按钮（FAB）：`w-12 h-12` 对应 `size="lg" iconOnly`
+
+在已经存在大量硬编码按钮的项目中，**不要使用推测的尺寸**（如 w-7/w-9/w-11），必须用 `git show <commit>:path` 读取基准版本的代码统计实际值。
+
+**Button 完整 Props：**
+| Prop | 类型 | 说明 |
+|------|------|------|
+| `variant` | `'primary' | 'default' | 'secondary' | 'danger' | 'ghost' | 'link'` | 视觉风格 |
+| `size` | `'sm' | 'md' | 'lg'` | 按钮尺寸 |
+| `rounded` | `'sm' | 'md' | 'lg' | 'full' | 'none'` | 独立圆角控制 |
+| `iconOnly` | `boolean` | 等宽高方形按钮，auto-detected 当 icon 无 children |
+| `block` | `boolean` | `w-full` |
+| `icon` | `ReactNode` | 前置图标 |
+| `loading` | `boolean` | 加载旋转态 |
 
 ### 阶段 3：并行替换
 

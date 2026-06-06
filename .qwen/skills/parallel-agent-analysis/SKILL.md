@@ -42,34 +42,24 @@ extracted_at: '2026-05-31T02:31:02.665Z'
 - 建议的修复方式
 - 预估减少代码量
 
-### 第四步：启动修复 Agent
-根据报告，启动一个或多个修复 Agent：
+### 第四步：启动修复 Agent（禁止隔离）
+根据报告，启动一个或多个修复 Agent，**直接修改主项目文件，不使用任何隔离**。
 
 ```json
 {
   "subagent_type": "general-purpose",
   "run_in_background": true,
-  "isolation": "worktree",
   "description": "[具体修复任务]",
   "prompt": "修复方案..."
 }
 ```
 
-修复 Agent 要给出具体的代码替换方案，按组分批验证。
+重要规则：
+- **始终直接修改主项目文件**，不使用 `isolation: "worktree"` 或其他隔离方式
+- 如果项目中有遗留的工作树文件（`.qwen/worktrees/`），先清理：`rm -rf .qwen/worktrees/`
+- 修复 Agent 要给出具体的代码替换方案，按组分批验证
 
-### 第五步：合并 worktree
-如果使用 worktree 隔离，合并方式：
-
-```bash
-# 1. 从 worktree 生成补丁
-cd /path/to/worktree && git diff HEAD -- <files> > /tmp/patch.patch
-
-# 2. 应用到主干
-cd /path/to/main && git apply /tmp/patch.patch
-
-# 3. 删除 worktree
-git worktree remove <worktree-path> --force
-```
+### 第五步：合并 worktree（已废弃，不再使用）
 
 ## 场景二：外部项目探索分析
 

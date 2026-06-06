@@ -15,10 +15,11 @@ import {
   ChevronUp,
   RefreshCw,
 } from 'lucide-react';
-import { Card, Tag, Progress, Button } from 'antd';
+import { Card, Tag, Progress } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Button } from '@/components/ui/Button';
 
 interface EnvVar {
   name: string;
@@ -129,9 +130,13 @@ function EnvGroupCard({
       bordered={false}
       styles={{ body: { padding: 0 } }}
     >
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
+        block
+        rounded="none"
+        className="justify-between px-6 py-4 hover:bg-zinc-50/50"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-6 py-4 hover:bg-zinc-50/50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-zinc-100 rounded-lg flex items-center justify-center">
@@ -150,7 +155,7 @@ function EnvGroupCard({
           )}
           {collapsed ? <ChevronDown size={16} className="text-zinc-400" /> : <ChevronUp size={16} className="text-zinc-400" />}
         </div>
-      </button>
+      </Button>
       {!collapsed && (
         <div className="divide-y divide-zinc-50">
           {group.variables.map((variable) => (
@@ -195,11 +200,12 @@ function EnvStatusContent({
           </div>
         </div>
         <Button
+          variant="default"
+          rounded="md"
           icon={<RefreshCw size={14} />}
           onClick={onRefresh}
-          className="rounded-xl border-zinc-200 hover:border-zinc-300"
         >
-          刷新
+          {t('env.refresh') || '刷新'}
         </Button>
       </div>
 

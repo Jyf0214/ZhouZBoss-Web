@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Filter, Sparkles, BookOpen, Users, ArrowRight, Calendar, User as UserIcon, Pin, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Input, Button } from 'antd';
+import { Input, Button as AntdButton } from 'antd';
+import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
 import { useI18n } from '@/hooks/use-i18n';
 import { CategoryBar } from './CategoryBar';
@@ -263,9 +264,9 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
                 variant="outlined"
               />
             </div>
-            <Button size="large" icon={<Filter size={20} />} className="bg-white hover:bg-zinc-50 border-zinc-200 rounded-2xl">
+            <AntdButton size="large" icon={<Filter size={20} />} className="bg-white hover:bg-zinc-50 border-zinc-200 rounded-2xl">
               {t('common.sort')}
-            </Button>
+            </AntdButton>
           </div>
         </motion.div>
       </section>
@@ -288,28 +289,24 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
       {allTags.length > 0 && (
         <section className="mb-8">
           <div className="flex flex-wrap gap-2">
-            <button
+            <Button
+              variant={selectedTag === null ? 'primary' : 'ghost'}
+              size="sm"
+              rounded="full"
               onClick={() => setSelectedTag(null)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedTag === null
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-white text-zinc-600 hover:bg-zinc-100'
-              }`}
             >
               全部
-            </button>
+            </Button>
             {allTags.map((tag) => (
-              <button
+              <Button
                 key={tag}
+                variant={selectedTag === tag ? 'primary' : 'ghost'}
+                size="sm"
+                rounded="full"
                 onClick={() => setSelectedTag(tag)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedTag === tag
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-white text-zinc-600 hover:bg-zinc-100'
-                }`}
               >
                 {tag}
-              </button>
+              </Button>
             ))}
           </div>
         </section>
@@ -397,35 +394,36 @@ export function HomePostGrid({ posts, postCount, facesCount, isAdmin = false, he
         {/* 分页 */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-10">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            <Button
+              variant="default"
+              size="sm"
+              icon={<ChevronLeft size={16} />}
               disabled={currentPage === 1}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             >
-              <ChevronLeft size={16} />
               <span className="hidden sm:inline">{t('common.previous')}</span>
-            </button>
+            </Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
+              <Button
                 key={page}
+                variant={page === currentPage ? 'primary' : 'ghost'}
+                size="sm"
+                iconOnly
+                className={page === currentPage ? 'shadow-lg shadow-zinc-900/20' : 'border border-zinc-200'}
                 onClick={() => setCurrentPage(page)}
-                className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${
-                  page === currentPage
-                    ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20'
-                    : 'bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700'
-                }`}
               >
                 {page}
-              </button>
+              </Button>
             ))}
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            <Button
+              variant="default"
+              size="sm"
+              icon={<ChevronRight size={16} />}
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             >
               <span className="hidden sm:inline">{t('common.next')}</span>
-              <ChevronRight size={16} />
-            </button>
+            </Button>
           </div>
         )}
       </section>

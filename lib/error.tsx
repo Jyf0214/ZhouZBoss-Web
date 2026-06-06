@@ -5,6 +5,7 @@
 
 import { message } from 'antd';
 import React from 'react';
+import { Button } from '@/components/ui/Button';
 
 const copiedKey = 'copied-feedback';
 
@@ -14,7 +15,11 @@ export function showError(msg: string, duration = 4) {
     content: (
       <span>
         {msg}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          rounded="sm"
+          className="ml-3"
           onClick={(e) => {
             e.stopPropagation();
             navigator.clipboard.writeText(msg).then(() => {
@@ -23,20 +28,10 @@ export function showError(msg: string, duration = 4) {
               message.error({ content: '复制失败', key: copiedKey, duration: 1.5 });
             });
           }}
-          style={{
-            marginLeft: 12,
-            padding: '2px 8px',
-            border: '1px solid currentColor',
-            borderRadius: 4,
-            background: 'transparent',
-            color: 'inherit',
-            cursor: 'pointer',
-            fontSize: 12,
-          }}
           title="点击复制错误信息"
         >
           📋复制
-        </button>
+        </Button>
       </span>
     ),
     key,

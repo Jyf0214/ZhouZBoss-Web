@@ -125,8 +125,14 @@ export default function TableOfContents({ content, pageType = 'post' }: TableOfC
     let match: RegExpExecArray | null;
     while ((match = headingRegex.exec(content)) !== null) {
       const level = match[1]!.length;
-      const text = match[2]!.replace(/[`*_~\[\]()]/g, '').trim();
-      const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fff-]/g, '');
+      let text = match[2]!.trim();
+      // 去除 Markdown 链接语法 [visible](url) → visible
+      text = text.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+      // 去除 Markdown 格式字符
+      text = text.replace(/[`*_~\[\]()]/g, '').trim();
+      // 与 MarkdownRenderer slugify 算法保持一致
+      const slugified = text.toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, '-').replace(/(^-|-$)/g, '');
+      const id = slugified || 'heading';
       headings.push({ id, text, level });
     }
     setItems(headings);

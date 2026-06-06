@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
+import Button from '@/components/ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
 
 type SocialConfigData = Record<string, string>;
@@ -58,16 +58,18 @@ export default function SocialConfig({ config, onChange }: SocialConfigProps) {
             placeholder="链接 || 图标 (可选)"
             className="flex-1 h-9 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
           />
-          <button
+          <Button
+            variant="danger"
+            size="sm"
+            iconOnly
+            icon={<Trash2 size={14} />}
             onClick={() => removeEntry(key)}
-            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-          >
-            <Trash2 size={14} />
-          </button>
+            className="shrink-0"
+          />
         </div>
       ))}
 
-      <Button size="small" icon={<Plus size={14} />} onClick={addEntry} className="rounded-lg">
+      <Button size="sm" icon={<Plus size={14} />} onClick={addEntry}>
         添加社交链接
       </Button>
       <p className="text-xs text-zinc-400">格式: 名称: 链接 || 图标 (图标可选，如 fab fa-github)</p>

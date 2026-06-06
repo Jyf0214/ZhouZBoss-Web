@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import ShareModal from './ShareModal';
 
 interface ReadModeShareProps {
@@ -30,14 +31,15 @@ export default function ReadModeShare({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setModalOpen(true)}
-        className="fixed top-24 right-6 z-40 flex items-center justify-center w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg hover:bg-white/20 hover:scale-110 active:scale-95 transition-all duration-200"
+      <Button
+        variant="ghost"
+        rounded="lg"
+        className="fixed top-24 right-6 z-40 w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg hover:bg-white/20 hover:scale-110 active:scale-95"
         title="分享此页面"
+        onClick={() => setModalOpen(true)}
       >
         <Share2 size={20} />
-      </button>
+      </Button>
 
       <ShareModal
         open={modalOpen}

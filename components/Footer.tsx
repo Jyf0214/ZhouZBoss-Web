@@ -168,7 +168,8 @@ function SocialBar({
               <Button
                 key={item.name}
                 variant="primary"
-                className="w-9 h-9 rounded-full flex items-center justify-center p-0"
+                iconOnly
+                rounded="full"
                 title={item.name}
                 onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
               >
@@ -180,10 +181,12 @@ function SocialBar({
       )}
 
       {/* Center avatar / logo */}
-      <button
-        onClick={handleScrollTop}
-        className={`${entries.length > 0 ? 'mx-6' : ''} focus:outline-none`}
+      <Button
+        variant="ghost"
+        rounded="full"
+        className={entries.length > 0 ? 'mx-6' : ''}
         title="回到顶部"
+        onClick={handleScrollTop}
       >
         {avatarUrl ? (
           <img
@@ -196,7 +199,7 @@ function SocialBar({
             <Globe className="w-6 h-6" />
           </div>
         )}
-      </button>
+      </Button>
 
       {/* Right icons */}
       {rightItems.length > 0 && (
@@ -207,7 +210,8 @@ function SocialBar({
               <Button
                 key={item.name}
                 variant="primary"
-                className="w-9 h-9 rounded-full flex items-center justify-center p-0"
+                iconOnly
+                rounded="full"
                 title={item.name}
                 onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
               >

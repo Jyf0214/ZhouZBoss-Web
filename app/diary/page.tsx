@@ -211,33 +211,33 @@ export default function DiaryPage() {
         />
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-          <button
+          <Button
+            variant={showSettings ? 'primary' : 'secondary'}
+            size="md"
             onClick={() => setShowSettings(!showSettings)}
-            className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border rounded-xl transition-colors font-medium text-sm ${
-              showSettings
-                ? 'border-zinc-900 bg-zinc-900 text-white'
-                : 'border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-            }`}
+            icon={<Settings size={14} />}
             title="日记设置"
           >
-            <Settings size={14} className="sm:size-4" />
             <span className="hidden sm:inline">设置</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => router.push('/diary/drafts')}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-zinc-200 text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors font-medium text-sm"
+            icon={<FileText size={14} />}
           >
-            <FileText size={14} className="sm:size-4" />
             <span className="hidden sm:inline">草稿箱</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => setShowSecurityInfo(true)}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-zinc-200 text-amber-600 rounded-xl hover:bg-amber-50 transition-colors font-medium text-sm"
+            icon={<ShieldAlert size={14} />}
+            className="text-amber-600 hover:bg-amber-50"
             title="安全与隐私说明"
           >
-            <ShieldAlert size={14} className="sm:size-4" />
             <span className="hidden sm:inline">安全与隐私</span>
-          </button>
+          </Button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
@@ -269,15 +269,20 @@ export default function DiaryPage() {
 
         {groups.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            <button onClick={() => setActiveGroup(null)}
-              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
-                activeGroup === null ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-400'
-              }`}>全部</button>
+            <Button
+              variant={activeGroup === null ? 'primary' : 'ghost'}
+              size="sm"
+              rounded="full"
+              onClick={() => setActiveGroup(null)}
+            >全部</Button>
             {groups.map((g) => (
-              <button key={g} onClick={() => setActiveGroup(g)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  activeGroup === g ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-400'
-                }`}>{g}</button>
+              <Button
+                key={g}
+                variant={activeGroup === g ? 'primary' : 'ghost'}
+                size="sm"
+                rounded="full"
+                onClick={() => setActiveGroup(g)}
+              >{g}</Button>
             ))}
           </div>
         )}
@@ -311,10 +316,10 @@ export default function DiaryPage() {
             action={
               <Button
                 variant="primary"
-                size="md"
+                size="lg"
                 onClick={() => router.push('/diary/new')}
+                icon={<Plus size={18} />}
               >
-                <Plus size={18} />
                 写下第一篇日记
               </Button>
             }
@@ -348,36 +353,44 @@ export default function DiaryPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        iconOnly
+                        rounded="sm"
                         onClick={() => handleTogglePin(d.id)}
                         disabled={pinning === d.id}
-                        className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                        loading={pinning === d.id}
+                        title={d.pinned ? '取消置顶' : '置顶'}
+                        className={`${
                           d.pinned
                             ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'
                             : 'text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100'
-                        } disabled:opacity-50`}
-                        title={d.pinned ? '取消置顶' : '置顶'}
-                      >
-                        {pinning === d.id
-                          ? <Loader2 size={14} className="sm:size-4 animate-spin" />
-                          : <Pin size={14} className={`sm:size-4 ${d.pinned ? 'fill-amber-500' : ''}`} />
-                        }
-                      </button>
-                      <button
+                        }`}
+                        icon={<Pin size={14} className={d.pinned ? 'fill-amber-500' : ''} />}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        iconOnly
+                        rounded="sm"
                         onClick={() => router.push(`/diary/${d.id}/edit`)}
-                        className="p-1.5 sm:p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
                         title="编辑"
-                      >
-                        <Edit3 size={14} className="sm:size-4" />
-                      </button>
-                      <button
+                        className="text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
+                        icon={<Edit3 size={14} />}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        iconOnly
+                        rounded="sm"
                         onClick={() => handleDelete(d.id)}
                         disabled={deleting === d.id}
-                        className="p-1.5 sm:p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                        loading={deleting === d.id}
                         title="删除"
-                      >
-                        {deleting === d.id ? <Loader2 size={14} className="sm:size-4 animate-spin" /> : <Trash2 size={14} className="sm:size-4" />}
-                      </button>
+                        className="text-zinc-400 hover:text-red-500 hover:bg-red-50"
+                        icon={<Trash2 size={14} />}
+                      />
                       <div className="p-1.5 sm:p-2 text-zinc-400" title={viewingId === d.id ? '收起' : '展开'}>
                         {viewingId === d.id ? <X size={14} className="sm:size-4" /> : <Eye size={14} className="sm:size-4" />}
                       </div>
@@ -417,12 +430,14 @@ export default function DiaryPage() {
             className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
               onClick={() => setShowSecurityInfo(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900 transition-colors"
-            >
-              <X size={20} />
-            </button>
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900"
+              icon={<X size={20} />}
+            />
             <h2 className="text-lg font-bold text-zinc-900 mb-4">安全与隐私</h2>
             <ul className="space-y-3 text-sm text-zinc-600">
               <li className="flex items-start gap-2">

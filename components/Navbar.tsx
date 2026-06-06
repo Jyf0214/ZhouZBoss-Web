@@ -165,14 +165,14 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-3">
             {/* 搜索按钮 */}
-            <button
+            <Button
               onClick={() => setSearchOpen(true)}
-              type="button"
-              className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition-colors"
+              variant="ghost"
+              size="sm"
+              iconOnly
+              icon={<Search size={18} />}
               aria-label="搜索"
-            >
-              <Search size={18} />
-            </button>
+            />
             <NavClock travelling={navConfig?.travelling} clock={navConfig?.clock} time={time} />
             <NavAuthSection user={user} allowRegistration={allowRegistration} clerkAvailable={clerkAvailable} t={t} />
           </div>

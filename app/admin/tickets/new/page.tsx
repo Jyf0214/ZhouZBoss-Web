@@ -206,9 +206,7 @@ export default function NewTicketTemplatePage() {
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-medium">{t('tickets.fieldName')} {index + 1}</span>
               {fields.length > 1 && (
-                <button onClick={() => removeField(index)} className="text-red-500">
-                  <Trash2 size={16} />
-                </button>
+                <Button variant="ghost" size="sm" iconOnly icon={<Trash2 size={16}/>} className="text-red-500" onClick={() => removeField(index)} />
               )}
             </div>
             <div className="grid grid-cols-2 gap-3 mb-3">
@@ -294,7 +292,7 @@ export default function NewTicketTemplatePage() {
             {labels.map(l => (
               <Tag key={l} size="sm" className="flex items-center gap-1">
                 {l}
-                <button onClick={() => removeLabel(l)} className="text-red-500">×</button>
+                <Button variant="ghost" size="sm" iconOnly icon={<Trash2 size={16}/>} className="text-red-500" onClick={() => removeLabel(l)} />
               </Tag>
             ))}
           </div>
@@ -316,7 +314,7 @@ export default function NewTicketTemplatePage() {
             {assignees.map(a => (
               <Tag key={a} size="sm" className="flex items-center gap-1">
                 {a}
-                <button onClick={() => removeAssignee(a)} className="text-red-500">×</button>
+                <Button variant="ghost" size="sm" iconOnly icon={<Trash2 size={16}/>} className="text-red-500" onClick={() => removeAssignee(a)} />
               </Tag>
             ))}
           </div>

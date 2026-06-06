@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Button } from 'antd';
+import { Button } from '@/components/ui/Button';
 import { Settings, Save } from 'lucide-react';
 import GitHubStatus from '@/components/ui/GitHubStatus';
 import ConfigFormBody from './config-form-body';
@@ -59,12 +59,15 @@ function SaveButton({
   return (
     <div className="fixed bottom-8 right-8 z-50">
       <Button
+        variant="primary"
+        rounded="full"
+        size="lg"
+        iconOnly
+        icon={<Save size={18} />}
         onClick={onSave}
         loading={saving}
-        icon={<Save size={18} />}
-        type="primary"
-        className="!w-12 !h-12 !rounded-full bg-zinc-900 hover:!bg-zinc-800 shadow-lg !border-0 flex items-center justify-center"
         disabled={!githubConfigured || remoteFetchFailed}
+        className="shadow-lg"
       />
     </div>
   );

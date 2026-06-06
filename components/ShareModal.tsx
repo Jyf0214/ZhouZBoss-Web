@@ -230,7 +230,7 @@ export default function ShareModal({
             {/* 顶部：标题 + 关闭 */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-zinc-100">
               <h2 className="text-lg font-bold text-zinc-900">分享</h2>
-              <Button variant="ghost" size="sm" onClick={onClose} className="w-8 h-8 rounded-lg">
+              <Button variant="ghost" size="sm" iconOnly onClick={onClose}>
                 <X size={18} />
               </Button>
             </div>

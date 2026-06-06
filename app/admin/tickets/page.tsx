@@ -5,7 +5,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
 import { Plus, Trash2, Edit2, FileText, X, Save, Loader2 } from 'lucide-react';
-import { Button as AntButton, Modal, message } from 'antd';
+import { Modal, message } from 'antd';
+import { Button } from '@/components/ui/Button';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
@@ -180,9 +181,9 @@ const handleDelete = async (id: string) => {
           <h1 className="text-2xl font-bold text-zinc-900">{t('tickets.management')}</h1>
           <p className="text-sm text-zinc-400 mt-1">{t('tickets.subtitle')}</p>
         </div>
-        <AntButton type="primary" icon={<Plus size={14} />} onClick={handleCreate} className="bg-zinc-900 rounded-xl">
+        <Button variant="primary" rounded="md" icon={<Plus size={14} />} onClick={handleCreate}>
           {t('tickets.createTemplate')}
-        </AntButton>
+        </Button>
       </div>
 
       {/* 模板列表 */}
@@ -203,8 +204,8 @@ const handleDelete = async (id: string) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <AntButton size="small" icon={<Edit2 size={13} />} onClick={() => handleEdit(template)} className="rounded-lg">{t('tickets.edit')}</AntButton>
-                  <AntButton size="small" danger icon={deleting === template.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} onClick={() => handleDelete(template.id)} disabled={deleting === template.id} className="rounded-lg">{t('tickets.delete')}</AntButton>
+                  <Button size="sm" rounded="sm" icon={<Edit2 size={13} />} onClick={() => handleEdit(template)}>{t('tickets.edit')}</Button>
+                  <Button size="sm" variant="danger" rounded="sm" icon={deleting === template.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} onClick={() => handleDelete(template.id)} disabled={deleting === template.id}>{t('tickets.delete')}</Button>
                 </div>
               </div>
             ))}
@@ -213,9 +214,9 @@ const handleDelete = async (id: string) => {
           <div className="py-16 text-center">
             <FileText size={48} className="text-zinc-200 mx-auto mb-4" />
             <p className="text-zinc-400 mb-4">{t('tickets.noTemplates')}</p>
-            <AntButton type="primary" icon={<Plus size={14} />} onClick={handleCreate} className="bg-zinc-900 rounded-xl">
+            <Button variant="primary" rounded="md" icon={<Plus size={14} />} onClick={handleCreate}>
               {t('tickets.createFirst')}
-            </AntButton>
+            </Button>
           </div>
         )}
       </div>
@@ -254,7 +255,7 @@ const handleDelete = async (id: string) => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-medium">{t('tickets.formFields')}</label>
-              <AntButton size="small" icon={<Plus size={12} />} onClick={addField} className="rounded-lg">{t('tickets.addField')}</AntButton>
+              <Button size="sm" rounded="sm" icon={<Plus size={12} />} onClick={addField}>{t('tickets.addField')}</Button>
             </div>
             {formData.fields.map((field, index) => (
               <div key={index} className="flex items-center gap-2 mb-2">
@@ -280,9 +281,7 @@ const handleDelete = async (id: string) => {
                   {t('tickets.required')}
                 </label>
                 {formData.fields.length > 1 && (
-                  <button onClick={() => removeField(index)} className="p-1 text-red-400 hover:text-red-500">
-                    <X size={14} />
-                  </button>
+                  <Button variant="danger" size="sm" iconOnly icon={<X size={14}/>} onClick={() => removeField(index)} />
                 )}
               </div>
             ))}

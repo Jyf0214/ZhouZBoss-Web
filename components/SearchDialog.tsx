@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, Loader2, FileText, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Tag';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -105,14 +106,15 @@ function SearchInitial({ onTagClick }: { onTagClick: (tag: string) => void }) {
       </p>
       <div className="flex flex-wrap justify-center gap-2">
         {popularTags.map((tag) => (
-          <button
+          <Button
             key={tag}
+            variant="ghost"
+            size="sm"
+            rounded="full"
             onClick={() => onTagClick(tag)}
-            type="button"
-            className="px-3.5 py-1.5 text-sm rounded-full bg-zinc-50 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
           >
             {tag}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -316,14 +318,16 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                   className="text-zinc-400 animate-spin shrink-0"
                 />
               )}
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                rounded="sm"
+                iconOnly
                 onClick={onClose}
-                type="button"
-                className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition-colors shrink-0"
                 aria-label="关闭搜索"
               >
                 <X size={18} />
-              </button>
+              </Button>
             </div>
 
             {/* ── ESC 快捷键提示 ── */}

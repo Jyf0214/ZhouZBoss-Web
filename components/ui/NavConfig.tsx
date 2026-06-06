@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
+import Button from '@/components/ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
 import FormField from './FormField';
 import ToggleField from './ToggleField';
@@ -88,7 +88,7 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
       <div className="border-t border-zinc-100 pt-4">
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-medium">导航菜单</label>
-          <Button size="small" icon={<Plus size={14} />} onClick={addGroup} className="rounded-lg">
+          <Button size="sm" icon={<Plus size={14} />} onClick={addGroup}>
             添加分组
           </Button>
         </div>
@@ -110,13 +110,15 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
                   placeholder="例如：网页、项目"
                 />
               </div>
-              <button
+              <Button
+                variant="danger"
+                size="sm"
+                iconOnly
+                icon={<Trash2 size={16} />}
                 onClick={() => removeGroup(gi)}
-                className="mt-6 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 title="删除分组"
-              >
-                <Trash2 size={16} />
-              </button>
+                className="mt-6"
+              />
             </div>
 
             <div className="space-y-2">
@@ -145,16 +147,18 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
                       className="h-9 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
                     />
                   </div>
-                  <button
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    iconOnly
+                    icon={<Trash2 size={14} />}
                     onClick={() => removeItem(gi, ii)}
-                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
                     title="删除菜单项"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                    className="shrink-0"
+                  />
                 </div>
               ))}
-              <Button size="small" type="dashed" icon={<Plus size={12} />} onClick={() => addItem(gi)} className="w-full rounded-lg text-xs">
+              <Button variant="secondary" size="sm" block icon={<Plus size={12} />} onClick={() => addItem(gi)} rounded="sm">
                 添加菜单项
               </Button>
             </div>

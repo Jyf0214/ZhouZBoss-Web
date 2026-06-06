@@ -121,12 +121,13 @@ function SidebarContent({
           </div>
         </Link>
         {showCloseButton && onClose && (
-          <button
+          <Button
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-zinc-100 transition-colors text-zinc-400 hover:text-zinc-600"
-          >
-            <X size={18} />
-          </button>
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<X size={18} />}
+          />
         )}
       </div>
 
@@ -146,13 +147,14 @@ function SidebarContent({
               {user?.role === 'sudo' ? t('user.sudo') : user?.role === 'admin' ? t('user.admin') : t('user.user')}
             </div>
           </div>
-          <button
+          <Button
             onClick={onLogout}
-            className="p-2.5 rounded-xl hover:bg-red-50 transition-all text-zinc-300 hover:text-red-500 shrink-0"
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<LogOut size={18} />}
             title={t('auth.logout')}
-          >
-            <LogOut size={18} />
-          </button>
+          />
         </div>
       </div>
 

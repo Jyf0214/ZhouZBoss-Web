@@ -401,14 +401,15 @@ export default function ShareButtons({
               onWeChat={handleWeChat}
             />
           ))}
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
             onClick={() => setModalOpen(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700 transition-all hover:scale-110 active:scale-95"
             title="更多分享方式"
           >
             <MoreHorizontal size={16} />
-          </button>
+          </Button>
         </div>
         <Toast message={toastMessage} visible={toastVisible} />
         <ShareModal
@@ -444,23 +445,25 @@ export default function ShareButtons({
             />
           ))}
           {showMore && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
               onClick={() => setModalOpen(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700 transition-all hover:scale-110 active:scale-95"
               title="更多分享方式"
             >
               <MoreHorizontal size={20} />
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="md"
+            iconOnly
             onClick={handleCopyLink}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-zinc-800 text-white hover:bg-zinc-700 transition-all hover:scale-110 active:scale-95"
             title="复制链接"
           >
             <Link2 size={18} />
-          </button>
+          </Button>
         </div>
       </div>
       <Toast message={toastMessage} visible={toastVisible} />

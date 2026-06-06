@@ -235,10 +235,11 @@ function useArticleFetcher(username: string, article: string) {
         const res = await fetch(`/api/u/${username}/${article}`);
         if (res.ok) {
           const data = await res.json();
-          setArticleData(data.article);
-          setUserData(data.user);
-          if (data.rawContent) {
-            setRawContent(data.rawContent);
+          const { user, rawContent: raw, ...articleFields } = data;
+          setArticleData(articleFields as ArticleData);
+          setUserData(user);
+          if (raw) {
+            setRawContent(raw);
           }
         } else {
           showError('文章加载失败');
@@ -400,7 +401,7 @@ function ArticlePageBody({
         </article>
 
         <CopyInterceptor articleRef={articleRef} authorName={articleData.authorName} />
-        <TableOfContents content={articleData.content} />
+        <TableOfContents content={rawContent || articleData.content} />
       </PageContainer>
       <Footer />
     </div>

@@ -75,14 +75,7 @@ export default function DiaryDraftsPage() {
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <div className="border-b border-zinc-100 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <button
-            onClick={() => router.push('/diary')}
-            className="inline-flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base text-zinc-400 hover:text-zinc-900 transition-colors"
-          >
-            <ArrowLeft size={16} className="sm:size-[18]" />
-            <span className="hidden sm:inline">返回日记列表</span>
-            <span className="sm:hidden">返回</span>
-          </button>
+          <Button onClick={() => router.push('/diary')} variant="ghost" size="sm" icon={<ArrowLeft size={16}/>}>返回</Button>
           <h1 className="text-base sm:text-lg font-bold text-zinc-900">草稿箱</h1>
           <div className="w-16 sm:w-20" />
         </div>
@@ -97,10 +90,7 @@ export default function DiaryDraftsPage() {
           <EmptyState
             description="暂无草稿"
             action={
-              <Button onClick={() => router.push('/diary/new')} variant="primary" size="lg">
-                <FileText size={16} />
-                写新日记
-              </Button>
+              <Button onClick={() => router.push('/diary/new')} variant="primary" size="md" icon={<FileText size={16}/>}>写新日记</Button>
             }
           />
         ) : (
@@ -126,19 +116,18 @@ export default function DiaryDraftsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Button onClick={() => handleContinue(d)} variant="ghost" size="sm">
-                      继续
-                    </Button>
+                    <Button onClick={() => handleContinue(d)} variant="secondary" size="sm">继续</Button>
                     <Button
                       onClick={() => handleDelete(d.id)}
                       disabled={deleting === d.id}
-                      variant="danger"
+                      variant="ghost"
                       size="sm"
+                      iconOnly
+                      icon={<Trash2 size={14} />}
                       loading={deleting === d.id}
+                      className="hover:text-red-500 hover:bg-red-50"
                       title="删除草稿"
-                    >
-                      <Trash2 size={14} />
-                    </Button>
+                    />
                   </div>
                 </div>
               </div>
