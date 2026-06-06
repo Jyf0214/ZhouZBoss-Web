@@ -578,7 +578,13 @@
     "deleteFailed": "删除失败",
     "createFailed": "创建失败",
     "fileTooLarge": "文件超过 50MB 限制",
-    "refresh": "刷新"
+    "refresh": "刷新",
+    "passwordLabel": "访问密码",
+    "passwordHint": "设置后,访问此文件夹需在 URL 加 ?pwd=xxx(留空清除)",
+    "setPassword": "设置密码",
+    "hasPassword": "已设置密码",
+    "noPassword": "无密码",
+    "passwordPlaceholder": "输入新密码"
   },
   "page": {
     "title": "自定义页面",
@@ -588,6 +594,12 @@
     "notConfiguredDesc": "请在 .env.local 中设置 WEBDAV_URL、WEBDAV_USER、WEBDAV_PASS 后重启服务,并在 pages/ 目录下放置 HTML 文件。",
     "notFound": "页面不存在",
     "loadError": "页面加载失败",
-    "loading": "加载中"
+    "loading": "加载中",
+    "passwordRequired": "此页面需要密码",
+    "passwordPlaceholder": "请输入密码",
+    "passwordSubmit": "进入",
+    "wrongPassword": "密码错误,请重试",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码"
   }
 }

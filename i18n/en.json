@@ -578,7 +578,13 @@
     "deleteFailed": "Delete failed",
     "createFailed": "Create failed",
     "fileTooLarge": "File exceeds 50MB limit",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "passwordLabel": "Access Password",
+    "passwordHint": "Once set, accessing this folder requires ?pwd=xxx in the URL (leave empty to clear)",
+    "setPassword": "Set Password",
+    "hasPassword": "Password Set",
+    "noPassword": "No Password",
+    "passwordPlaceholder": "Enter new password"
   },
   "page": {
     "title": "Custom Page",
@@ -588,6 +594,12 @@
     "notConfiguredDesc": "Please set WEBDAV_URL, WEBDAV_USER, WEBDAV_PASS in .env.local and restart, then place HTML files in pages/.",
     "notFound": "Page not found",
     "loadError": "Failed to load page",
-    "loading": "Loading"
+    "loading": "Loading",
+    "passwordRequired": "This page requires a password",
+    "passwordPlaceholder": "Please enter the password",
+    "passwordSubmit": "Enter",
+    "wrongPassword": "Wrong password, please try again",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   }
 }
