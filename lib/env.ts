@@ -75,3 +75,15 @@ export function isCronEnabled(): boolean {
   const config = getEnvConfig();
   return !!config.cronSecret;
 }
+
+/**
+ * 检测 WebDAV 存储池是否已配置
+ * - 全部三个环境变量都存在才返回 true
+ * - 部分缺失视为未配置(失败安全)
+ */
+export function isWebDavConfigured(): boolean {
+  const url = process.env.WEBDAV_URL;
+  const user = process.env.WEBDAV_USER;
+  const pass = process.env.WEBDAV_PASS;
+  return !!(url && user && pass);
+}

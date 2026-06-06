@@ -91,3 +91,16 @@ model Request {
   @@index([status])
   @@index([postSlug])
 }
+
+// 存储池文件夹元数据(WebDAV 顶层文件夹可见性控制)
+// 注意:此表只存文件夹级别的元数据,不存文件内容/文件名清单
+model StorageFolder {
+  path        String   @id          // 文件夹相对路径,如 "covers" 或 "covers/2024"(无前导斜杠,无尾斜杠,顶层为空字符串表示根)
+  public      Boolean  @default(false) @map("is_public")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("storage_folders")
+  @@index([public])
+}

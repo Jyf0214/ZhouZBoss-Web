@@ -48,7 +48,8 @@
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
     "svix": "^1.92.2",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "webdav": "^5.10.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
