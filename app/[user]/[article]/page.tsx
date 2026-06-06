@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { Avatar } from '@/components/Avatar';
-import { ArrowLeft, Calendar, Tag, Code, Eye } from 'lucide-react';
+import { ArrowLeft, Calendar, Tag as TagIcon, Code, Eye } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { GlobalLoading } from '@/components/Loading';
@@ -23,6 +23,8 @@ import { useConfig, type FrontendConfig } from '@/hooks/use-config';
 import { useMainTone } from '@/hooks/use-main-tone';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Button } from '@/components/ui/Button';
+import { Tag } from '@/components/ui/Tag';
 
 interface ArticleData {
   id: string;
@@ -56,10 +58,10 @@ function TagsSection({ tags, show }: { tags?: string[]; show: boolean }) {
   return (
     <div className="flex flex-wrap gap-2 mb-8">
       {tags.map((tag: string) => (
-        <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-zinc-50 text-zinc-500 text-xs font-bold uppercase tracking-widest rounded-full border border-zinc-100">
-          <Tag size={12} />
+        <Tag key={tag} variant="light" size="md" className="flex items-center gap-1.5">
+          <TagIcon size={12} />
           {tag}
-        </span>
+        </Tag>
       ))}
     </div>
   );
@@ -103,9 +105,9 @@ function ArticleLabelBadge({ postMeta, category }: {
   return (
     <div className="flex items-center gap-3 mb-4">
       {postMeta?.label && (
-        <span className="inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-zinc-900 text-white">
+        <Tag variant="dark" size="sm">
           文章
-        </span>
+        </Tag>
       )}
       {postMeta?.unread && (
         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-red-500">
@@ -114,9 +116,9 @@ function ArticleLabelBadge({ postMeta, category }: {
         </span>
       )}
       {postMeta?.categories && category && (
-        <span className="inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
+        <Tag variant="light" size="sm">
           {category}
-        </span>
+        </Tag>
       )}
     </div>
   );
@@ -439,8 +441,8 @@ function UserArticleContent() {
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <h1 className="text-4xl font-display font-black text-zinc-900 mb-4">{t('error.404')}</h1>
           <p className="text-zinc-500 mb-8">{t('error.notFound')}</p>
-          <Link href="/" className="bg-zinc-900 text-white px-8 py-3 rounded-xl hover:bg-zinc-800 transition-colors">
-            {t('common.back')}
+          <Link href="/">
+            <Button variant="primary" size="lg">{t('common.back')}</Button>
           </Link>
         </div>
       </div>

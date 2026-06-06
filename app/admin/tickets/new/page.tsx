@@ -5,9 +5,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
 import { Plus, Trash2, Eye, Code } from 'lucide-react';
-import { Button, message } from 'antd';
+import { message } from 'antd';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Tag } from '@/components/ui/Tag';
 
 const FIELD_TYPES = [
   { value: 'input', labelKey: 'tickets.typeText' },
@@ -166,32 +169,32 @@ export default function NewTicketTemplatePage() {
         <h2 className="text-base font-bold text-zinc-900 mb-4">{t('tickets.basicInfo')}</h2>
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">{t('tickets.templateName')}</label>
-          <input
+          <Input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder={t('tickets.placeholderName')}
-            className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
+            className="w-full"
           />
         </div>
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">{t('tickets.templateDescription')}</label>
-          <input
+          <Input
             type="text"
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder={t('tickets.placeholderDesc')}
-            className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
+            className="w-full"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">{t('tickets.titleFormat')}</label>
-          <input
+          <Input
             type="text"
             value={titleFormat}
             onChange={e => setTitleFormat(e.target.value)}
             placeholder="[Bug] "
-            className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
+            className="w-full"
           />
         </div>
       </div>
@@ -211,7 +214,7 @@ export default function NewTicketTemplatePage() {
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="block text-xs mb-1">{t('tickets.fieldName')}</label>
-                <input
+                <Input
                   type="text"
                   value={field.name}
                   onChange={e => updateField(index, 'name', e.target.value)}
@@ -221,7 +224,7 @@ export default function NewTicketTemplatePage() {
               </div>
               <div>
                 <label className="block text-xs mb-1">{t('tickets.inputLabel')}</label>
-                <input
+                <Input
                   type="text"
                   value={field.label}
                   onChange={e => updateField(index, 'label', e.target.value)}
@@ -267,7 +270,7 @@ export default function NewTicketTemplatePage() {
             )}
           </div>
         ))}
-        <Button onClick={addField} icon={<Plus size={14} />} className="rounded-xl">
+        <Button onClick={addField} icon={<Plus size={14} />} variant="primary" size="sm">
           {t('tickets.addField')}
         </Button>
       </div>
@@ -277,7 +280,7 @@ export default function NewTicketTemplatePage() {
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">{t('tickets.labels')}</label>
           <div className="flex gap-2 mb-2">
-            <input
+            <Input
               type="text"
               value={labelInput}
               onChange={e => setLabelInput(e.target.value)}
@@ -285,21 +288,21 @@ export default function NewTicketTemplatePage() {
               placeholder={t('tickets.enterLabel')}
               className="flex-1 h-9 px-3 border border-zinc-200 rounded-lg text-sm"
             />
-            <Button onClick={addLabel} size="small">{t('tickets.add')}</Button>
+            <Button onClick={addLabel} size="sm">{t('tickets.add')}</Button>
           </div>
           <div className="flex flex-wrap gap-2">
             {labels.map(l => (
-              <span key={l} className="px-2 py-1 bg-zinc-100 rounded-lg text-xs flex items-center gap-1">
+              <Tag key={l} size="sm" className="flex items-center gap-1">
                 {l}
                 <button onClick={() => removeLabel(l)} className="text-red-500">×</button>
-              </span>
+              </Tag>
             ))}
           </div>
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">{t('tickets.assignees')}</label>
           <div className="flex gap-2 mb-2">
-            <input
+            <Input
               type="text"
               value={assigneeInput}
               onChange={e => setAssigneeInput(e.target.value)}
@@ -307,14 +310,14 @@ export default function NewTicketTemplatePage() {
               placeholder={t('tickets.username')}
               className="flex-1 h-9 px-3 border border-zinc-200 rounded-lg text-sm"
             />
-            <Button onClick={addAssignee} size="small">{t('tickets.add')}</Button>
+            <Button onClick={addAssignee} size="sm">{t('tickets.add')}</Button>
           </div>
           <div className="flex flex-wrap gap-2">
             {assignees.map(a => (
-              <span key={a} className="px-2 py-1 bg-zinc-100 rounded-lg text-xs flex items-center gap-1">
+              <Tag key={a} size="sm" className="flex items-center gap-1">
                 {a}
                 <button onClick={() => removeAssignee(a)} className="text-red-500">×</button>
-              </span>
+              </Tag>
             ))}
           </div>
         </div>
@@ -346,12 +349,11 @@ export default function NewTicketTemplatePage() {
       </div>
 
       <div className="flex justify-end gap-3">
-        <Button onClick={() => router.back()} className="rounded-xl">{t('tickets.cancel')}</Button>
+        <Button onClick={() => router.back()} variant="default">{t('tickets.cancel')}</Button>
         <Button
-          type="primary"
+          variant="primary"
           onClick={handleSave}
           loading={saving}
-          className="bg-zinc-900 hover:bg-zinc-800 rounded-xl"
         >
           {t('tickets.createTemplate')}
         </Button>

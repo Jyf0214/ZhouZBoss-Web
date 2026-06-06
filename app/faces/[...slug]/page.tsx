@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Tag } from '@/components/ui/Tag';
 
 function LoadingView() {
   return (
@@ -80,12 +81,9 @@ function FaceDetailHeader({ file, isSudo, rawContent, showRaw, setShowRaw }: {
       {file.meta.tags && file.meta.tags.length > 0 && (
         <div className="flex flex-wrap justify-center gap-2 mt-4">
           {file.meta.tags.map((tag: string) => (
-            <span
-              key={tag}
-              className="px-3 py-1 bg-zinc-50 text-zinc-500 text-xs font-bold uppercase tracking-widest rounded-full border border-zinc-100"
-            >
+            <Tag key={tag} variant="light" size="md">
               {tag}
-            </span>
+            </Tag>
           ))}
         </div>
       )}

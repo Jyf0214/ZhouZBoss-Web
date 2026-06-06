@@ -24,6 +24,7 @@ import {
 import { useI18n } from '@/hooks/use-i18n';
 import LanguageSwitcher from '@/components/LanguageSwitcher/index';
 import { Avatar } from '@/components/Avatar';
+import { Button } from '@/components/ui/Button';
 
 type SidebarVariant = 'user' | 'admin';
 
@@ -260,12 +261,12 @@ function Sidebar({ variant = 'user' }: { variant?: SidebarVariant }) {
     <>
       {/* 移动端菜单按钮 */}
       {!isOpen && (
-        <button
+        <Button variant="primary"
           onClick={() => setIsOpen(true)}
-          className="md:hidden fixed top-6 left-6 z-[9999] bg-zinc-900 text-white rounded-2xl p-3.5 shadow-2xl shadow-zinc-900/20 hover:scale-110 active:scale-95 transition-all"
+          className="md:hidden fixed top-6 left-6 z-[9999] rounded-2xl p-3.5 shadow-2xl shadow-zinc-900/20 hover:scale-110 active:scale-95"
         >
           <Menu size={22} />
-        </button>
+        </Button>
       )}
 
       {/* PC 端侧边栏 */}

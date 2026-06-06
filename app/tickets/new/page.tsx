@@ -9,6 +9,7 @@ import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { useI18n } from '@/hooks/use-i18n';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Tag } from '@/components/ui/Tag';
 
 interface TicketField {
   name: string;
@@ -108,7 +109,7 @@ export default function NewTicketPage() {
               {template.labels.length > 0 && (
                 <div className="mt-2 flex gap-1">
                   {template.labels.map(label => (
-                    <span key={label} className="inline-block px-2 py-0.5 bg-zinc-100 rounded text-xs">{label}</span>
+                    <Tag key={label} variant="light" size="sm">{label}</Tag>
                   ))}
                 </div>
               )}

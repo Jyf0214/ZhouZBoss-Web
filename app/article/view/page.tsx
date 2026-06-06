@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
-import { ArrowLeft, User, Calendar, Tag } from 'lucide-react';
+import { ArrowLeft, User, Calendar, Tag as TagIcon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { GlobalLoading } from '@/components/Loading';
@@ -12,6 +12,8 @@ import Footer from '@/components/Footer';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Button } from '@/components/ui/Button';
+import { Tag } from '@/components/ui/Tag';
 
 interface ArticleData {
   title?: string;
@@ -61,9 +63,9 @@ function ArticleHeaderSection({ articleData, userParam }: { articleData: Article
     <header className="mb-12">
       <div className="flex flex-wrap gap-2 mb-8">
         {articleData.tags?.map((tag: string) => (
-          <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-zinc-50 text-zinc-500 text-xs font-bold uppercase tracking-widest rounded-full border border-zinc-100">
-            <Tag size={12} /> {tag}
-          </span>
+          <Tag key={tag} variant="light" size="md" className="flex items-center gap-1.5">
+            <TagIcon size={12} /> {tag}
+          </Tag>
         ))}
       </div>
       <h1 className="text-4xl md:text-7xl font-display font-black tracking-tight text-zinc-900 mb-10 leading-[1.05]">
@@ -81,8 +83,8 @@ function NotFoundView() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
         <h1 className="text-4xl font-display font-black text-zinc-900 mb-4">404</h1>
         <p className="text-zinc-500 mb-8">Article not found in this kernel.</p>
-        <Link href="/" className="bg-zinc-900 text-white px-8 py-3 rounded-xl">
-          Back Home
+        <Link href="/">
+          <Button variant="primary" size="lg">Back Home</Button>
         </Link>
       </div>
     </div>

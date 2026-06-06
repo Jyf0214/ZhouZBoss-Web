@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
+import { Tag } from '@/components/ui/Tag';
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
@@ -123,9 +124,9 @@ export default async function PostDetailPage({ params }: PageProps) {
             {file.meta.tags && file.meta.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-5">
                 {file.meta.tags.map((tag) => (
-                  <span key={tag} className="inline-flex items-center gap-1 px-3 py-1.5 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg">
+                  <Tag key={tag} variant="dark" size="md">
                     {tag}
-                  </span>
+                  </Tag>
                 ))}
               </div>
             )}

@@ -2,6 +2,7 @@
 
 import { useConfig } from '@/hooks/use-config';
 import { Avatar } from '@/components/Avatar';
+import { Tag } from '@/components/ui/Tag';
 
 interface AuthorCardProps {
   authorName: string;
@@ -34,12 +35,7 @@ export default function AuthorCard({ authorName, authorAvatar, authorUrl }: Auth
           {cfg.skills?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {cfg.skills.map((skill, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 bg-white px-2 py-0.5 rounded-full border border-zinc-100"
-                >
-                  {skill}
-                </span>
+                <Tag key={i} variant="outline" size="sm">{skill}</Tag>
               ))}
             </div>
           )}

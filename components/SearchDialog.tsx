@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, Loader2, FileText, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { Tag } from '@/components/ui/Tag';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -159,12 +160,7 @@ function SearchResultItem({
         {result.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             {result.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500"
-              >
-                {tag}
-              </span>
+              <Tag key={tag} variant="light" size="sm">{tag}</Tag>
             ))}
           </div>
         )}

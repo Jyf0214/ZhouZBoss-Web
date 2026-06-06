@@ -1,6 +1,7 @@
 import { getContentFiles, getContentIndexes } from '@/lib/content';
 import { Navbar } from '@/components/Navbar';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Tag } from '@/components/ui/Tag';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -116,12 +117,9 @@ export default function ArchivesPage() {
                     {post.tags.length > 0 && (
                       <div className="flex gap-1.5 ml-auto shrink-0">
                         {post.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-block px-2 py-0.5 text-xs rounded-full bg-zinc-100 text-zinc-500"
-                          >
+                          <Tag key={tag} variant="light" size="sm">
                             {tag}
-                          </span>
+                          </Tag>
                         ))}
                       </div>
                     )}

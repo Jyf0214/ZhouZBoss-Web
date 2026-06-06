@@ -9,7 +9,8 @@ import {
   BookOpen, ArrowRight, Trash2,
   Globe, PenLine, Sparkles,
 } from 'lucide-react';
-import { Button, Tag } from 'antd';
+import { Button } from 'antd';
+import { Tag } from '@/components/ui/Tag';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import ProCard from '@/components/ui/ProCard';
@@ -298,14 +299,14 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-3 ml-4">
                     <Tag
-                      color={
+                      variant={
                         article.status === 'published'
-                          ? 'success'
+                          ? 'emerald'
                           : article.status === 'pending_deletion'
-                          ? 'error'
+                          ? 'amber'
                           : 'warning'
                       }
-                      className="rounded-lg text-xs"
+                      size="sm"
                     >
                       {article.status === 'published'
                         ? t('article.published')

@@ -7,6 +7,7 @@ import { Card, ColorPicker, Select } from 'antd';
 import { Loader2, CircleDot, Sparkles, Orbit, Waves, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { Color } from 'antd/es/color-picker';
+import { Tag } from '@/components/ui/Tag';
 
 type LoadingPosition = 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
@@ -227,15 +228,15 @@ function SizeComparisonCard({ t }: { t: (key: string) => string }) {
       <div className="grid grid-cols-3 gap-8 py-8">
         <div className="flex flex-col items-center gap-4">
           <GlobalLoading type="spinner" size="small" />
-          <span className="text-xs text-zinc-400 bg-zinc-100 px-2 py-1 rounded">small</span>
+          <Tag variant="light" size="sm">small</Tag>
         </div>
         <div className="flex flex-col items-center gap-4">
           <GlobalLoading type="spinner" size="default" />
-          <span className="text-xs text-zinc-400 bg-zinc-100 px-2 py-1 rounded">default</span>
+          <Tag variant="light" size="sm">default</Tag>
         </div>
         <div className="flex flex-col items-center gap-4">
           <GlobalLoading type="spinner" size="large" />
-          <span className="text-xs text-zinc-400 bg-zinc-100 px-2 py-1 rounded">large</span>
+          <Tag variant="light" size="sm">large</Tag>
         </div>
       </div>
     </Card>

@@ -7,6 +7,7 @@ import { showError } from '@/lib/error';
 import { GlobalLoading } from '@/components/Loading';
 import { X, Clock, FileText, Trash2, Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Button } from '@/components/ui/Button';
 
 interface Request {
   id: string;
@@ -156,22 +157,22 @@ export default function RequestsPage() {
                   <td className="p-4 text-right">
                     {req.status === 'pending' && (
                       <div className="flex items-center justify-end gap-2">
-                        <button
+                        <Button
+                          variant="danger"
+                          size="sm"
                           onClick={() => handleApprove(req)}
                           disabled={operating === req.id}
-                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors disabled:opacity-50"
-                          title="批准删除"
                         >
                           {operating === req.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
                           onClick={() => handleReject(req.id)}
                           disabled={operating === req.id}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
-                          title="拒绝"
                         >
                           {operating === req.id ? <Loader2 size={18} className="animate-spin" /> : <X size={18} />}
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </td>

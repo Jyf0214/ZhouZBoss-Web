@@ -7,6 +7,7 @@ import { Search, Sparkles, Calendar, User, ArrowUpRight, Hash, BookOpen } from '
 import { Input } from 'antd';
 import Image from 'next/image';
 import { useI18n } from '@/hooks/use-i18n';
+import { Tag } from '@/components/ui/Tag';
 
 interface PostItem {
   slug: string;
@@ -184,12 +185,9 @@ function PostListItemBody({
       {post.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           {post.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 bg-zinc-50 px-2.5 py-1 rounded-lg"
-            >
+            <Tag key={tag} variant="light" size="md">
               {tag}
-            </span>
+            </Tag>
           ))}
         </div>
       )}

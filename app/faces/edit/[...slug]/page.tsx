@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
-import { Button, Form, Input, Popconfirm, message, Select } from 'antd';
+import { Button as AntButton, Form, Input, Popconfirm, message, Select } from 'antd';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { showError } from '@/lib/error';
@@ -298,13 +298,13 @@ export default function EditFacePage() {
             {/* 操作按钮 */}
             <div className="flex items-center justify-between pt-6 border-t border-zinc-100">
               <Link href={`/faces${fullPath}`}>
-                <Button
+                <AntButton
                   type="default"
                   icon={<ArrowLeft size={16} />}
                   className="h-10 px-6 rounded-xl"
                 >
                   {t('common.back')}
-                </Button>
+                </AntButton>
               </Link>
 
               <div className="flex gap-3">
@@ -316,7 +316,7 @@ export default function EditFacePage() {
                   cancelText={t('common.cancel')}
                   okButtonProps={{ danger: true }}
                 >
-                  <Button
+                  <AntButton
                     type="default"
                     danger
                     icon={<Trash2 size={16} />}
@@ -324,10 +324,10 @@ export default function EditFacePage() {
                     className="h-10 px-6 rounded-xl"
                   >
                     {t('common.delete')}
-                  </Button>
+                  </AntButton>
                 </Popconfirm>
 
-                <Button
+                <AntButton
                   type="primary"
                   htmlType="submit"
                   icon={<Save size={16} />}
@@ -335,7 +335,7 @@ export default function EditFacePage() {
                   className="h-10 px-8 rounded-xl bg-zinc-900 hover:bg-zinc-800"
                 >
                   {t('common.save')}
-                </Button>
+                </AntButton>
               </div>
             </div>
           </Form>

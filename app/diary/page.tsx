@@ -11,6 +11,7 @@ import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { PageContainer } from '@/components/ui/PageContainer';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { HeroBanner } from '@/components/ui/HeroBanner';
+import { Button } from '@/components/ui/Button';
 
 interface DiaryEntry {
   id: string;
@@ -285,14 +286,16 @@ export default function DiaryPage() {
           <div className="mb-6 sm:mb-8 bg-white rounded-2xl border border-zinc-100 p-4 sm:p-6">
             <h3 className="text-sm font-bold text-zinc-900 mb-3">日记设置</h3>
             <div className="space-y-3">
-              <button
+              <Button
+                variant="primary"
+                size="md"
                 onClick={handleExport}
                 disabled={exportLoading}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm disabled:opacity-50"
+                loading={exportLoading}
+                icon={<Download size={16} />}
               >
-                {exportLoading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
                 导出全部日记（Markdown）
-              </button>
+              </Button>
               <p className="text-xs text-zinc-400">导出的 Markdown 文件包含所有日记的标题、内容、标签和日期。</p>
             </div>
           </div>
@@ -306,13 +309,14 @@ export default function DiaryPage() {
           <EmptyState
             description="暂无日记"
             action={
-              <button
+              <Button
+                variant="primary"
+                size="md"
                 onClick={() => router.push('/diary/new')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm sm:text-base"
               >
                 <Plus size={18} />
                 写下第一篇日记
-              </button>
+              </Button>
             }
           />
         ) : (

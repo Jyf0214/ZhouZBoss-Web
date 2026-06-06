@@ -11,6 +11,8 @@ import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Button } from '@/components/ui/Button';
+import { Tag } from '@/components/ui/Tag';
 import ShareButtons from '@/components/ShareButtons';
 
 /**
@@ -75,8 +77,8 @@ export default function ArticlePage() {
         </div>
         <h1 className="text-3xl font-display font-bold text-zinc-900 mb-4">{t('error.notFound')}</h1>
         <p className="text-zinc-500 mb-8 max-w-md">{t('error.networkError')}</p>
-        <Link href="/" className="bg-zinc-900 text-white px-8 py-3 rounded-xl hover:bg-zinc-800 transition-all">
-          {t('common.back')}
+        <Link href="/">
+          <Button variant="primary" size="lg">{t('common.back')}</Button>
         </Link>
       </div>
     </div>
@@ -96,9 +98,9 @@ export default function ArticlePage() {
             {articleData.tags && articleData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {articleData.tags.map((tag: string) => (
-                  <span key={tag} className="px-3 py-1 bg-zinc-100 text-zinc-600 text-xs font-bold uppercase tracking-wider rounded-full">
+                  <Tag key={tag} variant="light" size="md">
                     {tag}
-                  </span>
+                  </Tag>
                 ))}
               </div>
             )}

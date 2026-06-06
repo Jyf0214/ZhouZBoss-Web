@@ -7,6 +7,7 @@ import { Search, Users, UserCircle } from 'lucide-react';
 import { Input } from 'antd';
 import { useI18n } from '@/hooks/use-i18n';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Tag } from '@/components/ui/Tag';
 
 export interface FaceItem {
   slug: string;
@@ -158,12 +159,9 @@ export function FacesListClient({ faces, groups }: FacesListClientProps) {
                 {face.tags.length > 0 && (
                   <div className="flex flex-wrap justify-center gap-1.5">
                     {face.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 bg-zinc-50 px-2.5 py-1 rounded-full group-hover:bg-zinc-100 transition-colors duration-300"
-                      >
+                      <Tag key={tag} variant="light" size="sm">
                         {tag}
-                      </span>
+                      </Tag>
                     ))}
                   </div>
                 )}

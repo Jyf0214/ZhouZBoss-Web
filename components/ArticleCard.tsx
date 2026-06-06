@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import { Calendar, ArrowUpRight, BookOpen, Clock } from 'lucide-react';
 import { Avatar } from './Avatar';
+import { Tag } from '@/components/ui/Tag';
 
 import { type Article } from '@/types/content';
 
@@ -75,9 +76,7 @@ function TagBadges({ tags }: { tags: string[] }) {
   return (
     <div className="flex flex-wrap gap-2 mb-6">
       {tags.slice(0, 3).map((tag) => (
-        <span key={tag} className="text-[10px] font-black uppercase tracking-widest text-zinc-400 border border-zinc-100 px-2 py-0.5 rounded-full">
-          {tag}
-        </span>
+        <Tag key={tag} variant="outline" size="sm">{tag}</Tag>
       ))}
     </div>
   );
@@ -163,9 +162,7 @@ function ArticleCardFooter({ article, chars, readingTime, wordcount, postMeta }:
       <div className="flex items-center gap-3 text-[10px] font-black">
         <ArticleMetaStats chars={chars} readingTime={readingTime} wordcount={wordcount} />
         {postMeta?.label && (
-          <span className="text-[10px] font-black uppercase tracking-widest text-white bg-zinc-900 px-2 py-0.5 rounded-full">
-            Article
-          </span>
+          <Tag variant="dark" size="sm">Article</Tag>
         )}
         <span className="flex items-center gap-1">
           <Calendar size={12} />

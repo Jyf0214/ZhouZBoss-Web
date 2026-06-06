@@ -3,6 +3,7 @@ import { Navbar } from '@/components/Navbar';
 import Link from 'next/link';
 import { ArrowLeft, Hash } from 'lucide-react';
 import type { Metadata } from 'next';
+import { Tag } from '@/components/ui/Tag';
 
 interface PageProps {
   params: Promise<{ tag: string }>;
@@ -87,13 +88,13 @@ export default async function TagPage({ params }: PageProps) {
                         <Link
                           key={t}
                           href={`/tags/${encodeURIComponent(t)}`}
-                          className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg transition-colors ${
-                            t === tag
-                              ? 'bg-zinc-900 text-white'
-                              : 'text-zinc-500 bg-zinc-50 hover:bg-zinc-200 hover:text-zinc-700'
-                          }`}
                         >
-                          {t}
+                          <Tag
+                            variant={t === tag ? 'dark' : 'light'}
+                            size="md"
+                          >
+                            {t}
+                          </Tag>
                         </Link>
                       ))}
                     </div>

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
-import { Form, Input, Button, Select, message } from 'antd';
+import { Form, Input, Button as AntButton, Select, message } from 'antd';
 import { Save, ArrowLeft, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { generateMarkdown, type FrontMatter } from '@/lib/markdown';
@@ -113,13 +113,13 @@ export default function NewFacePage() {
             <h2 className="text-2xl font-bold text-zinc-900 mb-2">需要管理员权限</h2>
             <p className="text-zinc-400 mb-8">此操作仅限超级管理员执行</p>
             <Link href="/faces">
-              <Button
+              <AntButton
                 type="default"
                 icon={<ArrowLeft size={16} />}
                 className="h-10 px-8 rounded-xl"
               >
                 返回通讯录
-              </Button>
+              </AntButton>
             </Link>
           </div>
         </PageContainer>
@@ -204,16 +204,16 @@ export default function NewFacePage() {
 
             <div className="flex items-center justify-between pt-6 border-t border-zinc-100">
               <Link href="/faces">
-                <Button
+                <AntButton
                   type="default"
                   icon={<ArrowLeft size={16} />}
                   className="h-10 px-6 rounded-xl"
                 >
                   {t('common.back')}
-                </Button>
+                </AntButton>
               </Link>
 
-              <Button
+              <AntButton
                 type="primary"
                 htmlType="submit"
                 icon={<Save size={16} />}
@@ -221,7 +221,7 @@ export default function NewFacePage() {
                 className="h-10 px-8 rounded-xl bg-zinc-900 hover:bg-zinc-800"
               >
                 {t('common.create')}
-              </Button>
+              </AntButton>
             </div>
           </Form>
         </div>

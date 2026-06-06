@@ -6,6 +6,7 @@ import { PageContainer } from '@/components/ui/PageContainer';
 import { HeroBanner } from '@/components/ui/HeroBanner';
 import { BookOpen, Github, Shield, Globe } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
 
 const features = [
   {
@@ -120,11 +121,12 @@ export default function AboutPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/posts"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm"
             >
+            <Button variant="primary" size="lg">
               <BookOpen size={16} />
               浏览文章
-            </Link>
+            </Button>
+          </Link>
           </div>
         </section>
       </PageContainer>

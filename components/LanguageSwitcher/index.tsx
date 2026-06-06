@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Globe } from 'lucide-react';
 import { useI18n } from '@/hooks/use-i18n';
+import { Button } from '@/components/ui/Button';
 
 export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,14 +23,11 @@ export default function LanguageSwitcher() {
 
   return (
     <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 w-full px-3 py-2 bg-transparent border border-zinc-200 rounded-lg cursor-pointer text-[13px] hover:border-zinc-300 transition-colors"
-      >
+      <Button variant="secondary" onClick={() => setIsOpen(!isOpen)} className="w-full justify-start bg-transparent">
         <Globe size={14} className="text-zinc-500" />
         <span>{currentLang.flag}</span>
         <span>{currentLang.name}</span>
-      </button>
+      </Button>
       {isOpen && (
         <>
           <div className="fixed inset-0 z-[999]" onClick={() => setIsOpen(false)} />

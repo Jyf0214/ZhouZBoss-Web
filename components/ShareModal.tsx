@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Link2, Check, Copy } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 /* ============================================================
    平台图标（复用 ShareButtons 中的 SVG）
@@ -229,13 +230,9 @@ export default function ShareModal({
             {/* 顶部：标题 + 关闭 */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-zinc-100">
               <h2 className="text-lg font-bold text-zinc-900">分享</h2>
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700 transition-colors"
-              >
+              <Button variant="ghost" size="sm" onClick={onClose} className="w-8 h-8 rounded-lg">
                 <X size={18} />
-              </button>
+              </Button>
             </div>
 
             {/* 中间：平台网格 */}
@@ -289,13 +286,9 @@ export default function ShareModal({
 
             {/* 底部通知 */}
             {toast && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-sm px-4 py-2 rounded-xl shadow-lg"
-              >
+              <Button variant="primary" className="absolute bottom-20 left-1/2 -translate-x-1/2 shadow-lg">
                 {toast}
-              </motion.div>
+              </Button>
             )}
           </motion.div>
         </motion.div>

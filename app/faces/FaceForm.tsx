@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { Save, Trash2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { Input, Button, Form, Popconfirm, message } from 'antd';
+import { Input, Button as AntButton, Form, Popconfirm, message } from 'antd';
 import { showError } from '@/lib/error';
 import { useI18n } from '@/hooks/use-i18n';
 
@@ -220,13 +220,13 @@ export function FaceForm({ groups, faceData, isEdit = false }: FaceFormProps) {
 
         <div className="flex items-center justify-between pt-6 border-t border-zinc-100">
           <Link href={isEdit && faceData ? `/faces${faceData.slug}` : '/faces'}>
-            <Button
+            <AntButton
               type="default"
               icon={<ArrowLeft size={16} />}
               className="h-12 px-6 rounded-xl"
             >
               {t('common.back')}
-            </Button>
+            </AntButton>
           </Link>
 
           <div className="flex gap-3">
@@ -239,7 +239,7 @@ export function FaceForm({ groups, faceData, isEdit = false }: FaceFormProps) {
                 cancelText={t('common.cancel')}
                 okButtonProps={{ danger: true }}
               >
-                <Button
+                <AntButton
                   type="default"
                   danger
                   icon={<Trash2 size={16} />}
@@ -247,10 +247,10 @@ export function FaceForm({ groups, faceData, isEdit = false }: FaceFormProps) {
                   className="h-12 px-6 rounded-xl"
                 >
                   {t('common.delete')}
-                </Button>
+                </AntButton>
               </Popconfirm>
             )}
-            <Button
+            <AntButton
               type="primary"
               htmlType="submit"
               icon={<Save size={16} />}
@@ -258,7 +258,7 @@ export function FaceForm({ groups, faceData, isEdit = false }: FaceFormProps) {
               className="h-12 px-8 rounded-xl bg-zinc-900 hover:bg-zinc-800"
             >
               {isEdit ? t('common.save') : t('common.create')}
-            </Button>
+            </AntButton>
           </div>
         </div>
       </Form>

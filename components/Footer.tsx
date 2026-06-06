@@ -12,6 +12,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+import { Button } from '@/components/ui/Button';
+import { Tag } from '@/components/ui/Tag';
+
 // ─── Types ───────────────────────────────────────────
 
 interface FooterOwnerConfig {
@@ -162,16 +165,15 @@ function SocialBar({
           {leftItems.map((item) => {
             const Icon = resolveIcon(item.icon);
             return (
-              <a
+              <Button
                 key={item.name}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-zinc-800 text-white flex items-center justify-center hover:bg-zinc-900 transition-all duration-300"
+                variant="primary"
+                className="w-9 h-9 rounded-full flex items-center justify-center p-0"
                 title={item.name}
+                onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
               >
                 <Icon className="w-4 h-4" />
-              </a>
+              </Button>
             );
           })}
         </div>
@@ -202,16 +204,15 @@ function SocialBar({
           {rightItems.map((item) => {
             const Icon = resolveIcon(item.icon);
             return (
-              <a
+              <Button
                 key={item.name}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-zinc-800 text-white flex items-center justify-center hover:bg-zinc-900 transition-all duration-300"
+                variant="primary"
+                className="w-9 h-9 rounded-full flex items-center justify-center p-0"
                 title={item.name}
+                onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
               >
                 <Icon className="w-4 h-4" />
-              </a>
+              </Button>
             );
           })}
         </div>
@@ -316,15 +317,9 @@ function RuntimeStatus({
     <div className="flex items-center justify-center text-sm text-zinc-400 gap-2">
       <Heart className="w-4 h-4 text-red-400 animate-pulse" />
       <span>{text}</span>
-      <span
-        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-          isOnline
-            ? 'bg-green-100 text-green-700'
-            : 'bg-zinc-100 text-zinc-500'
-        }`}
-      >
+      <Tag variant="light" size="sm" className={isOnline ? 'bg-green-100 text-green-700 border-green-200' : ''}>
         {isOnline ? '在线' : '休息中'}
-      </span>
+      </Tag>
     </div>
   );
 }

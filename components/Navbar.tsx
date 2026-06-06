@@ -6,7 +6,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
 import { ClerkLoginSection } from '@/components/ClerkLoginSection';
 import { LoginOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
+import { Button } from '@/components/ui/Button';
 import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
 import { useConfig } from '@/hooks/use-config';
@@ -39,7 +39,7 @@ function NavMenuGroup({ config }: { config: NavConfig | null }) {
         <React.Fragment key={gi}>
           {group.item.map((item, ii) => (
             <Link key={`${gi}-${ii}`} href={item.link}>
-              <Button type="text" size="small" className="text-zinc-500 hover:text-zinc-900">
+              <Button variant="ghost" size="sm" className="text-zinc-500">
                 {item.icon && <img src={item.icon} alt="" className="w-4 h-4" />}
                 {item.name}
               </Button>
@@ -75,13 +75,13 @@ function NavAuthSection({ user, allowRegistration, clerkAvailable, t }: { user: 
   return (
     <>
       <Link href="/login">
-        <Button type="text" size="large" className="text-zinc-600 hover:text-zinc-900">
+        <Button variant="ghost" size="md" className="text-zinc-600">
           {t('auth.login')}
         </Button>
       </Link>
       {allowRegistration && (
         <Link href="/login">
-          <Button size="large" className="bg-zinc-900 text-white hover:bg-zinc-800 border-0 rounded-xl px-6">
+          <Button variant="primary" size="lg">
             <span className="flex items-center gap-1.5">
               <LoginOutlined />
               <span>{t('auth.register')}</span>

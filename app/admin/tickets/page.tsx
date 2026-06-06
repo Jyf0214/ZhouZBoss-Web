@@ -5,10 +5,11 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
 import { Plus, Trash2, Edit2, FileText, X, Save, Loader2 } from 'lucide-react';
-import { Button, Modal, message } from 'antd';
+import { Button as AntButton, Modal, message } from 'antd';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
+import { Input } from '@/components/ui/Input';
 
 interface TicketTemplate {
   id: string;
@@ -179,9 +180,9 @@ const handleDelete = async (id: string) => {
           <h1 className="text-2xl font-bold text-zinc-900">{t('tickets.management')}</h1>
           <p className="text-sm text-zinc-400 mt-1">{t('tickets.subtitle')}</p>
         </div>
-        <Button type="primary" icon={<Plus size={14} />} onClick={handleCreate} className="bg-zinc-900 rounded-xl">
+        <AntButton type="primary" icon={<Plus size={14} />} onClick={handleCreate} className="bg-zinc-900 rounded-xl">
           {t('tickets.createTemplate')}
-        </Button>
+        </AntButton>
       </div>
 
       {/* 模板列表 */}
@@ -202,8 +203,8 @@ const handleDelete = async (id: string) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="small" icon={<Edit2 size={13} />} onClick={() => handleEdit(template)} className="rounded-lg">{t('tickets.edit')}</Button>
-                  <Button size="small" danger icon={deleting === template.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} onClick={() => handleDelete(template.id)} disabled={deleting === template.id} className="rounded-lg">{t('tickets.delete')}</Button>
+                  <AntButton size="small" icon={<Edit2 size={13} />} onClick={() => handleEdit(template)} className="rounded-lg">{t('tickets.edit')}</AntButton>
+                  <AntButton size="small" danger icon={deleting === template.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} onClick={() => handleDelete(template.id)} disabled={deleting === template.id} className="rounded-lg">{t('tickets.delete')}</AntButton>
                 </div>
               </div>
             ))}
@@ -212,9 +213,9 @@ const handleDelete = async (id: string) => {
           <div className="py-16 text-center">
             <FileText size={48} className="text-zinc-200 mx-auto mb-4" />
             <p className="text-zinc-400 mb-4">{t('tickets.noTemplates')}</p>
-            <Button type="primary" icon={<Plus size={14} />} onClick={handleCreate} className="bg-zinc-900 rounded-xl">
+            <AntButton type="primary" icon={<Plus size={14} />} onClick={handleCreate} className="bg-zinc-900 rounded-xl">
               {t('tickets.createFirst')}
-            </Button>
+            </AntButton>
           </div>
         )}
       </div>
@@ -233,12 +234,12 @@ const handleDelete = async (id: string) => {
         <div className="space-y-4 mt-4">
           <div>
             <label className="block text-sm font-medium mb-2">{t('tickets.templateName')} *</label>
-            <input
+            <Input
               type="text"
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
               placeholder={t('tickets.placeholderName')}
-              className="w-full h-10 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400 transition-colors"
+              className="w-full"
             />
           </div>
           <div>
@@ -253,7 +254,7 @@ const handleDelete = async (id: string) => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-medium">{t('tickets.formFields')}</label>
-              <Button size="small" icon={<Plus size={12} />} onClick={addField} className="rounded-lg">{t('tickets.addField')}</Button>
+              <AntButton size="small" icon={<Plus size={12} />} onClick={addField} className="rounded-lg">{t('tickets.addField')}</AntButton>
             </div>
             {formData.fields.map((field, index) => (
               <div key={index} className="flex items-center gap-2 mb-2">
