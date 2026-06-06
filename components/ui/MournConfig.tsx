@@ -1,7 +1,8 @@
 import React from 'react';
-import { Button, Tag } from 'antd';
+import { Tag } from 'antd';
 import { Plus } from 'lucide-react';
 import ToggleField from './ToggleField';
+import { Button } from '@/components/ui/Button';
 
 interface MournConfigData {
   enable: boolean;
@@ -49,7 +50,7 @@ export default function MournConfig({ config, onChange }: MournConfigProps) {
             placeholder="例如: 4-5"
             className="flex-1 h-9 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
           />
-          <Button size="small" icon={<Plus size={14} />} onClick={addDay} className="rounded-lg shrink-0">
+          <Button size="sm" icon={<Plus size={14} />} onClick={addDay} className="rounded-lg shrink-0">
             添加
           </Button>
         </div>
