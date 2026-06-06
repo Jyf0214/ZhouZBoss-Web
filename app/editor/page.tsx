@@ -184,8 +184,8 @@ if (res.ok) {
             onClick={handleSaveDraft}
             disabled={loading}
             loading={loading}
-            variant="secondary"
-            size="sm"
+            variant="default"
+            size="md"
             icon={<Save size={18} />}
           >
             {loading ? '' : t('editor.saveDraft')}
@@ -196,7 +196,7 @@ if (res.ok) {
               disabled={loading}
               loading={loading}
               variant="primary"
-              size="sm"
+              size="md"
               icon={<Send size={18} />}
             >
               {loading ? '' : t('editor.publish')}

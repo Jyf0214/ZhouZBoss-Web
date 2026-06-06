@@ -185,7 +185,7 @@ export default function ArticlesPage() {
                         onClick={() => handleRestore(article.id)}
                         disabled={operating === article.id}
                         loading={operating === article.id}
-                        variant="primary"
+                        variant="ghost"
                         size="sm"
                       >
                         {t('common.restore')}
@@ -197,7 +197,7 @@ export default function ArticlesPage() {
                         cancelText={t('common.cancel')}
                         okButtonProps={{ danger: true }}
                       >
-                        <Button disabled={operating === article.id} variant="danger" size="sm">
+                        <Button disabled={operating === article.id} variant="ghost" size="sm" className="text-red-500 hover:bg-red-50">
                           {t('common.delete')}
                         </Button>
                       </Popconfirm>
@@ -223,7 +223,7 @@ export default function ArticlesPage() {
                         cancelText={t('common.cancel')}
                         okButtonProps={{ danger: true }}
                       >
-                        <Button disabled={operating === article.id} variant="danger" size="sm">
+                        <Button disabled={operating === article.id} variant="ghost" size="sm" className="text-red-500 hover:bg-red-50">
                           {operating === article.id ? <Loader2 size={12} className="animate-spin" /> : t('common.delete')}
                         </Button>
                       </Popconfirm>
