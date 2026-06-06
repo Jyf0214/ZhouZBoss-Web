@@ -4,7 +4,8 @@ import React, { useEffect, useState, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Clock, AlertCircle, Save } from 'lucide-react';
-import { Button, message } from 'antd';
+import { message } from 'antd';
+import { Button } from '@/components/ui/Button';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { useI18n } from '@/hooks/use-i18n';
@@ -77,12 +78,12 @@ function TicketStatusUpdater({
           <option value="closed">{t('tickets.statusClosed')}</option>
         </select>
         <Button
-          type="primary"
+          variant="primary"
           icon={<Save size={14} />}
           onClick={onSave}
           loading={saving}
           disabled={newStatus === ticket.status}
-          className="bg-zinc-900 rounded-xl"
+          rounded="md"
         >
           {t('common.save')}
         </Button>
@@ -189,7 +190,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
   return (
     <PageContainer maxWidth="3xl">
       <div className="flex items-center gap-3 mb-8">
-        <Button size="small" icon={<ArrowLeft size={14} />} onClick={() => router.push('/tickets')} className="rounded-lg" />
+        <Button variant="default" size="sm" rounded="sm" icon={<ArrowLeft size={14} />} onClick={() => router.push('/tickets')} />
         <h1 className="text-2xl font-bold text-zinc-900">{t('tickets.details')}</h1>
       </div>
 
