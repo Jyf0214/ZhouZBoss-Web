@@ -1,0 +1,27 @@
+export interface PostItem {
+  slug: string;
+  title: string;
+  date?: string;
+  author?: string;
+  tags: string[];
+  cover?: string;
+  description?: string;
+  pinned?: boolean;
+}
+
+export interface CoverConfig {
+  indexEnable?: boolean;
+  asideEnable: boolean;
+  position: string;
+}
+
+export interface HomePostGridProps {
+  posts: PostItem[];
+  postCount: number;
+  facesCount: number;
+  isAdmin?: boolean;
+  heroTitleLine1?: string;
+  heroTitleLine2?: string;
+  defaultCover?: string;
+  coverConfig?: CoverConfig;
+}
