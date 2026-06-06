@@ -8,9 +8,9 @@ import { Input } from 'antd';
 import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
 import { useI18n } from '@/hooks/use-i18n';
-import { CategoryBar } from './CategoryBar';
-import { HeroBanner } from './HeroBanner';
-import { RecentUpdatesBar } from './RecentUpdatesBar';
+import { CategoryBar } from '@/components/CategoryBar';
+import { HeroBanner } from '@/app/HeroBanner';
+import { RecentUpdatesBar } from '@/components/RecentUpdatesBar';
 import { Tag } from '@/components/ui/Tag';
 
 interface PostItem {

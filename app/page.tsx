@@ -1,7 +1,7 @@
 import { getContentFiles, getContentIndexes } from '@/lib/content';
 import { loadConfig, hasDatabase, canAccess } from '@/lib/config';
 import { Navbar } from '@/components/Navbar';
-import { HomePostGrid } from './HomePostGrid';
+import { HomePostGrid } from '@/components/HomePostGrid';
 import { getSession } from '@/lib/auth';
 import type { Metadata } from 'next';
 

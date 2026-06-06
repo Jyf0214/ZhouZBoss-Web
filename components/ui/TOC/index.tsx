@@ -1,36 +1,24 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import type { TOCProps, TocHeading, TocNode } from './toc-types';
+import { useTocActive } from './use-toc-active';
+import { TocItem } from './TocItem';
 
-interface TOCConfig {
-  number?: boolean;
-  expand?: boolean;
-  styleSimple?: boolean;
-}
+export type { TOCConfig, TOCProps, TocHeading, TocNode, TocItemProps } from './toc-types';
 
-interface TOCProps {
-  content: string;
-  config?: TOCConfig;
-  locale?: string;
-}
-
-interface TocItem {
-  id: string;
-  text: string;
-  level: number;
-  children: TocItem[];
-}
-
+// 将标题文本转为锚点 id（小写、空格转 -、移除非中英文字符）
 function slugify(text: string): string {
   return text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fff-]/g, '');
 }
 
-function buildTree(items: { id: string; text: string; level: number }[]): TocItem[] {
-  const root: TocItem[] = [];
-  const stack: TocItem[] = [];
+// 将扁平的标题列表按 level 构造成嵌套树
+function buildTree(items: TocHeading[]): TocNode[] {
+  const root: TocNode[] = [];
+  const stack: TocNode[] = [];
 
   for (const item of items) {
-    const node: TocItem = { ...item, children: [] };
+    const node: TocNode = { ...item, children: [] };
     while (stack.length > 0) {
       const top = stack[stack.length - 1];
       if (!top || top.level >= node.level) {
@@ -50,76 +38,21 @@ function buildTree(items: { id: string; text: string; level: number }[]): TocIte
   return root;
 }
 
-function TocTree({
-  items,
-  activeId,
-  depth = 0,
-  numbering,
-  prefix = '',
-  onLinkClick,
-}: {
-  items: TocItem[];
-  activeId: string;
-  depth?: number;
-  numbering?: boolean;
-  prefix?: string;
-  onLinkClick?: () => void;
-}) {
-  let counter = 0;
-
-  return (
-    <ul className={depth === 0 ? 'space-y-0.5' : 'ml-4 space-y-0.5'}>
-      {items.map((item) => {
-        counter++;
-        const num = prefix ? `${prefix}.${counter}` : `${counter}`;
-        const isActive = activeId === item.id;
-
-        return (
-          <li key={item.id}>
-            <a
-              href={`#${item.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
-                onLinkClick?.();
-              }}
-              className={`
-                block py-1 text-sm transition-colors duration-150
-                ${isActive
-                  ? 'text-zinc-900 font-semibold border-l-2 border-zinc-900 -ml-px pl-3'
-                  : 'text-zinc-400 hover:text-zinc-600 border-l-2 border-transparent pl-3'
-                }
-              `}
-            >
-              {numbering && (
-                <span className="mr-1.5 text-zinc-400 text-xs">{num}</span>
-              )}
-              {item.text}
-            </a>
-            {item.children.length > 0 && (
-              <TocTree
-                items={item.children}
-                activeId={activeId}
-                depth={depth + 1}
-                numbering={numbering}
-                prefix={num}
-                onLinkClick={onLinkClick}
-              />
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
+/**
+ * 文章目录组件
+ *
+ * - 从 Markdown 内容中提取 h2~h4 标题
+ * - 桌面端：sticky 侧边栏
+ * - 移动端：右下角浮动按钮 + 折叠面板
+ * - 滚动时通过 IntersectionObserver 高亮当前标题
+ * - 少于 3 个标题时不渲染
+ */
 export function TOC({ content, config, locale }: TOCProps) {
-  const [activeId, setActiveId] = useState<string>('');
   const [mobileOpen, setMobileOpen] = useState(config?.expand ?? false);
 
-  const headings = useMemo(() => {
+  const headings = useMemo<TocHeading[]>(() => {
     const regex = /^(#{1,6})\s+(.+)$/gm;
-    const result: { id: string; text: string; level: number }[] = [];
+    const result: TocHeading[] = [];
     let match: RegExpExecArray | null;
     while ((match = regex.exec(content)) !== null) {
       const level = match[1]!.length;
@@ -134,28 +67,7 @@ export function TOC({ content, config, locale }: TOCProps) {
   }, [content]);
 
   const tree = useMemo(() => buildTree(headings), [headings]);
-
-  useEffect(() => {
-    if (headings.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
-          }
-        }
-      },
-      { rootMargin: '-80px 0px -80% 0px' },
-    );
-
-    for (const h of headings) {
-      const el = document.getElementById(h.id);
-      if (el) observer.observe(el);
-    }
-
-    return () => observer.disconnect();
-  }, [headings]);
+  const activeId = useTocActive(headings);
 
   // 少于 3 个标题时返回 null
   if (headings.length < 3) return null;
@@ -173,7 +85,7 @@ export function TOC({ content, config, locale }: TOCProps) {
         <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3 px-3">
           {label}
         </h4>
-        <TocTree
+        <TocItem
           items={tree}
           activeId={activeId}
           numbering={config?.number}
@@ -211,7 +123,7 @@ export function TOC({ content, config, locale }: TOCProps) {
             <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">
               {label}
             </h4>
-            <TocTree
+            <TocItem
               items={tree}
               activeId={activeId}
               numbering={config?.number}
