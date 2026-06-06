@@ -6,15 +6,15 @@ type ButtonSize = 'sm' | 'md' | 'lg';
 type ButtonRounded = 'sm' | 'md' | 'lg' | 'full' | 'none';
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700',
+  primary: 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700 shadow-sm hover:shadow-md',
   default: 'bg-white border border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:text-zinc-900',
   secondary: 'border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800',
   danger: 'bg-white border border-red-300 text-red-600 hover:border-red-500 hover:bg-red-50',
   ghost: 'text-zinc-600 hover:bg-zinc-100',
   link: 'text-zinc-900 hover:underline',
-  success: 'bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700',
-  warning: 'bg-amber-500 text-white hover:bg-amber-400 active:bg-amber-600',
-  filled: 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700',
+  success: 'bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700 shadow-sm hover:shadow-md',
+  warning: 'bg-amber-500 text-white hover:bg-amber-400 active:bg-amber-600 shadow-sm hover:shadow-md',
+  filled: 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700 shadow-sm hover:shadow-md',
 };
 
 const sizePadding: Record<ButtonSize, string> = {
@@ -66,7 +66,7 @@ export const Button = memo(
           ref={ref}
           disabled={disabled || loading}
           className={cn(
-            'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200',
+            'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 active:scale-[0.97]',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-1',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none',
             variantStyles[variant],
