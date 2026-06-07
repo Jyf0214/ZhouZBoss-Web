@@ -1,38 +1,40 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createApiLogger } from '@/lib/api-logger';
-import { getSession } from '@/lib/auth';
+import { getSession, requireSudo } from '@/lib/auth';
 
-interface ApiHandlerContext { params: Promise<Record<string, string>> }
-type ApiHandler = (
-  req: NextRequest,
-  context?: ApiHandlerContext,
-) => NextResponse | Promise<NextResponse>;
-
-interface ApiHandlerOptions {
+export interface ApiHandlerOptions {
   label: string;
   requireAuth?: boolean;
   requireAdmin?: boolean;
+  requireSudo?: boolean;
 }
+
+interface ApiCtx<P extends Record<string, unknown>> { params: Promise<P> }
 
 /**
  * 解析 context.params 中的指定参数，并确保返回非空字符串
  */
-export async function getParam(context: ApiHandlerContext | undefined, name: string): Promise<string> {
-  const params = await (context?.params ?? Promise.resolve({} as Record<string, string>));
-  return params[name] ?? '';
+export async function getParam<P extends Record<string, unknown> = Record<string, string>>(
+  context: ApiCtx<P> | undefined,
+  name: keyof P & string,
+): Promise<string> {
+  const params = (await (context?.params ?? Promise.resolve({} as P)));
+  return (params[name] as unknown as string | undefined) ?? '';
 }
 
 /**
  * 包装 API 路由处理器，提供统一的 try/catch + 日志 + 错误响应
  * 以及可选的权限验证
  */
-export function apiHandler(
+export function apiHandler<
+  P extends Record<string, unknown> = Record<string, string>,
+>(
   method: string,
   options: ApiHandlerOptions,
-  handler: ApiHandler,
+  handler: (req: NextRequest, ctx?: ApiCtx<P>) => NextResponse | Promise<NextResponse>,
 ) {
   const logger = createApiLogger(options.label);
-  return async (req: NextRequest, context?: ApiHandlerContext) => {
+  return async (req: NextRequest, ctx?: ApiCtx<P>) => {
     try {
       // 权限验证
       if (options.requireAuth || options.requireAdmin) {
@@ -44,7 +46,13 @@ export function apiHandler(
           return NextResponse.json({ error: '无权限访问' }, { status: 403 });
         }
       }
-      return await handler(req, context);
+      if (options.requireSudo) {
+        const result = await requireSudo();
+        if (result instanceof NextResponse) {
+          return result;
+        }
+      }
+      return await handler(req, ctx);
     } catch (error) {
       const msg = `${options.label} 失败`;
       logger.error(method, msg, {

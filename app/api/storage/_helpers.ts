@@ -10,7 +10,7 @@
  * 与 lib/storage/acl.ts 保持同构:acl.ts 读 Prisma(用于公开访问的 ACL 判定),
  * 本文件在管理员操作时同时读写 Prisma。
  */
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import type { FileStat } from 'webdav'
 import { getDb } from '@/lib/db'
 import { isWebDavConfigured, getWebDavClient } from '@/lib/webdav'
@@ -18,12 +18,8 @@ import { isValidPath, joinPath } from '@/lib/storage/path'
 import { apiHandler } from '@/lib/api-handler'
 import type { StorageFolderMeta, WebDavEntry } from '@/lib/storage/types'
 
-/** 与 lib/api-handler 内部 ApiHandlerOptions 同构(该类型未导出,本地复刻) */
-interface HandlerOptions {
-  label: string
-  requireAuth?: boolean
-  requireAdmin?: boolean
-}
+/** 直接复用 lib/api-handler 导出的 ApiHandlerOptions(已支持泛型 + requireSudo) */
+export { apiHandler, type ApiHandlerOptions } from '@/lib/api-handler'
 
 /** WebDAV 服务器根路径:暂未支持多挂载,所有路径相对服务器根(空串) */
 const STORAGE_ROOT = ''
@@ -220,30 +216,9 @@ export function webdavErrorResponse(err: unknown, op: string): NextResponse {
 export { isWebDavConfigured, getWebDavClient }
 
 /**
- * 给 catch-all 路由使用的类型化包装
+ * 兼容旧调用:catch-all 路由可直接复用 apiHandler(已内置泛型)
  *
- * 背景:apiHandler 内部 context 类型是 { params: Promise<Record<string, string>> },
- * 但 Next.js 16 RouteHandlerConfig 对 [...path] 路由要求 context.params 是
- * { path: string[] }。这里用一次显式类型转换,既保留 apiHandler 的统一鉴权/日志,
- * 又满足路由配置的类型校验。运行时行为完全一致(都是 await context?.params)。
+ * 旧的 catchAllHandler 包装器会在 apiHandler 和业务函数之间做 `as unknown as` 强转,
+ * 借助 apiHandler<P> 现已原生支持 params 泛型,这里直接透传即可,无需再做强转。
  */
-export function catchAllHandler<TParams extends object>(
-  method: string,
-  options: HandlerOptions,
-  handler: (
-    req: NextRequest,
-    context: { params: Promise<TParams> } | undefined
-  ) => Promise<NextResponse>
-): (req: NextRequest, context: { params: Promise<TParams> }) => Promise<NextResponse> {
-  // 强转 handler:业务函数签名用了 TParams,而 apiHandler 内部期望 Record<string,string>
-  // 运行时行为完全一致(await context?.params 在两种类型下都安全)
-  const wrapped = apiHandler(
-    method,
-    options,
-    handler as unknown as Parameters<typeof apiHandler>[2]
-  )
-  return wrapped as unknown as (
-    req: NextRequest,
-    context: { params: Promise<TParams> }
-  ) => Promise<NextResponse>
-}
+export const catchAllHandler = apiHandler
