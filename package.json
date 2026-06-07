@@ -19,6 +19,7 @@
     "db:studio": "PRISMA_HIDE_UPDATE_MESSAGE=true PRISMA_HIDE_PREVIEW_FLAG_WARNINGS=true prisma studio",
     "build": "NEXT_TELEMETRY_DISABLED=1 npm run check && npm run test && npm run db:generate && npm run db:init:seed && next build",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "start": "next start",
     "clean": "next clean",
     "prepare": "husky"
@@ -63,6 +64,7 @@
     "@types/react": "^19",
     "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.1",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "9.39.1",
     "eslint-config-next": "16.1.6",
     "eslint-plugin-react": "^7.37.5",
