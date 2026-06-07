@@ -98,8 +98,15 @@ export async function GET(
         'Content-Type': stat.mime ?? 'application/octet-stream',
         'Content-Length': String(stat.size),
         'Last-Modified': stat.lastmod ?? new Date().toUTCString(),
-        'Cache-Control': 'public, max-age=3600',
-        'Content-Disposition': 'inline',
+        // 私有缓存:防止用户上传的恶意文件经共享 CDN/代理缓存投递给其他用户
+        'Cache-Control': 'private, max-age=3600',
+        // 禁止 MIME 嗅探:防止浏览器将 text/plain 误判为 text/html 并执行内联脚本
+        'X-Content-Type-Options': 'nosniff',
+        // 严格 CSP:用户控制的文件不应获得脚本执行能力,资源加载限制到 self/data
+        'Content-Security-Policy':
+          "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline';",
+        // HTML 强制下载而非渲染:避免用户上传的 HTML 文件成为 XSS 攻击载体
+        'Content-Disposition': stat.mime === 'text/html' ? 'attachment' : 'inline',
       },
     })
   } catch (err) {
