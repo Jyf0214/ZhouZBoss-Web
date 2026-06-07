@@ -249,7 +249,11 @@
     "fillRequired": "请填写必填字段: {fields}",
     "options": "选项（每行一个）",
     "placeholderOptions": "选项1\n选项2",
-    "username": "用户名"
+    "username": "用户名",
+    "listLoadFailed": "工单列表加载失败",
+    "templateLoadFailed": "工单模板加载失败",
+    "detailLoadFailed": "工单详情加载失败",
+    "statusUpdateFailed": "工单状态更新失败"
   },
   "article": {
     "title": "标题",

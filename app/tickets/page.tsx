@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Tag, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -27,17 +27,17 @@ export default function TicketsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
       const res = await fetch('/api/tickets');
-      if (res.ok) { const data = await res.json(); setTickets(data); } else { showError('工单列表加载失败'); }
+      if (res.ok) { const data = await res.json(); setTickets(data); } else { showError(t('tickets.listLoadFailed')); }
     } catch (error) {
 		console.error('Failed to fetch tickets:', error);
-		showError('工单列表加载失败');
+		showError(t('tickets.listLoadFailed'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     if (!user) {
@@ -49,7 +49,7 @@ export default function TicketsPage() {
     if (user) {
       void fetchTickets();
     }
-  }, [user]);
+  }, [user, fetchTickets]);
 
   const filteredTickets = statusFilter === 'all' ? tickets : tickets.filter(ti => ti.status === statusFilter);
 

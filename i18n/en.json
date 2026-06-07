@@ -249,7 +249,11 @@
     "fillRequired": "Please fill required fields: {fields}",
     "options": "Options (one per line)",
     "placeholderOptions": "Option 1\nOption 2",
-    "username": "Username"
+    "username": "Username",
+    "listLoadFailed": "Failed to load tickets",
+    "templateLoadFailed": "Failed to load ticket templates",
+    "detailLoadFailed": "Failed to load ticket details",
+    "statusUpdateFailed": "Failed to update ticket status"
   },
   "article": {
     "title": "Title",

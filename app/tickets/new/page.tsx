@@ -45,10 +45,10 @@ export default function NewTicketPage() {
   useEffect(() => {
     if (!user) { router.push('/login'); return; }
     fetch('/api/ticket-templates')
-      .then(res => { if (!res.ok) throw new Error('工单模板加载失败'); return res.json(); })
+      .then(res => { if (!res.ok) throw new Error(t('tickets.templateLoadFailed')); return res.json(); })
       .then(data => setTemplates(data))
-		.catch(err => { console.error('Failed to fetch templates:', err); showError('工单模板加载失败'); });
-  }, [user, router]);
+		.catch(err => { console.error('Failed to fetch templates:', err); showError(t('tickets.templateLoadFailed')); });
+  }, [user, router, t]);
 
   const handleTemplateSelect = (template: TicketTemplate) => {
     setSelectedTemplate(template);
@@ -80,7 +80,7 @@ export default function NewTicketPage() {
       }
     } catch (error) {
 		console.error('Failed to create ticket:', error);
-		showError(t('tickets.createFailed') ?? '工单创建失败');
+		showError(t('tickets.createFailed'));
     } finally {
       setSubmitting(false);
     }

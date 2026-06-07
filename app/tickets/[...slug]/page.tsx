@@ -113,15 +113,15 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
         setTicket(data);
         setNewStatus(data.status ?? 'open');
       } else {
-        showError('工单详情加载失败');
+        showError(t('tickets.detailLoadFailed'));
       }
     } catch (error) {
 		console.error('Failed to fetch ticket:', error);
-		showError('工单详情加载失败');
+		showError(t('tickets.detailLoadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [slug]);
+  }, [slug, t]);
 
   useEffect(() => {
     if (!user) {
@@ -152,7 +152,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
       }
     } catch (error) {
 		console.error('Failed to update status:', error);
-		showError('工单状态更新失败');
+		showError(t('tickets.statusUpdateFailed'));
     } finally {
       setSaving(false);
     }
