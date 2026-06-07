@@ -272,6 +272,37 @@ export interface AppConfig {
   users?: Record<string, UserConfig>;
 }
 
+/**
+ * 构建期 URL 健康检查
+ *
+ * 目的：在 `next build` 阶段主动探测 `NEXT_PUBLIC_SITE_URL` 是否配置，
+ * 缺失时打 loud warning（在 build 日志里显眼），
+ * 但不阻断构建（运行时还有 Vercel env 兜底）。
+ *
+ * 触发条件：
+ * - NODE_ENV === 'production'（即 `next build`）
+ * - NEXT_PUBLIC_SITE_URL 未设置
+ * - VERCEL === '1'（即在 Vercel 上构建，本地生产构建不警告）
+ */
+if (process.env.NODE_ENV === 'production' && process.env.VERCEL === '1' && !process.env.NEXT_PUBLIC_SITE_URL) {
+  const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const vercelUrl = process.env.VERCEL_URL;
+  const fallback = vercelProd ? `VERCEL_PROJECT_PRODUCTION_URL=${vercelProd}` : vercelUrl ? `VERCEL_URL=${vercelUrl}` : 'NONE';
+  // 用 console.warn 配合醒目的 '⚠' 前缀,确保在 build log 里可被 grep
+  console.warn(
+    `\n` +
+      `╔══════════════════════════════════════════════════════════════════╗\n` +
+      `║  ⚠  NEXT_PUBLIC_SITE_URL 未设置                                       ║\n` +
+      `╠══════════════════════════════════════════════════════════════════╣\n` +
+      `║  运行时将自动回退到 ${fallback.padEnd(40)}║\n` +
+      `║  建议在 Vercel Project Settings → Environment Variables 显式设置: ║\n` +
+      `║    NEXT_PUBLIC_SITE_URL = https://zhou-z-boss.castorice.giize.com  ║\n` +
+      `║  否则社交分享(og:url)、版权链接、构建预览等会使用临时 URL,    ║\n` +
+      `║  影响 SEO 与分享稳定性。                                       ║\n` +
+      `╚══════════════════════════════════════════════════════════════════╝\n`,
+  );
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typescript: {
