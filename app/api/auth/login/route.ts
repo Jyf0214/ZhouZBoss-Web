@@ -39,8 +39,10 @@ async function upgradePasswordHashIfNeeded(
   password: string,
   db: ReturnType<typeof getDb>,
 ): Promise<void> {
-  const isNewHash = user.password.length === 64 && /^[a-f0-9]+$/.test(user.password);
-  if (!isNewHash) {
+  // 新格式为 scrypt:<saltHex>:<hashHex>;其他任何格式(64 字符 HMAC-SHA256 hex、
+  // 历史 key:hash 形式)都视为旧版,登录成功后立即以 scrypt 重写。
+  const isScryptFormat = user.password.startsWith('scrypt:') && user.password.split(':').length === 3;
+  if (!isScryptFormat) {
     try {
       user.password = await hashPassword(password);
       await db.set(`user:uid:${user.uid}`, JSON.stringify(user));
