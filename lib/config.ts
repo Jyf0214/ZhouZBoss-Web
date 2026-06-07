@@ -1,9 +1,43 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig, ShareConfig, MainToneConfig, FooterConfig, ClerkConfig, FooterOwnerConfig, FooterRuntimeConfig, SharejsConfig, AddtoanyConfig, PostEditConfig, CopyrightConfig, TocConfig, WordCountConfig, PostMetaConfig, PostMetaDisplayConfig, PostMetaPostConfig, ErrorImgConfig, CoverConfig, AuthorStatusConfig, SocialConfig, CopyConfig, HighlightConfig, MournConfig, NavConfig, NavMenuItem, NavMenuGroup, RewardConfig, QRCodeItem } from '@/next.config';
+import { zAppConfig, type AppConfig, type SiteConfig, type AppearanceConfig, type AccessConfig, type AuthConfig, type UserConfig, type ShareConfig, type MainToneConfig, type FooterConfig, type ClerkConfig, type FooterOwnerConfig, type FooterRuntimeConfig, type SharejsConfig, type AddtoanyConfig, type PostEditConfig, type CopyrightConfig, type TocConfig, type WordCountConfig, type PostMetaConfig, type PostMetaDisplayConfig, type PostMetaPostConfig, type ErrorImgConfig, type CoverConfig, type AuthorStatusConfig, type SocialConfig, type CopyConfig, type HighlightConfig, type MournConfig, type NavConfig, type NavMenuItem, type NavMenuGroup, type RewardConfig, type QRCodeItem } from '@/lib/config-schema';
 
-export type { AppConfig, SiteConfig, AppearanceConfig, AccessConfig, AuthConfig, UserConfig, ShareConfig, MainToneConfig, FooterConfig, ClerkConfig, FooterOwnerConfig, FooterRuntimeConfig, SharejsConfig, AddtoanyConfig, PostEditConfig, CopyrightConfig, TocConfig, WordCountConfig, PostMetaConfig, PostMetaDisplayConfig, PostMetaPostConfig, ErrorImgConfig, CoverConfig, AuthorStatusConfig, SocialConfig, CopyConfig, HighlightConfig, MournConfig, NavConfig, NavMenuItem, NavMenuGroup, RewardConfig, QRCodeItem };
+export type {
+  AppConfig,
+  SiteConfig,
+  AppearanceConfig,
+  AccessConfig,
+  AuthConfig,
+  UserConfig,
+  ShareConfig,
+  MainToneConfig,
+  FooterConfig,
+  ClerkConfig,
+  FooterOwnerConfig,
+  FooterRuntimeConfig,
+  SharejsConfig,
+  AddtoanyConfig,
+  PostEditConfig,
+  CopyrightConfig,
+  TocConfig,
+  WordCountConfig,
+  PostMetaConfig,
+  PostMetaDisplayConfig,
+  PostMetaPostConfig,
+  ErrorImgConfig,
+  CoverConfig,
+  AuthorStatusConfig,
+  SocialConfig,
+  CopyConfig,
+  HighlightConfig,
+  MournConfig,
+  NavConfig,
+  NavMenuItem,
+  NavMenuGroup,
+  RewardConfig,
+  QRCodeItem,
+};
 
 /**
  * 检测数据库是否可用（其他非配置页面使用，配置页面不再依赖数据库）
@@ -13,13 +47,34 @@ export function hasDatabase(): boolean {
 }
 
 /**
- * 从 config.yaml 加载配置。读取失败直接抛错，没有硬编码兜底。
+ * 从 config.yaml 加载配置。
+ *
+ * 行为:
+ * - 文件存在:读取并用 zAppConfig.safeParse 校验;校验失败抛错并列出问题字段
+ * - 文件不存在:返回 zAppConfig.parse({}),即全部使用 schema 默认值
+ *
+ * 注意:此处不再使用 `as AppConfig` 强制断言 — 任何结构错误都会在加载阶段
+ * 立即暴露,避免运行时静默接受错误配置。
  */
 function loadConfigFromYaml(): AppConfig {
   const configPath = path.join(process.cwd(), 'config.yaml');
+
+  if (!fs.existsSync(configPath)) {
+    return zAppConfig.parse({});
+  }
+
   const fileContent = fs.readFileSync(configPath, 'utf-8');
-  const parsed = yaml.load(fileContent) as AppConfig;
-  return parsed;
+  const raw = yaml.load(fileContent);
+  const result = zAppConfig.safeParse(raw);
+
+  if (!result.success) {
+    const issues = result.error.issues
+      .map((i) => `  - ${i.path.join('.') || '(root)'}: ${i.message}`)
+      .join('\n');
+    throw new Error(`config.yaml 校验失败:\n${issues}`);
+  }
+
+  return result.data;
 }
 
 /** 缓存已加载的配置 */
@@ -102,4 +157,3 @@ export function getUserAvatar(uid: string, isAdmin?: boolean): string | null {
 
   return null;
 }
-
