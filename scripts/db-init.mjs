@@ -1,3 +1,14 @@
+/**
+ * 数据库初始化脚本
+ *
+ * 安全策略（2026-06 修订）：
+ * - `prisma db push` 不再默认执行。Build 链不应静默接受数据丢失。
+ * - 仅当同时满足以下两个条件时才执行 Schema 推送：
+ *     1. process.env.SKIP_DB_INIT !== '1'（未被全局跳过）
+ *     2. process.env.ALLOW_DB_PUSH === '1'（开发者显式同意）
+ * - 默认行为：打印 "db push skipped — set ALLOW_DB_PUSH=1 to opt in" 后继续执行种子/管理员初始化。
+ * - 推荐用法：本地/CI 显式使用 `npm run db:push:safe` 触发 Schema 推送。
+ */
 // 屏蔽 Prisma 广告
 process.env.PRISMA_HIDE_PREVIEW_FLAG_WARNINGS = 'true'
 process.env.PRISMA_HIDE_UPDATE_MESSAGE = 'true'
@@ -34,26 +45,32 @@ async function main() {
       finalUrl = `${databaseUrl}${separator}sslmode=require&ssl=true`
     }
     process.env.DATABASE_URL = finalUrl
-    console.log('[数据库初始化] 开始 Schema 推送...')
 
-    try {
-      execSync('npx prisma db push --accept-data-loss', {
-        stdio: 'pipe',
-        env: { ...process.env },
-        timeout: 30000
-      })
-      console.log('[数据库初始化] ✓ Schema 推送成功')
-    } catch (dbError) {
-      const errorMsg = dbError.message || ''
-      if (errorMsg.includes('MaxClientsInSessionMode') || 
-          errorMsg.includes('max clients reached') ||
-          errorMsg.includes('too many clients') ||
-          errorMsg.includes('connection pool')) {
-        console.log('[数据库初始化] ⚠️ 数据库连接池已满，跳过 Schema 推送')
-      } else {
-        console.log('[数据库初始化] ⚠️ Schema 推送失败:', errorMsg.split('\n')[0])
+    // 安全护栏：db push 默认跳过，仅在显式 ALLOW_DB_PUSH=1 且未被 SKIP_DB_INIT=1 时执行
+    if (process.env.SKIP_DB_INIT !== '1' && process.env.ALLOW_DB_PUSH === '1') {
+      console.log('[数据库初始化] 开始 Schema 推送...')
+
+      try {
+        execSync('npx prisma db push', {
+          stdio: 'pipe',
+          env: { ...process.env },
+          timeout: 30000
+        })
+        console.log('[数据库初始化] ✓ Schema 推送成功')
+      } catch (dbError) {
+        const errorMsg = dbError.message || ''
+        if (errorMsg.includes('MaxClientsInSessionMode') ||
+            errorMsg.includes('max clients reached') ||
+            errorMsg.includes('too many clients') ||
+            errorMsg.includes('connection pool')) {
+          console.log('[数据库初始化] ⚠️ 数据库连接池已满，跳过 Schema 推送')
+        } else {
+          console.log('[数据库初始化] ⚠️ Schema 推送失败:', errorMsg.split('\n')[0])
+        }
+        return
       }
-      return
+    } else {
+      console.log('[数据库初始化] db push skipped — set ALLOW_DB_PUSH=1 to opt in')
     }
   } else {
     console.log('[数据库初始化] 未找到数据库 URL，跳过 Schema 推送')
