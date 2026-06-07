@@ -3,6 +3,7 @@
  */
 
 const isDev = process.env.NODE_ENV === 'development';
+const isBuilding = process.env.NEXT_PHASE === 'phase-production-build';
 
 /**
  * 站点根地址（惰性求值，仅实际使用时才检查环境变量）
@@ -50,6 +51,16 @@ function resolveSiteUrl(): string {
         `。建议在 Vercel Project Settings 中显式设置 APP_URL。`,
     );
     return `https://${vercelUrl}`;
+  }
+
+  // next build 阶段如果没有任何 URL 环境变量,返回占位 URL 让 build 走通
+  // 运行时仍会抛错,所以生产部署不受影响(运维必须在 Vercel 设置 APP_URL)
+  if (isBuilding) {
+    console.warn(
+      '[url] next build 阶段未设置任何 URL 环境变量,使用占位 https://example.com 让 build 走通。' +
+      '运行时仍会要求 APP_URL(或 Vercel 注入的 VERCEL_PROJECT_PRODUCTION_URL / VERCEL_URL)。',
+    );
+    return 'https://example.com';
   }
 
   throw new Error(
