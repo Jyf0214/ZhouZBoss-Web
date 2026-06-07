@@ -9,6 +9,8 @@
     "lint": "eslint . --max-warnings=0",
     "check": "npm run type-check && npm run lint",
     "db:init": "node scripts/db-init.mjs",
+    "sync:pages": "node scripts/sync-pages.mjs",
+    "prebuild": "npm run sync:pages",
     "db:generate": "PRISMA_HIDE_UPDATE_MESSAGE=true PRISMA_HIDE_PREVIEW_FLAG_WARNINGS=true prisma generate",
     "db:push": "PRISMA_HIDE_UPDATE_MESSAGE=true PRISMA_HIDE_PREVIEW_FLAG_WARNINGS=true prisma db push",
     "db:migrate": "PRISMA_HIDE_UPDATE_MESSAGE=true PRISMA_HIDE_PREVIEW_FLAG_WARNINGS=true prisma migrate dev",

@@ -1,7 +1,8 @@
 /**
  * /page — 自定义 HTML 页面索引(服务端入口)
  *
- * - 服务端从 WebDAV 的 `pages/` 根浅层扫描(根 + 1 级子目录)
+ * - 服务端从构建期同步下来的 `./pages/` 镜像浅层扫描(根 + 1 级子目录)
+ *   (镜像由 `scripts/sync-pages.mjs` 在 `npm run build` 时生成)
  * - 列出所有 .html/.htm 文件,显示文件名、所在目录、是否私有
  * - 私有判定:`StorageFolder.public` 字段驱动(由 `/admin/storage` 设置)
  * - 私有页面在列表中带锁标,点击仍走 `/page/<path>` 路由,密码提示由原 PasswordPrompt 组件处理
@@ -10,74 +11,19 @@
  * - 此处不继承任何 layout。/page/[...path] 是全屏 iframe,加父 layout 会污染其渲染。
  * - 视图由 PageIndexView 客户端组件渲染,本文件只负责数据获取。
  * - 公开访问,无需登录(与单页面策略一致)。
+ *
+ * 行为对齐:
+ * - 本地 `./pages/` 不存在或为空 → 展示「暂无可用页面」空状态卡
+ *   (WebDAV 未配置时同步脚本已清空目录,运行时无需再区分"未配置"和"空")
+ * - 本地 `./pages/` 有内容 → 正常列出 + 拼接链接
  */
 import 'server-only';
-import type { FileStat } from 'webdav';
-import { getWebDavClient, isWebDavConfigured } from '@/lib/webdav';
 import { getDb } from '@/lib/db';
-import { splitDirFilename, joinPath } from '@/lib/storage/path';
-import { extractTitle, fetchPageHtml, isHtmlPath } from './_lib/webdav-page';
+import { PAGES_PREFIX } from '@/lib/page-source/shared';
+import { isLocalPagesEmpty, scanLocalPagesHtml, readPageTitle } from './_lib/fs-page';
 import { PageIndexView, type PageIndexItem } from './_components/PageIndexView';
 
 export const dynamic = 'force-dynamic';
-
-const PAGES_PREFIX = 'pages';
-/** 索引最大扫描深度(根 + 1 级子目录 = 2) */
-const MAX_LIST_DEPTH = 2;
-
-interface ScannedHtml {
-  relativePath: string;
-  filename: string;
-  dir: string;
-}
-
-/**
- * 浅层递归列出 `pages/` 下所有 .html/.htm 文件
- * - 根级 HTML 文件 → depth=1
- * - 1 级子目录下的 HTML 文件 → depth=2
- * - 2 级及更深不再展开(由 navMenu 或手动 URL 进入)
- */
-async function scanPagesHtml(): Promise<ScannedHtml[]> {
-  if (!isWebDavConfigured()) return [];
-  const client = getWebDavClient();
-  const out: ScannedHtml[] = [];
-
-  let rootEntries: FileStat[];
-  try {
-    rootEntries = await client.getDirectoryContents(PAGES_PREFIX, { deep: false });
-  } catch (err) {
-    console.error('[custom-page-index] list pages/ failed:', err);
-    return [];
-  }
-
-  for (const entry of rootEntries) {
-    if (entry.type === 'file' && isHtmlPath(entry.filename)) {
-      const relativePath = joinPath(PAGES_PREFIX, entry.filename);
-      const { dir, filename } = splitDirFilename(relativePath);
-      out.push({ relativePath, dir, filename });
-      continue;
-    }
-    if (entry.type === 'directory' && MAX_LIST_DEPTH >= 2) {
-      const subPath = joinPath(PAGES_PREFIX, entry.filename);
-      let subEntries: FileStat[];
-      try {
-        subEntries = await client.getDirectoryContents(subPath, { deep: false });
-      } catch (err) {
-        console.error('[custom-page-index] list subdir failed:', subPath, err);
-        continue;
-      }
-      for (const sub of subEntries) {
-        if (sub.type === 'file' && isHtmlPath(sub.filename)) {
-          const relativePath = joinPath(subPath, sub.filename);
-          const { dir, filename } = splitDirFilename(relativePath);
-          out.push({ relativePath, dir, filename });
-        }
-      }
-    }
-  }
-
-  return out;
-}
 
 /**
  * 批量查询若干目录的 StorageFolder 私有元数据
@@ -105,12 +51,17 @@ async function loadPrivateDirs(dirs: readonly string[]): Promise<Set<string>> {
 }
 
 export default async function PageIndex() {
-  const notConfigured = !isWebDavConfigured();
-  if (notConfigured) {
-    return <PageIndexView notConfigured={true} pages={[]} />;
+  // ./pages/ 不存在 / 为空 → 统一走空状态卡(WebDAV 未配置时同步脚本已清空目录)
+  if (await isLocalPagesEmpty()) {
+    return <PageIndexView notConfigured={false} pages={[]} />;
   }
 
-  const scanned = await scanPagesHtml();
+  const scanned = (await scanLocalPagesHtml()).map((entry) => ({
+    relativePath: entry.relativePath,
+    dir: entry.dir,
+    filename: entry.filename,
+  }));
+
   if (scanned.length === 0) {
     return <PageIndexView notConfigured={false} pages={[]} />;
   }
@@ -122,8 +73,7 @@ export default async function PageIndex() {
     scanned.map(async ({ relativePath, dir, filename }): Promise<PageIndexItem> => {
       let title = filename;
       try {
-        const html = await fetchPageHtml(relativePath);
-        const extracted = html ? extractTitle(html) : null;
+        const extracted = await readPageTitle(relativePath);
         if (extracted) title = extracted;
       } catch {
         /* 保持 filename */
