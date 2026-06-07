@@ -1,9 +1,15 @@
 /**
  * 上传文件到存储池
  * POST /api/storage/upload/[...path]
- * 请求体:multipart/form-data,字段名 file
+ * 请求体:原始二进制流(请求体即文件内容)
  * 大小上限 50MB;超限返回 413
+ *
+ * 流式上传:不再把整个文件读到 V8 堆,而是直接把请求体流过 WebDAV 写入流,
+ * 通过 TransformStream 实时累计字节数,超限时立即终止并清理已写入的部分文件。
  */
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
 import { NextResponse } from 'next/server'
 import {
   MAX_UPLOAD_SIZE,
@@ -31,31 +37,61 @@ export const POST = catchAllHandler<{ path: string[] }>(
     if (!isValidStoragePath(rel) || rel === '') return invalidPathResponse()
     const target = buildWebDavTarget(parts)
 
-    let formData: FormData
-    try {
-      formData = await req.formData()
-    } catch {
-      return NextResponse.json({ error: '请求体不是合法 multipart/form-data' }, { status: 400 })
-    }
-    const file = formData.get('file')
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: '缺少 file 字段' }, { status: 400 })
-    }
-    if (file.size > MAX_UPLOAD_SIZE) {
-      return payloadTooLargeResponse(file.size)
+    // Content-Length 快速拒绝(避免对超大请求也分配流处理管线)
+    const contentLengthHeader = req.headers.get('content-length')
+    if (contentLengthHeader !== null) {
+      const declared = Number(contentLengthHeader)
+      if (Number.isFinite(declared) && declared > MAX_UPLOAD_SIZE) {
+        return payloadTooLargeResponse(declared)
+      }
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer())
+    if (!req.body) {
+      return NextResponse.json({ error: '请求体为空' }, { status: 400 })
+    }
+
+    let client
     try {
-      const client = getWebDavClient()
-      await client.putFileContents(target, buffer, { overwrite: true })
+      client = getWebDavClient()
     } catch (err) {
+      return webdavErrorResponse(err, '上传文件')
+    }
+
+    // 实时累计字节数,超限时立即终止流并通过管道错误信号上报
+    let bytesReceived = 0
+    let sizeExceeded = false
+    const sizeGuard = new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        bytesReceived += chunk.byteLength
+        if (bytesReceived > MAX_UPLOAD_SIZE) {
+          sizeExceeded = true
+          controller.error(new Error('payload-too-large'))
+          return
+        }
+        controller.enqueue(chunk)
+      },
+    })
+    const guarded = req.body.pipeThrough(sizeGuard) as unknown as NodeReadableStream
+
+    const writeStream = client.createWriteStream(target, { overwrite: true })
+    try {
+      await pipeline(Readable.fromWeb(guarded), writeStream)
+    } catch (err) {
+      // 清理已写入的部分文件(尽力而为,不抛错)
+      try {
+        await client.deleteFile(target)
+      } catch {
+        // ignore: 文件可能尚未创建,或远端已无该记录
+      }
+      if (sizeExceeded) {
+        return payloadTooLargeResponse(bytesReceived)
+      }
       return webdavErrorResponse(err, '上传文件')
     }
 
     return NextResponse.json({
       path: target,
-      size: file.size,
+      size: bytesReceived,
       uploadedAt: new Date().toISOString(),
     })
   }
