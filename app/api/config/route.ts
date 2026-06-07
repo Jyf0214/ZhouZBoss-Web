@@ -72,7 +72,9 @@ export async function GET() {
   }
 
   logger.info('GET', '配置读取成功', { source: remoteConfigStatus || 'local' });
-  return NextResponse.json(response);
+  return NextResponse.json(response, {
+    headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+  });
 }
 
 function mergeSite(

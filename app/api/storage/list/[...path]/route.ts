@@ -27,7 +27,10 @@ export const GET = catchAllHandler<{ path: string[] }>(
       const client = getWebDavClient()
       const stats = await client.getDirectoryContents(target)
       const entries = stats.map(toWebDavEntry)
-      return NextResponse.json({ path: target, entries })
+      return NextResponse.json(
+        { path: target, entries },
+        { headers: { 'Cache-Control': 'private, max-age=10' } },
+      )
     } catch (err) {
       return webdavErrorResponse(err, '列出目录')
     }
