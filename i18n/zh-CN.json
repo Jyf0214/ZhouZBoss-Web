@@ -333,7 +333,124 @@
     "summary": "已设置 {set}/{total} 个变量，必需 {requiredSet}/{required} 个",
     "missingList": "缺少: {missing}",
     "ready": "就绪",
-    "notReady": "未就绪"
+    "notReady": "未就绪",
+    "ui": {
+      "deprecated": "已弃用",
+      "renamedTo": "已重命名为 {name}",
+      "systemInjected": "自动注入",
+      "systemInjectedHint": "此变量由运行时或平台自动设置，无需手动配置。",
+      "deprecatedHint": "此变量已弃用，将在后续版本移除。",
+      "renamedHint": "新名称为 {name}，建议迁移。",
+      "allReady": "全部就绪",
+      "missingCount": "{count} 项缺失",
+      "expandAll": "全部展开",
+      "collapseAll": "全部折叠"
+    },
+    "groups": {
+      "database": {
+        "name": "数据库",
+        "desc": "PostgreSQL 连接配置。DATABASE_URL 与 POSTGRES_* 系列至少需要设置一个。"
+      },
+      "auth": {
+        "name": "认证",
+        "desc": "JWT 签名密钥与会话加密。认证子系统运行所必需。"
+      },
+      "admin": {
+        "name": "管理员账户",
+        "desc": "首次初始化数据库时植入的种子管理员账户。若未设置，则第一个注册的用户自动成为管理员。"
+      },
+      "app": {
+        "name": "应用 URL",
+        "desc": "站点规范 URL。用于 og:url、分享链接、版权链接和密码重置回调。"
+      },
+      "github": {
+        "name": "GitHub 同步",
+        "desc": "本地内容与 GitHub 仓库的双向同步。用于内容备份与 PR 编辑流程。"
+      },
+      "giscus": {
+        "name": "Giscus 评论",
+        "desc": "文章详情页评论区。四个变量必须同时设置，否则仅渲染占位符。"
+      },
+      "storage": {
+        "name": "存储池 (WebDAV)",
+        "desc": "WebDAV 远程存储后端。三个变量 (URL / USER / PASS) 必须同时设置；部分配置视为未配置。"
+      },
+      "smtp": {
+        "name": "SMTP 邮件",
+        "desc": "外发邮件传输通道，用于密码重置、验证码等功能。仅在使用相关功能时需要。"
+      },
+      "cron": {
+        "name": "定时任务",
+        "desc": "/api/cleanup 等内部接口的鉴权共享密钥。未设置时这些接口将返回 401。"
+      },
+      "clerk": {
+        "name": "Clerk 第三方登录",
+        "desc": "可选的 Clerk OAuth / 社交登录集成。不设置时自动禁用 Clerk，回退到本地认证。"
+      },
+      "system": {
+        "name": "系统 / 构建",
+        "desc": "构建期与运行时注入的变量。NODE_ENV / VERCEL_* 由平台自动设置；SKIP_DB_INIT / DISABLE_HMR 仅供开发者使用。"
+      }
+    },
+    "vars": {
+      "database": {
+        "DATABASE_URL": "Prisma 在运行时与迁移期使用的主 PostgreSQL 连接字符串。",
+        "POSTGRES_URL": "Vercel Postgres 池化连接（开通 Vercel Postgres 时由 Vercel 自动注入）。",
+        "POSTGRES_PRISMA_URL": "Vercel Postgres 为 Prisma 优化的连接 URL（由 Vercel 自动注入）。",
+        "POSTGRES_URL_NON_POOLING": "Vercel Postgres 直连（非池化）URL（由 Vercel 自动注入，用于迁移）。"
+      },
+      "auth": {
+        "AUTH_SECRET": "JWT 会话令牌的签名密钥。至少 32 字符；轮换密钥会使所有现有会话失效。"
+      },
+      "admin": {
+        "ADMIN_EMAIL": "首次数据库初始化时创建的种子管理员邮箱。",
+        "ADMIN_PASSWORD": "种子管理员的密码。必须与 ADMIN_EMAIL 同时设置；否则跳过种子步骤。"
+      },
+      "app": {
+        "APP_URL": "站点规范根 URL（例如 https://example.com）。用于 og:url、分享链接、版权链接和邮件回调地址。",
+        "NEXT_PUBLIC_SITE_URL": "APP_URL 的旧名字。仍可兼容使用，但命中时会输出 console.warn 警告。"
+      },
+      "github": {
+        "GITHUB_REPO": "目标仓库，格式 owner/repo。GitHub 同步所必需。",
+        "GITHUB_TOKEN": "具有 repo 权限的 Personal Access Token。用于在目标仓库读写内容。",
+        "NEXT_PUBLIC_GITHUB_REPO": "GITHUB_REPO 的客户端镜像，供浏览器端展示仓库元数据的组件使用。"
+      },
+      "giscus": {
+        "NEXT_PUBLIC_GISCUS_REPO": "托管 Discussions 的 GitHub 仓库，格式 owner/repo。在 giscus.app 生成。",
+        "NEXT_PUBLIC_GISCUS_REPO_ID": "giscus.app 颁发的仓库 ID。需与 NEXT_PUBLIC_GISCUS_REPO 同时设置。",
+        "NEXT_PUBLIC_GISCUS_CATEGORY": "Discussion 分类名（例如 Announcements）。需与 NEXT_PUBLIC_GISCUS_CATEGORY_ID 同时设置。",
+        "NEXT_PUBLIC_GISCUS_CATEGORY_ID": "giscus.app 颁发的分类 ID。需与 NEXT_PUBLIC_GISCUS_CATEGORY 同时设置。"
+      },
+      "storage": {
+        "WEBDAV_URL": "WebDAV 服务器根 URL（例如 https://dav.example.com/dav）。需指向配置用户可写的目录。",
+        "WEBDAV_USER": "WebDAV HTTP Basic 认证用户名。",
+        "WEBDAV_PASS": "WebDAV HTTP Basic 认证密码。"
+      },
+      "smtp": {
+        "SMTP_HOST": "SMTP 服务器主机名（例如 smtp.gmail.com、smtp.sendgrid.net）。",
+        "SMTP_PORT": "SMTP 端口。常用值：587 (STARTTLS)、465 (TLS)、25 (明文)。",
+        "SMTP_USER": "SMTP 登录用户名。使用 Gmail 时填写完整邮箱地址。",
+        "SMTP_PASS": "SMTP 登录密码。Gmail 开启两步验证时需使用应用专用密码。",
+        "SMTP_FROM": "外发邮件的 From 地址。未设置时默认使用 SMTP_USER。",
+        "SMTP_SECURE": "设为 true 强制启用 TLS。SMTP_PORT 为 465 时会自动启用。"
+      },
+      "cron": {
+        "CRON_SECRET": "调用 /api/cleanup 时 Authorization: Bearer 头中的共享密钥。未设置时该端点返回 401。"
+      },
+      "clerk": {
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "Clerk 公钥（前端可见）。与 CLERK_SECRET_KEY 同时设置时启用 Clerk。",
+        "CLERK_SECRET_KEY": "Clerk 私钥（仅服务端），用于校验会话和调用 Clerk API。",
+        "CLERK_WEBHOOK_SECRET": "用于校验 /api/webhooks/clerk 收到的 Svix Webhook 签名密钥。"
+      },
+      "system": {
+        "SKIP_DB_INIT": "开发者标志。设为 true 时，scripts/db-init.mjs 跳过初始化 / push 步骤。",
+        "DISABLE_HMR": "开发者标志。设为 true 时，webpack watch 完全禁用（用于非 React 工具场景）。",
+        "NODE_ENV": "Node 运行环境，由 Next.js 自动设置（development / production / test）。",
+        "VERCEL": "Vercel 构建平台自动设为 1。用于在运行时识别 Vercel 部署。",
+        "VERCEL_URL": "当前 Vercel 构建的部署 URL（无协议）。作为 APP_URL 的兜底。",
+        "VERCEL_PROJECT_PRODUCTION_URL": "Vercel 在自定义域名生效后注入的生产部署 URL，优先级高于 VERCEL_URL。"
+      }
+    }
   },
   "error": {
     "404": "页面不存在",

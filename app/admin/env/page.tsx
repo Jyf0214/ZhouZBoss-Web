@@ -1,285 +1,26 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/hooks/use-i18n';
-import {
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Server,
-  Shield,
-  GitBranch,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw,
-} from 'lucide-react';
-import { Card, Tag, Progress } from 'antd';
+import { Server } from 'lucide-react';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
 import { PageContainer } from '@/components/ui/PageContainer';
-import { Button } from '@/components/ui/Button';
-
-interface EnvVar {
-  name: string;
-  isSet: boolean;
-  required: boolean;
-  description: string;
-}
-
-interface EnvGroup {
-  name: string;
-  variables: EnvVar[];
-}
+import {
+  type EnvGroup,
+  type EnvSummary,
+  groupOrder,
+  EnvStatsCards,
+  SummaryHero,
+  HeaderActions,
+  EnvGroupSection,
+} from './_components';
 
 interface EnvStatus {
   groups: Record<string, EnvGroup>;
-  summary: {
-    total: number;
-    set: number;
-    required: number;
-    requiredSet: number;
-    optional: number;
-    optionalSet: number;
-    missingRequired: string[];
-    isReady: boolean;
-  };
-}
-
-const groupIcons: Record<string, React.ElementType> = {
-  database: Server,
-  auth: Shield,
-  github: GitBranch,
-};
-
-function EnvStatsCards({ summary }: { summary: EnvStatus['summary'] }) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-      <div className="bg-white rounded-2xl border border-zinc-100 p-4 text-center">
-        <div className="text-2xl font-black text-zinc-900">{summary.total}</div>
-        <div className="text-xs text-zinc-400 font-medium mt-1">总变量</div>
-      </div>
-      <div className="bg-white rounded-2xl border border-zinc-100 p-4 text-center">
-        <div className="text-2xl font-black text-emerald-600">{summary.set}</div>
-        <div className="text-xs text-zinc-400 font-medium mt-1">已设置</div>
-      </div>
-      <div className="bg-white rounded-2xl border border-zinc-100 p-4 text-center">
-        <div className="text-2xl font-black text-red-500">{summary.required - summary.requiredSet}</div>
-        <div className="text-xs text-zinc-400 font-medium mt-1">必需缺失</div>
-      </div>
-      <div className="bg-white rounded-2xl border border-zinc-100 p-4 text-center">
-        <div className="text-2xl font-black text-amber-500">{summary.optional - summary.optionalSet}</div>
-        <div className="text-xs text-zinc-400 font-medium mt-1">可选缺失</div>
-      </div>
-    </div>
-  );
-}
-
-function EnvVariableRow({ variable }: { variable: EnvVar }) {
-  return (
-    <div className="px-6 py-4 flex items-center justify-between gap-4">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <code className="text-sm font-mono font-semibold text-zinc-800 bg-zinc-100 px-2 py-0.5 rounded-md">
-            {variable.name}
-          </code>
-          {variable.required ? (
-            <Tag color="error" className="rounded-lg text-[10px] leading-tight">必需</Tag>
-          ) : (
-            <Tag className="rounded-lg text-[10px] leading-tight bg-zinc-50 border-zinc-200 text-zinc-500">可选</Tag>
-          )}
-        </div>
-        <p className="text-zinc-400 text-sm mt-1.5">{variable.description}</p>
-      </div>
-      <div className="shrink-0">
-        {variable.isSet ? (
-          <div className="flex items-center gap-1.5 text-emerald-600">
-            <CheckCircle2 size={16} />
-            <span className="text-sm font-medium">已设置</span>
-          </div>
-        ) : (
-          <div className={`flex items-center gap-1.5 ${variable.required ? 'text-red-500' : 'text-amber-500'}`}>
-            <XCircle size={16} />
-            <span className="text-sm font-medium">未设置</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function EnvGroupCard({
-  key: _groupKey,
-  group,
-  collapsed,
-  onToggle,
-  icon: Icon,
-}: {
-  key: string;
-  group: EnvGroup;
-  collapsed: boolean;
-  onToggle: () => void;
-  icon: React.ElementType;
-}) {
-  const groupSet = group.variables.filter((v) => v.isSet).length;
-  const groupTotal = group.variables.length;
-  return (
-    <Card
-      className="rounded-2xl border border-zinc-100 overflow-hidden"
-      bordered={false}
-      styles={{ body: { padding: 0 } }}
-    >
-      <Button
-        variant="ghost"
-        size="sm"
-        block
-        rounded="none"
-        className="justify-between px-6 py-4 hover:bg-zinc-50/50"
-        onClick={onToggle}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-zinc-100 rounded-lg flex items-center justify-center">
-            <Icon size={18} className="text-zinc-600" />
-          </div>
-          <div className="text-left">
-            <span className="font-bold text-zinc-900">{group.name}</span>
-            <span className="text-zinc-400 text-sm ml-2">{groupSet}/{groupTotal}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {groupSet === groupTotal ? (
-            <Tag color="success" className="rounded-lg mr-2">全部就绪</Tag>
-          ) : (
-            <Tag color="warning" className="rounded-lg mr-2">{groupTotal - groupSet} 项缺失</Tag>
-          )}
-          {collapsed ? <ChevronDown size={16} className="text-zinc-400" /> : <ChevronUp size={16} className="text-zinc-400" />}
-        </div>
-      </Button>
-      {!collapsed && (
-        <div className="divide-y divide-zinc-50">
-          {group.variables.map((variable) => (
-            <EnvVariableRow key={variable.name} variable={variable} />
-          ))}
-        </div>
-      )}
-    </Card>
-  );
-}
-
-function EnvStatusContent({
-  envStatus,
-  collapsed,
-  onToggleCollapsed,
-  onRefresh,
-  t,
-}: {
-  envStatus: EnvStatus;
-  collapsed: Record<string, boolean>;
-  onToggleCollapsed: (key: string) => void;
-  onRefresh: () => void;
-  t: (key: string) => string;
-}) {
-  const { groups, summary } = envStatus;
-  const progressPercent = summary.total > 0 ? Math.round((summary.set / summary.total) * 100) : 0;
-
-  return (
-    <PageContainer maxWidth="4xl" className="bg-zinc-50">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center">
-            <Server size={22} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-900">
-              {t('env.title') || '环境变量状态'}
-            </h1>
-            <p className="text-zinc-400 text-sm">
-              {t('env.subtitle') || '检查系统所需环境变量配置'}
-            </p>
-          </div>
-        </div>
-        <Button
-          variant="default"
-          rounded="md"
-          icon={<RefreshCw size={14} />}
-          onClick={onRefresh}
-        >
-          {t('env.refresh') || '刷新'}
-        </Button>
-      </div>
-
-      <Card
-        className={`rounded-2xl border mb-4 ${
-          summary.isReady
-            ? 'border-emerald-100 bg-emerald-50/50'
-            : 'border-amber-100 bg-amber-50/50'
-        }`}
-        bordered={false}
-      >
-        <div className="flex items-start gap-4">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${summary.isReady ? 'bg-emerald-100' : 'bg-amber-100'}`}>
-            {summary.isReady ? (
-              <CheckCircle2 size={28} className="text-emerald-600" />
-            ) : (
-              <AlertTriangle size={28} className="text-amber-600" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-zinc-900 mb-1">
-              {summary.isReady ? t('env.ready') || '环境配置完成' : t('env.notReady') || '缺少必要环境变量'}
-            </h2>
-            <p className="text-zinc-500 text-sm mb-4">
-              已设置 {summary.set}/{summary.total} 个变量 · 必需 {summary.requiredSet}/{summary.required} 个
-            </p>
-            <Progress
-              percent={progressPercent}
-              strokeColor={summary.isReady ? '#10b981' : '#f59e0b'}
-              trailColor={summary.isReady ? '#d1fae5' : '#fef3c7'}
-              size="small"
-              className="max-w-md"
-            />
-            {!summary.isReady && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {summary.missingRequired.map((name) => (
-                  <Tag key={name} color="error" className="rounded-lg text-xs">{name}</Tag>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      <EnvStatsCards summary={summary} />
-
-      <div className="space-y-4">
-        {Object.entries(groups).map(([key, group]) => {
-          const Icon = groupIcons[key] ?? Server;
-          return (
-            <EnvGroupCard
-              key={key}
-              group={group}
-              icon={Icon}
-              collapsed={!!collapsed[key]}
-              onToggle={() => onToggleCollapsed(key)}
-            />
-          );
-        })}
-      </div>
-
-      <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-3">
-        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-          <span className="text-blue-600 text-sm">💡</span>
-        </div>
-        <div>
-          <p className="text-blue-800 text-sm font-medium">
-            在 Vercel 项目的 Settings → Environment Variables 中配置环境变量。
-          </p>
-          <p className="text-blue-600 text-xs mt-1">修改后需要重新部署才能生效。</p>
-        </div>
-      </div>
-    </PageContainer>
-  );
+  summary: EnvSummary;
 }
 
 export default function EnvStatusPage() {
@@ -288,11 +29,11 @@ export default function EnvStatusPage() {
   const { t } = useI18n();
   const [envStatus, setEnvStatus] = useState<EnvStatus | null>(null);
   const [loading, setLoading] = useState(true);
-const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const hasRedirected = useRef(false);
   const hasFetched = useRef(false);
 
-  const fetchEnvStatus = async () => {
+  const fetchEnvStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/env-status');
       if (res.ok) {
@@ -308,7 +49,7 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
       setLoading(false);
       hasFetched.current = true;
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -320,7 +61,21 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
     if (isSudo && !hasFetched.current) {
       void fetchEnvStatus();
     }
-  }, [authLoading, isSudo, router]);
+  }, [authLoading, isSudo, router, fetchEnvStatus]);
+
+  const handleToggleCollapsed = useCallback((key: string) => {
+    setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  const handleToggleAll = useCallback((collapse: boolean) => {
+    setCollapsed((prev) => {
+      const next: Record<string, boolean> = { ...prev };
+      groupOrder.forEach((k) => {
+        next[k] = collapse;
+      });
+      return next;
+    });
+  }, []);
 
   if (authLoading) {
     return (
@@ -348,13 +103,59 @@ const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
     );
   }
 
+  const { groups, summary } = envStatus;
+  const orderedEntries = Object.entries(groups).sort(([a], [b]) => {
+    const ai = groupOrder.indexOf(a);
+    const bi = groupOrder.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+  const allCollapsed = orderedEntries.every(([key]) => collapsed[key]);
+
   return (
-    <EnvStatusContent
-      envStatus={envStatus}
-      collapsed={collapsed}
-      onToggleCollapsed={(key: string) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }))}
-      onRefresh={fetchEnvStatus}
-      t={t}
-    />
+    <PageContainer maxWidth="4xl" className="bg-zinc-50">
+      <div className="flex items-center justify-between mb-5 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center shrink-0">
+            <Server size={22} className="text-white" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-zinc-900">{t('env.title') || '环境变量状态'}</h1>
+            <p className="text-zinc-400 text-sm">{t('env.subtitle') || '检查系统所需环境变量配置'}</p>
+          </div>
+        </div>
+        <HeaderActions onToggleAll={handleToggleAll} onRefresh={fetchEnvStatus} allCollapsed={allCollapsed} t={t} />
+      </div>
+
+      <SummaryHero summary={summary} t={t} />
+      <EnvStatsCards summary={summary} t={t} />
+
+      <div className="space-y-4">
+        {orderedEntries.map(([key, group]) => (
+          <EnvGroupSection
+            key={key}
+            groupKey={key}
+            group={group}
+            collapsed={!!collapsed[key]}
+            onToggleCollapsed={handleToggleCollapsed}
+            t={t}
+          />
+        ))}
+      </div>
+
+      <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-3">
+        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+          <span className="text-blue-600 text-sm">💡</span>
+        </div>
+        <div>
+          <p className="text-blue-800 text-sm font-medium">
+            {t('env.tip') || '在 Vercel 项目的 Settings → Environment Variables 中配置环境变量。'}
+          </p>
+          <p className="text-blue-600 text-xs mt-1">修改后需要重新部署才能生效。</p>
+        </div>
+      </div>
+    </PageContainer>
   );
 }

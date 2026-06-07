@@ -333,7 +333,124 @@
     "summary": "Set {set}/{total} variables, required {requiredSet}/{required}",
     "missingList": "Missing: {missing}",
     "ready": "Ready",
-    "notReady": "Not Ready"
+    "notReady": "Not Ready",
+    "ui": {
+      "deprecated": "Deprecated",
+      "renamedTo": "Renamed to {name}",
+      "systemInjected": "Auto-injected",
+      "systemInjectedHint": "This variable is automatically set by the runtime / platform; no manual configuration required.",
+      "deprecatedHint": "This variable is deprecated and will be removed in a future release.",
+      "renamedHint": "The new name is {name}. Migration is recommended.",
+      "allReady": "All ready",
+      "missingCount": "{count} missing",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all"
+    },
+    "groups": {
+      "database": {
+        "name": "Database",
+        "desc": "PostgreSQL connection. At least one of DATABASE_URL or any POSTGRES_* variant must be set."
+      },
+      "auth": {
+        "name": "Authentication",
+        "desc": "JWT signing key and session encryption. Required for the auth subsystem to function."
+      },
+      "admin": {
+        "name": "Admin Account",
+        "desc": "Initial seed admin account created on first database initialization. If unset, the first registered user becomes admin."
+      },
+      "app": {
+        "name": "Application URL",
+        "desc": "Canonical site URL. Used for og:url, share links, copyright links, and password reset callbacks."
+      },
+      "github": {
+        "name": "GitHub Sync",
+        "desc": "Two-way sync between local content and a GitHub repository. Used for content backup and edits via PR."
+      },
+      "giscus": {
+        "name": "Giscus Comments",
+        "desc": "Comments widget on post detail pages. All four variables must be set together; otherwise a placeholder is rendered."
+      },
+      "storage": {
+        "name": "Storage Pool (WebDAV)",
+        "desc": "WebDAV remote storage backend. All three variables (URL / USER / PASS) must be set together; partial configuration is treated as unconfigured."
+      },
+      "smtp": {
+        "name": "SMTP Email",
+        "desc": "Outbound email transport for password reset, verification codes, etc. Required only when those features are used."
+      },
+      "cron": {
+        "name": "Scheduled Jobs",
+        "desc": "Shared secret for authenticating calls to /api/cleanup and similar internal endpoints. Unset disables the endpoints."
+      },
+      "clerk": {
+        "name": "Clerk Third-Party Login",
+        "desc": "Optional Clerk integration for OAuth / social login. Leaving these unset disables Clerk entirely and falls back to local auth."
+      },
+      "system": {
+        "name": "System / Build",
+        "desc": "Build- and runtime-injected variables. NODE_ENV / VERCEL_* are auto-set; SKIP_DB_INIT / DISABLE_HMR are developer-only."
+      }
+    },
+    "vars": {
+      "database": {
+        "DATABASE_URL": "Primary PostgreSQL connection string used by Prisma at runtime and during migrations.",
+        "POSTGRES_URL": "Vercel Postgres pooled connection (auto-injected by Vercel when Vercel Postgres is provisioned).",
+        "POSTGRES_PRISMA_URL": "Vercel Postgres Prisma-optimized connection URL (auto-injected by Vercel).",
+        "POSTGRES_URL_NON_POOLING": "Vercel Postgres direct / non-pooled connection URL (auto-injected by Vercel, used for migrations)."
+      },
+      "auth": {
+        "AUTH_SECRET": "Secret used to sign JWT session tokens. Must be at least 32 characters; rotate to invalidate all existing sessions."
+      },
+      "admin": {
+        "ADMIN_EMAIL": "Email address of the initial admin account created during the first database initialization.",
+        "ADMIN_PASSWORD": "Password of the initial admin account. Must be set together with ADMIN_EMAIL; otherwise the seed step is skipped."
+      },
+      "app": {
+        "APP_URL": "Canonical site root URL (e.g. https://example.com). Used for og:url, share links, copyright links, and email callback URLs.",
+        "NEXT_PUBLIC_SITE_URL": "Legacy name of APP_URL. Still honored for backward compatibility but logs a console.warn on use."
+      },
+      "github": {
+        "GITHUB_REPO": "Target repository in the format owner/repo. Required for GitHub sync.",
+        "GITHUB_TOKEN": "Personal Access Token with repo scope. Used to read and write content in the configured repository.",
+        "NEXT_PUBLIC_GITHUB_REPO": "Client-side mirror of GITHUB_REPO for components that render repo metadata in the browser."
+      },
+      "giscus": {
+        "NEXT_PUBLIC_GISCUS_REPO": "GitHub repository hosting Discussions, in the format owner/repo. Generate via giscus.app.",
+        "NEXT_PUBLIC_GISCUS_REPO_ID": "Repository ID issued by giscus.app. Required together with NEXT_PUBLIC_GISCUS_REPO.",
+        "NEXT_PUBLIC_GISCUS_CATEGORY": "Discussion category name (e.g. Announcements). Required together with NEXT_PUBLIC_GISCUS_CATEGORY_ID.",
+        "NEXT_PUBLIC_GISCUS_CATEGORY_ID": "Category ID issued by giscus.app. Required together with NEXT_PUBLIC_GISCUS_CATEGORY."
+      },
+      "storage": {
+        "WEBDAV_URL": "WebDAV server base URL (e.g. https://dav.example.com/dav). Must point to a directory writable by the configured user.",
+        "WEBDAV_USER": "Username for HTTP Basic auth against the WebDAV server.",
+        "WEBDAV_PASS": "Password for HTTP Basic auth against the WebDAV server."
+      },
+      "smtp": {
+        "SMTP_HOST": "SMTP server hostname (e.g. smtp.gmail.com, smtp.sendgrid.net).",
+        "SMTP_PORT": "SMTP server port. Common values: 587 (STARTTLS), 465 (TLS), 25 (plain).",
+        "SMTP_USER": "Username for SMTP authentication. For Gmail, use the full email address.",
+        "SMTP_PASS": "Password for SMTP authentication. For Gmail with 2FA, use an App Password.",
+        "SMTP_FROM": "From address used on outgoing emails. Defaults to SMTP_USER if unset.",
+        "SMTP_SECURE": "Set to true to force TLS. Auto-enabled when SMTP_PORT is 465."
+      },
+      "cron": {
+        "CRON_SECRET": "Shared secret required by the Authorization: Bearer header on /api/cleanup. Unset disables the endpoint with a 401."
+      },
+      "clerk": {
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "Clerk publishable key (frontend-visible). When set together with CLERK_SECRET_KEY, Clerk is enabled.",
+        "CLERK_SECRET_KEY": "Clerk secret key (server-side only) for verifying sessions and calling the Clerk API.",
+        "CLERK_WEBHOOK_SECRET": "Signing secret used to verify Svix webhooks from Clerk on /api/webhooks/clerk."
+      },
+      "system": {
+        "SKIP_DB_INIT": "Developer-only flag. When set to true, scripts/db-init.mjs skips the init / push step.",
+        "DISABLE_HMR": "Developer-only flag. When set to true, webpack watch is fully ignored (useful for non-React tooling).",
+        "NODE_ENV": "Node environment, set automatically by Next.js (development / production / test).",
+        "VERCEL": "Set to 1 by the Vercel build platform. Used to detect Vercel deployments at runtime.",
+        "VERCEL_URL": "Deployment URL of the current Vercel build (no protocol). Used as a fallback for APP_URL.",
+        "VERCEL_PROJECT_PRODUCTION_URL": "Production deployment URL injected by Vercel after a custom domain is attached. Preferred over VERCEL_URL."
+      }
+    }
   },
   "error": {
     "404": "Page not found",

@@ -430,42 +430,282 @@ export const zAppConfig = z.object({
 // ============================================================================
 // 推导出的 TypeScript 类型 (供业务代码直接 import)
 // ============================================================================
+//
+// 注:AppConfig 及子类型采用**手写 interface**而非 `z.infer`,原因:
+// 1. Zod 的 `.default() + .strict()` 推断出的类型会把所有字段标记为"必填",
+//    这与业务代码(尤其 `app/api/config/route.ts` 的 `mergeAppConfig`)
+//    长期依赖的"部分顶层字段可选"语义不兼容,会触发 17+ 个 TS2769 / TS2345。
+// 2. 手写 interface 保留原 `next.config.ts` 中标记为 `?` 的可选字段,
+//    让 `mergeAppConfig` 之类的合并函数可以返回 `T | undefined`。
+// 3. 运行时校验仍由 `zAppConfig.strict()` 负责,未知 key 仍会被立即抛错。
+//    Zod schema 是单一事实源;这里导出的 interface 只是把 schema 推断出来的
+//    "过严"类型放宽到与原 next.config.ts 一致的可选项。
+// ============================================================================
 
-export type AppConfig = z.infer<typeof zAppConfig>;
-export type SiteConfig = z.infer<typeof zSiteConfig>;
-export type AppearanceConfig = z.infer<typeof zAppearanceConfig>;
-export type AccessConfig = z.infer<typeof zAccessConfig>;
-export type AccessSection = z.infer<typeof zAccessSection>;
-export type AuthConfig = z.infer<typeof zAuthConfig>;
-export type NavMenuItem = z.infer<typeof zNavMenuItem>;
-export type NavMenuGroup = z.infer<typeof zNavMenuGroup>;
-export type NavConfig = z.infer<typeof zNavConfig>;
-export type MournConfig = z.infer<typeof zMournConfig>;
-export type HighlightConfig = z.infer<typeof zHighlightConfig>;
-export type CopyConfig = z.infer<typeof zCopyConfig>;
-export type SocialConfig = z.infer<typeof zSocialConfig>;
-export type AuthorStatusConfig = z.infer<typeof zAuthorStatusConfig>;
-export type CoverConfig = z.infer<typeof zCoverConfig>;
-export type ErrorImgConfig = z.infer<typeof zErrorImgConfig>;
-export type PostMetaDisplayConfig = z.infer<typeof zPostMetaDisplayConfig>;
-export type PostMetaPostConfig = z.infer<typeof zPostMetaPostConfig>;
-export type PostMetaConfig = z.infer<typeof zPostMetaConfig>;
-export type WordCountConfig = z.infer<typeof zWordCountConfig>;
-export type TocConfig = z.infer<typeof zTocConfig>;
-export type CopyrightConfig = z.infer<typeof zCopyrightConfig>;
-export type QRCodeItem = z.infer<typeof zQRCodeItem>;
-export type RewardConfig = z.infer<typeof zRewardConfig>;
-export type PostEditConfig = z.infer<typeof zPostEditConfig>;
-export type SharejsConfig = z.infer<typeof zSharejsConfig>;
-export type AddtoanyConfig = z.infer<typeof zAddtoanyConfig>;
-export type ShareConfig = z.infer<typeof zShareConfig>;
-export type MainToneConfig = z.infer<typeof zMainToneConfig>;
-export type FooterOwnerConfig = z.infer<typeof zFooterOwnerConfig>;
-export type FooterRuntimeConfig = z.infer<typeof zFooterRuntimeConfig>;
-export type FooterSocialLink = z.infer<typeof zFooterSocialLink>;
-export type FooterLinkItem = z.infer<typeof zFooterLinkItem>;
-export type FooterLinkGroup = z.infer<typeof zFooterLinkGroup>;
-export type FooterBadge = z.infer<typeof zFooterBadge>;
-export type FooterConfig = z.infer<typeof zFooterConfig>;
-export type ClerkConfig = z.infer<typeof zClerkConfig>;
-export type UserConfig = z.infer<typeof zUserConfig>;
+export interface SiteConfig {
+  title: string;
+  description: string;
+  heroTitleLine1: string;
+  heroTitleLine2: string;
+  lang: string;
+}
+
+export interface AppearanceConfig {
+  /** 全局基础字号(px),默认 16,可在网页端配置 */
+  fontSize?: number;
+  background: {
+    url: string;
+    opacity: number;
+  };
+  customCSS: string;
+  customHead: string;
+  loading?: {
+    page?: {
+      type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
+      color?: string;
+      position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    };
+    navigation?: {
+      type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd';
+      color?: string;
+    };
+    slogans?: string[];
+  };
+}
+
+export interface AccessSection {
+  public: string[];
+  private: string[];
+}
+
+export interface AccessConfig {
+  posts: AccessSection;
+  faces: AccessSection;
+  diary: AccessSection;
+}
+
+export interface AuthConfig {
+  allowRegistration: boolean;
+  admin?: {
+    avatar?: string;
+  };
+}
+
+export interface NavMenuItem {
+  name: string;
+  link: string;
+  icon?: string;
+}
+
+export interface NavMenuGroup {
+  title: string;
+  item: NavMenuItem[];
+}
+
+export interface NavConfig {
+  enable: boolean;
+  travelling: boolean;
+  clock: boolean;
+  menu: NavMenuGroup[];
+}
+
+export interface MournConfig {
+  enable: boolean;
+  days: string[];
+}
+
+export interface HighlightConfig {
+  theme: string;
+  copy: boolean;
+  lang: boolean;
+  shrink: boolean;
+  heightLimit: number;
+  wordWrap: boolean;
+}
+
+export interface CopyConfig {
+  enable: boolean;
+  copyright: {
+    enable: boolean;
+    limitCount: number;
+  };
+}
+
+export type SocialConfig = Record<string, string>;
+
+export interface AuthorStatusConfig {
+  enable: boolean;
+  statusImg: string;
+  skills: string[];
+}
+
+export interface CoverConfig {
+  indexEnable: boolean;
+  asideEnable: boolean;
+  archivesEnable: boolean;
+  position: 'left' | 'right' | 'both';
+  defaultCover: string[];
+}
+
+export interface ErrorImgConfig {
+  flink: string;
+  postPage: string;
+}
+
+export interface PostMetaDisplayConfig {
+  dateType: 'created' | 'updated' | 'both';
+  dateFormat: 'date' | 'relative' | 'simple';
+  categories: boolean;
+  tags: boolean;
+  label: boolean;
+}
+
+export interface PostMetaPostConfig extends PostMetaDisplayConfig {
+  unread: boolean;
+}
+
+export interface PostMetaConfig {
+  page: PostMetaDisplayConfig & { dateFormat: 'date' | 'relative' | 'simple' };
+  post: PostMetaPostConfig;
+}
+
+export interface WordCountConfig {
+  enable: boolean;
+  postWordcount: boolean;
+  min2read: boolean;
+  totalWordcount: boolean;
+}
+
+export interface TocConfig {
+  post: boolean;
+  page: boolean;
+  number: boolean;
+  expand: boolean;
+  styleSimple: boolean;
+}
+
+export interface CopyrightConfig {
+  enable: boolean;
+  decode: boolean;
+  authorHref: string;
+  location: string;
+  license: string;
+  licenseUrl: string;
+  avatarSinks: boolean;
+  authorImgBack: string;
+  authorImgFront: string;
+  authorLink: string;
+}
+
+export interface QRCodeItem {
+  img: string;
+  link: string;
+  text: string;
+}
+
+export interface RewardConfig {
+  enable: boolean;
+  qrCodes: QRCodeItem[];
+}
+
+export interface PostEditConfig {
+  enable: boolean;
+  github: string | false;
+}
+
+export interface SharejsConfig {
+  enable: boolean;
+  sites: string;
+}
+
+export interface AddtoanyConfig {
+  enable: boolean;
+  item: string;
+}
+
+export interface ShareConfig {
+  sharejs: SharejsConfig;
+  addtoany: AddtoanyConfig;
+}
+
+export interface MainToneConfig {
+  enable: boolean;
+  mode: 'cdn' | 'api' | 'both';
+}
+
+export interface FooterOwnerConfig {
+  enable: boolean;
+  since: number;
+  author?: string;
+}
+
+export interface FooterRuntimeConfig {
+  enable: boolean;
+  launchTime: string;
+}
+
+export interface FooterSocialLink {
+  name: string;
+  icon: string;
+}
+
+export interface FooterLinkItem {
+  name: string;
+  url: string;
+}
+
+export interface FooterLinkGroup {
+  group: string;
+  items: FooterLinkItem[];
+}
+
+export interface FooterBadge {
+  name: string;
+  url: string;
+}
+
+export interface FooterConfig {
+  owner: FooterOwnerConfig;
+  customText: string;
+  runtime: FooterRuntimeConfig;
+  avatar?: string;
+  socialLinks?: FooterSocialLink[];
+  links?: FooterLinkGroup[];
+  badges?: FooterBadge[];
+  typedTextPrefix?: string;
+  typedText?: string[];
+}
+
+export interface ClerkConfig {
+  enable: boolean;
+}
+
+export interface UserConfig {
+  avatar?: string;
+}
+
+export interface AppConfig {
+  site: SiteConfig;
+  appearance: AppearanceConfig;
+  access: AccessConfig;
+  auth: AuthConfig;
+  nav?: NavConfig;
+  mourn?: MournConfig;
+  highlight?: HighlightConfig;
+  copy?: CopyConfig;
+  social?: SocialConfig;
+  authorStatus?: AuthorStatusConfig;
+  cover?: CoverConfig;
+  errorImg?: ErrorImgConfig;
+  postMeta?: PostMetaConfig;
+  wordcount?: WordCountConfig;
+  toc?: TocConfig;
+  copyright?: CopyrightConfig;
+  reward?: RewardConfig;
+  postEdit?: PostEditConfig;
+  share?: ShareConfig;
+  mainTone?: MainToneConfig;
+  footer?: FooterConfig;
+  clerk?: ClerkConfig;
+  users?: Record<string, UserConfig>;
+}
