@@ -68,29 +68,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<Route
       return debugResponse(relativePath, stat, Math.round(performance.now() - start))
     }
 
-    // fetch 流式代理:直接请求 WebDAV 服务器
-    const webdavUrl = `${process.env.WEBDAV_URL!.replace(/\/+$/, '')}/${relativePath}`
-    const auth = Buffer.from(`${process.env.WEBDAV_USER}:${process.env.WEBDAV_PASS}`).toString('base64')
-
-    const upstream = await fetch(webdavUrl, {
-      headers: { 'Authorization': `Basic ${auth}` },
-    })
-    if (!upstream.ok) {
-      return NextResponse.json({ error: `上游 ${upstream.status}` }, { status: upstream.status })
+    // 用 webdav 客户端读取文件(处理路径和认证一致)
+    const buf = await client.getFileContents(relativePath, { format: 'binary' }) as ArrayBuffer
+    const headers: Record<string, string> = {
+      'Content-Type': stat.mime ?? 'application/octet-stream',
+      'Content-Length': String(stat.size),
+      'Cache-Control': 'private, max-age=3600',
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Disposition': stat.mime === 'text/html' ? 'attachment' : 'inline',
     }
-
-    // 缓冲响应体并返回(serverless 环境不依赖流式管道)
-    const buf = await upstream.arrayBuffer()
-    const headers: Record<string, string> = {}
-    upstream.headers.forEach((val, key) => {
-      const lk = key.toLowerCase()
-      if (lk === 'content-type' || lk === 'content-disposition' || lk === 'last-modified') {
-        headers[key] = val
-      }
-    })
-    headers['Cache-Control'] = 'private, max-age=3600'
-    headers['X-Content-Type-Options'] = 'nosniff'
-    headers['Content-Disposition'] = stat.mime === 'text/html' ? 'attachment' : 'inline'
 
     return new NextResponse(buf, { status: 200, headers })
   } catch (err) {
