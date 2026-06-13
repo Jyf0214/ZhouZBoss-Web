@@ -344,15 +344,19 @@ async function main() {
       const relNoPrefix = relPath.slice(WEBDAV_PREFIX.length + 1);
       const localPath = path.join(LOCAL_DIR, relNoPrefix);
 
-      // 先 stat 检查文件是否存在且非空
+      // 先 stat 检查文件元信息
+      let fileSize = null;
       try {
         const info = await client.stat(relPath);
-        if (info.size === 0) {
-          console.warn(`${LOG_PREFIX} ⚠️ 跳过空文件: ${relPath}`);
+        fileSize = info.size ?? null;
+        console.log(`${LOG_PREFIX} stat: ${relPath} → size=${fileSize}, type=${info.type}`);
+        if (fileSize === 0) {
+          console.warn(`${LOG_PREFIX} ⚠️ 跳过空文件(size=0): ${relPath}`);
           downloadErrors += 1;
           continue;
         }
-      } catch {
+      } catch (statErr) {
+        console.warn(`${LOG_PREFIX} stat 失败: ${relPath} → ${statErr.message}`);
         // stat 失败不阻断,继续尝试下载
       }
 
@@ -379,8 +383,16 @@ async function main() {
           break;
         } catch (err) {
           lastErr = err;
+          // 提取详细错误信息: HTTP 状态码、错误名、完整消息
+          const status = err.status ?? err.statusCode ?? 'unknown';
+          const errName = err.name ?? 'Error';
+          console.warn(`${LOG_PREFIX} ⚠️ 下载失败(第${attempt + 1}/${MAX_RETRIES}次): ${relPath}`);
+          console.warn(`${LOG_PREFIX}   错误类型: ${errName}, HTTP状态: ${status}`);
+          console.warn(`${LOG_PREFIX}   错误消息: ${err.message}`);
           if (attempt < MAX_RETRIES - 1) {
-            await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+            const delayMs = 1000 * (attempt + 1);
+            console.log(`${LOG_PREFIX}   ${delayMs}ms 后重试...`);
+            await new Promise((r) => setTimeout(r, delayMs));
           }
         }
       }
