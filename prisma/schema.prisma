@@ -25,22 +25,6 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   @@map("users")
-  @@index([email])
-  @@index([uid])
-  @@index([username])
-  @@index([clerkId])
-}
-
-// 用户组表
-model UserGroup {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  permissions String[] @default([])
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("user_groups")
 }
 
 // KV 存储表
@@ -51,7 +35,6 @@ model OriginiumKV {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("originium_kv")
-  @@index([key])
 }
 
 // 日记表
@@ -99,13 +82,11 @@ model StorageFolder {
   public      Boolean  @default(false) @map("is_public")
   description String?
   password    String?                // 私有页面访问密码(明文),null = 未设密码(私有但失败安全)
-  deletedAt   DateTime? @map("deleted_at") // 软删除时间,null = 未删除;WebDAV 文件夹尚未物理清理
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("storage_folders")
   @@index([public])
-  @@index([deletedAt])
 }
 
 /// 存储池操作审计日志(rmdir / mkdir / upload / delete_file / set_public / set_password)
