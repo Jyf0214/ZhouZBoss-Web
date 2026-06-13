@@ -12,6 +12,8 @@
  * 若 http2 失败，回退到 node:https 带 PROPFIND 风格头部。
  */
 import { type NextRequest, NextResponse } from 'next/server'
+import { readFile } from 'node:fs/promises'
+import nodePath from 'node:path'
 import https from 'node:https'
 import http2 from 'node:http2'
 import { getSession } from '@/lib/auth'
@@ -22,6 +24,8 @@ import type { FileStat, ResponseDataDetailed } from 'webdav'
 
 interface RouteParams { path: string[] }
 interface DownloadResult { ok: boolean; body: Buffer; method: string; error?: string }
+
+const LOCAL_PAGES_DIR = nodePath.join(process.cwd(), 'pages')
 
 function unwrapStat(raw: FileStat | ResponseDataDetailed<FileStat>): FileStat {
   const d = (raw as ResponseDataDetailed<FileStat>).data
@@ -121,6 +125,18 @@ function accessDenied(reason: string | undefined): NextResponse {
   return NextResponse.json({ error: '请先登录' }, { status: 401, headers: { 'WWW-Authenticate': 'Basic realm="Storage"' } })
 }
 
+/** 尝试从构建时同步的本地 ./pages/ 读取文件(sync-pages.mjs 产出) */
+async function readLocalPagesFile(relPath: string): Promise<Buffer | null> {
+  if (!relPath.startsWith('pages/')) return null
+  const localRelative = relPath.slice('pages/'.length)
+  const localFile = nodePath.join(LOCAL_PAGES_DIR, localRelative)
+  try {
+    const buf = await readFile(localFile)
+    console.warn(`[files] 本地命中 path="${relPath}" size=${buf.length}`)
+    return buf
+  } catch { return null }
+}
+
 async function downloadFile(webdavBase: string, relPath: string, auth: string): Promise<DownloadResult> {
   let result = await http2Get(webdavBase, relPath, auth)
   if (!result.ok) {
@@ -176,6 +192,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<Route
     }
     const webdavBase = process.env.WEBDAV_URL!.replace(/\/+$/, '')
     const auth = `Basic ${Buffer.from(`${process.env.WEBDAV_USER}:${process.env.WEBDAV_PASS}`).toString('base64')}`
+
+    // 优先:构建时同步到本地 ./pages/ 的文件(sync-pages.mjs 产出)
+    const localBuf = await readLocalPagesFile(relativePath)
+    if (localBuf) return fileResponse(localBuf, stat)
+
+    // 兜底:WebDAV 远程下载(http2 → https)
     const result = await downloadFile(webdavBase, relativePath, auth)
     if (!result.ok) {
       console.error(`[files] 下载失败 path="${relativePath}" method=${result.method} error=${result.error}`)
