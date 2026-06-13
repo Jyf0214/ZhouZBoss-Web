@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: '现代内容发布平台',
 };
 
+export const revalidate = 300; // 5 分钟 ISR
+
 /**
  * 首页 — 服务端组件，直接从文件系统读取帖子索引
  * 仅展示 public 内容，不查数据库
