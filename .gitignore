@@ -44,5 +44,8 @@ bun.lockb
 .qwen/skills/**
 !.qwen/skills/.gitkeep
 
+# 构建期生成产物
+/data/
+
 # 构建期同步产物(由 npm run sync:pages 生成)
 /pages/

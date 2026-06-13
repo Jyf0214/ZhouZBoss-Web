@@ -80,6 +80,47 @@ function calcRelevance(title: string, description: string, tags: string[], _cont
 
 const POSTS_DIR = path.join(/* @__PURE__ */ process.cwd(), 'posts');
 
+// ─── 构建时搜索索引 ────────────────────────────────────────────────────────
+
+/** 索引条目类型（与 generate-search-index.mjs 输出结构一致） */
+interface SearchIndexEntry {
+  slug: string;
+  title: string;
+  description: string;
+  tags: string[];
+  content: string;
+}
+
+/** 模块级单例缓存，避免每次请求重复读取磁盘 */
+let _searchIndex: SearchIndexEntry[] | null = null;
+/** 标记是否已尝试加载过索引（区分"索引为空"和"尚未加载"） */
+let _searchIndexLoaded = false;
+
+/**
+ * 加载构建时预生成的搜索索引
+ * 首次调用时从磁盘读取并缓存，后续调用直接返回缓存
+ * 索引文件不存在或读取失败时返回 null，由调用方降级到实时扫描
+ */
+function loadSearchIndex(): SearchIndexEntry[] | null {
+  if (_searchIndexLoaded) return _searchIndex;
+  _searchIndexLoaded = true;
+
+  try {
+    const indexPath = path.join(process.cwd(), 'data', 'search-index.json');
+    if (fs.existsSync(indexPath)) {
+      const raw = fs.readFileSync(indexPath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        _searchIndex = parsed;
+        return _searchIndex;
+      }
+    }
+  } catch {
+    // 索引文件损坏或读取失败，降级到实时扫描
+  }
+  return null;
+}
+
 /** 处理单个 markdown 文件，返回搜索结果或 undefined */
 function processSearchFile(
   filePath: string,
@@ -142,9 +183,10 @@ function processSearchFile(
 // ─── Search Functions ──────────────────────────────────────────────────────
 
 /**
- * 递归扫描 posts 目录，搜索匹配的文章
+ * 降级方案：递归扫描 posts 目录，搜索匹配的文章
+ * 仅在构建时索引文件缺失时使用（运行时每次请求都会读取文件系统）
  */
-function searchPostsDirectory(
+function searchPostsDirectoryLegacy(
   dir: string,
   baseDir: string,
   query: string,
@@ -165,7 +207,7 @@ function searchPostsDirectory(
 
     if (entry.isDirectory()) {
       results.push(
-        ...searchPostsDirectory(fullPath, baseDir, query, options),
+        ...searchPostsDirectoryLegacy(fullPath, baseDir, query, options),
       );
     } else if (entry.isFile() && entry.name.endsWith('.md')) {
       const result = processSearchFile(
@@ -181,6 +223,83 @@ function searchPostsDirectory(
   }
 
   return results;
+}
+
+/**
+ * 使用构建时预生成的索引搜索文章（内存中匹配，无需读取文件系统）
+ */
+function searchFromIndex(
+  index: SearchIndexEntry[],
+  query: string,
+  options: {
+    isAuthenticated: boolean;
+    dbAvailable: boolean;
+    tagFilter?: string;
+  },
+): SearchResult[] {
+  const results: SearchResult[] = [];
+  const qLower = query.toLowerCase();
+  const config = loadConfig();
+
+  for (const entry of index) {
+    // 权限检查：索引包含所有文章，运行时按当前认证状态过滤
+    if (!canAccess('posts', entry.slug, options.isAuthenticated, options.dbAvailable, config)) {
+      continue;
+    }
+
+    const tLower = entry.title.toLowerCase();
+    const dLower = entry.description.toLowerCase();
+    const cLower = entry.content.toLowerCase();
+
+    const matchesTitle = tLower.includes(qLower);
+    const matchesDesc = dLower.includes(qLower);
+    const matchesTags = entry.tags.some((t) => t.toLowerCase().includes(qLower));
+    const matchesContent = cLower.includes(qLower);
+
+    if (!matchesTitle && !matchesDesc && !matchesTags && !matchesContent) {
+      continue;
+    }
+
+    if (options.tagFilter && !entry.tags.some((t) => t.toLowerCase() === options.tagFilter!.toLowerCase())) {
+      continue;
+    }
+
+    // 使用原始内容生成预览（索引已截取前 5000 字，足够生成上下文摘要）
+    const matchPreview = extractMatchPreview(entry.content, query);
+
+    results.push({
+      id: entry.slug,
+      title: entry.title,
+      description: entry.description,
+      tags: entry.tags,
+      slug: entry.slug,
+      matchPreview,
+      type: 'post',
+    });
+  }
+
+  return results;
+}
+
+/**
+ * 搜索入口：优先使用构建时索引，索引不可用时降级到实时扫描
+ */
+function searchPostsDirectory(
+  dir: string,
+  baseDir: string,
+  query: string,
+  options: {
+    isAuthenticated: boolean;
+    dbAvailable: boolean;
+    tagFilter?: string;
+  },
+): SearchResult[] {
+  const index = loadSearchIndex();
+  if (index) {
+    return searchFromIndex(index, query, options);
+  }
+  // 降级：原有的实时扫描逻辑
+  return searchPostsDirectoryLegacy(dir, baseDir, query, options);
 }
 
 /**
