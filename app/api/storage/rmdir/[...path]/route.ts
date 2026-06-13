@@ -36,11 +36,12 @@ export const DELETE = catchAllHandler<{ path: string[] }>(
       const client = getWebDavClient()
       await client.deleteFile(target)
     } catch (err) {
+      console.error(`[storage.rmdir] target="${target}" WebDAV 删除失败`, err)
       return webdavErrorResponse(err, '删除目录')
     }
 
     await deleteFolderMeta(rel)
-
+    console.warn(`[storage.rmdir] target="${target}" 已删除(元数据已清理)`)
     return new NextResponse(null, { status: 204 })
   }
 )

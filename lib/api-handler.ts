@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { createApiLogger } from '@/lib/api-logger';
 import { getSession, requireSudo } from '@/lib/auth';
 
 export interface ApiHandlerOptions {
@@ -23,8 +22,22 @@ export async function getParam<P extends Record<string, unknown> = Record<string
 }
 
 /**
+ * 从请求 URL 提取查询参数摘要(仅记录 key,不记录敏感值)
+ */
+function querySummary(req: NextRequest): string {
+  const keys = Array.from(req.nextUrl.searchParams.keys());
+  if (keys.length === 0) return '';
+  return ` ${JSON.stringify(Object.fromEntries(keys.map(k => [k, req.nextUrl.searchParams.get(k)])))}`;
+}
+
+/**
  * 包装 API 路由处理器，提供统一的 try/catch + 日志 + 错误响应
  * 以及可选的权限验证
+ *
+ * 日志策略:
+ * - 仅在异常/错误时输出日志(4xx/5xx)
+ * - 成功响应不输出日志(由各路由自行按需记录业务日志)
+ * - 错误日志包含完整上下文:端点、查询参数、错误信息
  */
 export function apiHandler<
   P extends Record<string, unknown> = Record<string, string>,
@@ -33,48 +46,37 @@ export function apiHandler<
   options: ApiHandlerOptions,
   handler: (req: NextRequest, ctx?: ApiCtx<P>) => NextResponse | Promise<NextResponse>,
 ) {
-  const logger = createApiLogger(options.label);
   return async (req: NextRequest, ctx?: ApiCtx<P>) => {
-    const start = performance.now();
     const pathname = req.nextUrl.pathname;
-
-    /** 记录请求耗时，非 4xx/5xx 使用 console.warn */
-    const logResponse = (status: number) => {
-      const duration = Math.round(performance.now() - start);
-      const msg = `[API] ${method} ${pathname} → ${status} (${duration}ms)`;
-      console.warn(msg);
-    };
 
     try {
       // 权限验证
       if (options.requireAuth || options.requireAdmin) {
         const session = await getSession();
         if (!session) {
-          logResponse(401);
+          console.warn(`[API] ${method} ${pathname}${querySummary(req)} → 401 未登录`);
           return NextResponse.json({ error: '未登录' }, { status: 401 });
         }
         if (options.requireAdmin && session.role !== 'admin' && session.role !== 'sudo') {
-          logResponse(403);
+          console.warn(`[API] ${method} ${pathname}${querySummary(req)} → 403 用户 ${session.uid} 无管理员权限`);
           return NextResponse.json({ error: '无权限访问' }, { status: 403 });
         }
       }
       if (options.requireSudo) {
         const result = await requireSudo();
         if (result instanceof NextResponse) {
-          logResponse(result.status);
+          console.warn(`[API] ${method} ${pathname}${querySummary(req)} → ${result.status} sudo 验证失败`);
           return result;
         }
       }
-      const response = await handler(req, ctx);
-      logResponse(response.status);
-      return response;
+      return await handler(req, ctx);
     } catch (error) {
-      logResponse(500);
-      const msg = `${options.label} 失败`;
-      logger.error(method, msg, {
-        error: error instanceof Error ? error.message : String(error),
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error(`[API] ${method} ${pathname}${querySummary(req)} → 500 ${options.label} 失败`, {
+        message: err.message,
+        stack: err.stack,
       });
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: `${options.label} 失败` }, { status: 500 });
     }
   };
 }

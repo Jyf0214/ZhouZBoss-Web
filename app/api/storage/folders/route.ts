@@ -20,6 +20,7 @@ export const GET = apiHandler(
     if (!isWebDavConfigured()) return webdavNotConfigured()
     if (!getDb().prisma) return databaseNotConfigured()
     const folders = await listAllFolderMetas()
+    console.warn(`[storage.folders] 共 ${folders.length} 个文件夹元数据`)
     return NextResponse.json({ folders })
   }
 )

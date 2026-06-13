@@ -40,6 +40,7 @@ export const POST = catchAllHandler<{ path: string[] }>(
       const client = getWebDavClient()
       await client.createDirectory(target, { recursive: true })
     } catch (err) {
+      console.error(`[storage.mkdir] target="${target}" WebDAV 创建失败`, err)
       return webdavErrorResponse(err, '创建目录')
     }
 
@@ -69,6 +70,7 @@ export const POST = catchAllHandler<{ path: string[] }>(
           updatedAt: upserted.updatedAt,
         }
 
+    console.warn(`[storage.mkdir] target="${target}" 元数据已写入`)
     return NextResponse.json(meta)
   }
 )

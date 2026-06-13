@@ -27,11 +27,13 @@ export const GET = catchAllHandler<{ path: string[] }>(
       const client = getWebDavClient()
       const stats = await client.getDirectoryContents(target)
       const entries = stats.map(toWebDavEntry)
+      console.warn(`[storage.list] target="${target}" entries=${entries.length}`)
       return NextResponse.json(
         { path: target, entries },
         { headers: { 'Cache-Control': 'private, max-age=10' } },
       )
     } catch (err) {
+      console.error(`[storage.list] target="${target}" 失败`, err)
       return webdavErrorResponse(err, '列出目录')
     }
   }

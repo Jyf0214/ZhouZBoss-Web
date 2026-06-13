@@ -14,6 +14,7 @@ export const GET = apiHandler(
     const configured = isWebDavConfigured()
     // 未配置时也允许读 folder 数量(只读 KV,不依赖 WebDAV)
     const folders = configured ? await listAllFolderMetas() : []
+    console.warn(`[storage.config] webdav=${configured} folderCount=${folders.length}`)
     return NextResponse.json({
       configured,
       folderCount: folders.length,

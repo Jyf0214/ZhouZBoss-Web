@@ -34,9 +34,11 @@ export const DELETE = catchAllHandler<{ path: string[] }>(
       const client = getWebDavClient()
       await client.deleteFile(target)
     } catch (err) {
+      console.error(`[storage.file.delete] target="${target}" 失败`, err)
       return webdavErrorResponse(err, '删除文件')
     }
 
+    console.warn(`[storage.file.delete] target="${target}" 已删除`)
     return new NextResponse(null, { status: 204 })
   }
 )

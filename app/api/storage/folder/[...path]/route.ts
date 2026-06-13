@@ -129,6 +129,7 @@ export const PATCH = catchAllHandler<{ path: string[] }>(
       },
     })
 
+    console.warn(`[storage.folder.patch] path="${path}" public=${nextPublic} password=${passwordChanged ? '已更新' : '未变'}`)
     return NextResponse.json({
       path: updated.path,
       public: updated.public,

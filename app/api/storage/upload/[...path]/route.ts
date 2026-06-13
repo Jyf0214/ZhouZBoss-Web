@@ -84,11 +84,14 @@ export const POST = catchAllHandler<{ path: string[] }>(
         // ignore: 文件可能尚未创建,或远端已无该记录
       }
       if (sizeExceeded) {
+        console.warn(`[storage.upload] target="${target}" 超限 size=${bytesReceived} bytes`)
         return payloadTooLargeResponse(bytesReceived)
       }
+      console.error(`[storage.upload] target="${target}" 写入失败`, err)
       return webdavErrorResponse(err, '上传文件')
     }
 
+    console.warn(`[storage.upload] target="${target}" size=${bytesReceived} bytes`)
     return NextResponse.json({
       path: target,
       size: bytesReceived,
