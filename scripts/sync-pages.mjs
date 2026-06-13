@@ -130,16 +130,20 @@ async function runWithLimit(limit, worker) {
 }
 
 /**
- * 单层 `getDirectoryContents` 包装:任一异常都终止脚本
- * (与运行时不同:同步脚本必须"失败即终止",不允许吞错)
+ * 单层 `getDirectoryContents` 包装:用于子目录扫描
  *
- * 只用于「子目录」扫描:子目录出现在我们刚刚列出的根条目里,理论上
- * 应当存在;若仍然报错(权限 / 5xx 等),直接 fail 把 build 阻断。
+ * - 子目录 404 → 记录警告,返回空数组(跳过该目录,不阻断构建)
+ * - 其他异常 → fail 终止构建
  */
 async function listDir(client, dir) {
   try {
     return await client.getDirectoryContents(dir, { deep: false });
   } catch (err) {
+    const status = readErrorStatus(err);
+    if (status === 404) {
+      console.warn(`${LOG_PREFIX} ⚠️ 子目录不存在(跳过): ${dir}`);
+      return [];
+    }
     fail(`list ${dir}`, err);
   }
 }
