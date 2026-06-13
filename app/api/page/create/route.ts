@@ -2,15 +2,14 @@
  * 自定义页面快捷创建 API
  * POST /api/page/create
  *
- * 三重写入策略:
- * 1. WebDAV — 创建目录 + 写入 HTML 文件
- * 2. 本地文件系统 — ./pages/{name}/index.html（运行时立即可读）
- * 3. 数据库 — StorageFolder 元数据记录
+ * 写入策略:
+ * 1. WebDAV — 创建目录 + 写入 HTML 文件（唯一数据源）
+ * 2. 数据库 — StorageFolder 元数据记录
+ *
+ * 本地 ./pages/ 目录由构建时 sync-pages.mjs 从 WebDAV 同步，运行时不应写入。
  *
  * 认证: 仅限超级管理员(requireSudo)
  */
-import fs from 'fs'
-import path from 'path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { NextResponse } from 'next/server'
@@ -22,9 +21,6 @@ import { renderTemplate, type TemplateType } from '@/lib/page-templates'
 /** 名称白名单:字母、数字、中文、连字符、下划线，1-100 字符 */
 const NAME_REGEX = /^[a-zA-Z0-9\u4e00-\u9fff_-]{1,100}$/
 
-/** 本地页面根目录 */
-const PAGES_DIR = path.join(process.cwd(), 'pages')
-
 /** 请求体类型 */
 interface CreatePageBody {
   name: string
@@ -32,9 +28,9 @@ interface CreatePageBody {
   isPublic: boolean
 }
 
-/* ── 辅助函数：降低 handler 复杂度 ── */
+/* ── 辅助函数 ── */
 
-/** 校验请求参数，返回错误 Response 或 null */
+/** 校验请求参数 */
 function validateParams(body: CreatePageBody): NextResponse | null {
   const { name, template } = body
   if (!name || typeof name !== 'string') {
@@ -55,12 +51,8 @@ function validateParams(body: CreatePageBody): NextResponse | null {
   return null
 }
 
-/** 检查本地和数据库是否已有同名页面，返回冲突 Response 或 null */
+/** 检查 WebDAV 和数据库是否已有同名页面 */
 async function checkDuplicates(name: string): Promise<NextResponse | null> {
-  const localDir = path.join(PAGES_DIR, name)
-  if (fs.existsSync(localDir)) {
-    return NextResponse.json({ error: `页面 "${name}" 已存在` }, { status: 409 })
-  }
   const prisma = getDb().prisma
   if (!prisma) return null
   try {
@@ -69,7 +61,7 @@ async function checkDuplicates(name: string): Promise<NextResponse | null> {
     })
     if (existing) {
       return NextResponse.json(
-        { error: `页面 "${name}" 的数据库记录已存在` },
+        { error: `页面 "${name}" 已存在` },
         { status: 409 },
       )
     }
@@ -79,7 +71,7 @@ async function checkDuplicates(name: string): Promise<NextResponse | null> {
   return null
 }
 
-/** 写入 WebDAV，失败返回错误 Response 或 null */
+/** 写入 WebDAV（唯一数据源） */
 async function writeToWebDav(name: string, htmlContent: string): Promise<NextResponse | null> {
   const webdavDir = `pages/${name}`
   const webdavFile = `${webdavDir}/index.html`
@@ -97,34 +89,6 @@ async function writeToWebDav(name: string, htmlContent: string): Promise<NextRes
   }
 }
 
-/** 写入本地文件系统，失败时回滚 WebDAV 并返回错误 Response 或 null */
-async function writeLocal(name: string, htmlContent: string): Promise<NextResponse | null> {
-  const localDir = path.join(PAGES_DIR, name)
-  try {
-    fs.mkdirSync(localDir, { recursive: true })
-    fs.writeFileSync(path.join(localDir, 'index.html'), htmlContent, 'utf-8')
-    return null
-  } catch (err) {
-    console.error('[page.create] 本地写入失败，尝试回滚 WebDAV:', err)
-    await rollbackWebDav(name)
-    return NextResponse.json(
-      { error: `本地文件写入失败: ${err instanceof Error ? err.message : String(err)}` },
-      { status: 500 },
-    )
-  }
-}
-
-/** 回滚 WebDAV 已创建的文件 */
-async function rollbackWebDav(name: string): Promise<void> {
-  try {
-    const client = getWebDavClient()
-    await client.deleteFile(`pages/${name}/index.html`)
-    await client.deleteFile(`pages/${name}`)
-  } catch {
-    console.warn('[page.create] WebDAV 回滚失败，可能存在残留')
-  }
-}
-
 /** 写入数据库记录（失败不阻断） */
 async function writeToDb(name: string, isPublic: boolean): Promise<void> {
   const prisma = getDb().prisma
@@ -136,7 +100,7 @@ async function writeToDb(name: string, isPublic: boolean): Promise<void> {
       update: { public: isPublic, updatedAt: new Date() },
     })
   } catch (err) {
-    console.warn('[page.create] 数据库写入失败（页面已可用）:', err)
+    console.warn('[page.create] 数据库写入失败（页面已写入 WebDAV）:', err)
   }
 }
 
@@ -155,7 +119,7 @@ export const POST = apiHandler('POST', { label: 'page.create', requireSudo: true
 
   if (!isWebDavConfigured()) {
     return NextResponse.json(
-      { error: 'WebDAV 未配置，无法创建远程页面', code: 'NOT_CONFIGURED' },
+      { error: 'WebDAV 未配置，无法创建页面', code: 'NOT_CONFIGURED' },
       { status: 503 },
     )
   }
@@ -175,9 +139,6 @@ export const POST = apiHandler('POST', { label: 'page.create', requireSudo: true
 
   const webdavError = await writeToWebDav(body.name, htmlContent)
   if (webdavError) return webdavError
-
-  const localError = await writeLocal(body.name, htmlContent)
-  if (localError) return localError
 
   await writeToDb(body.name, body.isPublic)
 
