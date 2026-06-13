@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * Backblaze B2 存储提供者
  *
@@ -142,6 +143,32 @@ async function b2Request(
 }
 
 /**
+ * 解析 B2 authorize 响应，兼容 v3/v4 嵌套格式
+ */
+function parseAuthorizeResponse(data: Record<string, unknown>): AuthToken {
+  const storageApi = (data.apiInfo as Record<string, unknown> | undefined)
+    ?.storageApi as Record<string, unknown> | undefined
+  const resolvedApiUrl = String(
+    data.apiUrl ?? storageApi?.apiUrl ?? data.s3ApiUrl ?? ''
+  )
+  const resolvedDownloadUrl = String(
+    process.env.B2_DOWNLOAD_URL ?? data.downloadUrl ?? storageApi?.downloadUrl ?? ''
+  )
+  if (!resolvedApiUrl) {
+    throw new Error(
+      `B2 鉴权响应缺少 apiUrl, 可用字段: ${Object.keys(data).join(', ')}`
+    )
+  }
+  return {
+    accountId: String(data.accountId ?? ''),
+    authorizationToken: String(data.authorizationToken ?? ''),
+    apiUrl: resolvedApiUrl,
+    downloadUrl: resolvedDownloadUrl,
+    recommendedPartSize: Number(data.recommendedPartSize ?? 100_000_000),
+  }
+}
+
+/**
  * 获取/刷新 B2 授权令牌
  *
  * B2 认证流程:
@@ -167,9 +194,10 @@ async function getAuthToken(): Promise<AuthToken> {
     headers: { Authorization: `Basic ${credentials}` },
   })
 
-  const data = await resp.json() as AuthToken
-  globalForB2.__b2AuthToken = data
-  return data
+  const data = await resp.json() as Record<string, unknown>
+  const authToken = parseAuthorizeResponse(data)
+  globalForB2.__b2AuthToken = authToken
+  return authToken
 }
 
 /**
@@ -341,15 +369,15 @@ export class B2Provider implements StorageProvider {
   /**
    * 获取文件内容
    *
-   * 优先使用 download_url（CDN），否则使用 B2 直连。
-   *
    * 下载 URL 格式:
    * - CDN: {download_url}/file/{bucket_name}/{path}
    * - 直连: {apiUrl}/file/{bucket_name}/{path}
    *
-   * 对于私有桶通过 Cloudflare Workers：
-   * - Workers 可能重写 Authorization header
-   * - 如果 download_url 已配置，假设 CDN 端已处理认证
+   * 无论 CDN 还是直连模式，均发送 B2 Authorization header。
+   * 与 rclone 行为一致：authorize 后的所有请求自动携带 token。
+   * CDN 模式（如 Cloudflare Workers）同样依赖此 header 进行认证转发。
+   *
+   * 参考: https://www.backblaze.com/docs/cloud-storage-content-delivery-services
    */
   async getFileContents(
     filePath: string,
@@ -364,34 +392,19 @@ export class B2Provider implements StorageProvider {
 
     // 构建下载 URL
     const downloadUrl = process.env.B2_DOWNLOAD_URL
-    let url: string
+    const auth = await getAuthToken()
+    const effectiveDownloadUrl = downloadUrl
+      ? `${downloadUrl.replace(/\/+$/, '')}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
+      : `${auth.apiUrl}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
 
-    if (downloadUrl) {
-      // CDN 模式: {download_url}/file/{bucket_name}/{path}
-      url = `${downloadUrl.replace(/\/+$/, '')}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
-    } else {
-      // 直连模式: 使用 B2 API
-      const auth = await getAuthToken()
-      url = `${auth.apiUrl}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
-
-      // 直连模式需要 Authorization header
-      const resp = await fetch(url, {
-        headers: { Authorization: auth.authorizationToken },
-        signal: options?.signal,
-      })
-
-      if (!resp.ok) {
-        if (resp.status === 404) {
-          throw Object.assign(new Error(`B2: 文件不存在: ${key}`), { status: 404 })
-        }
-        throw Object.assign(new Error(`B2: 下载失败 ${resp.status} ${key}`), { status: resp.status })
-      }
-
-      return Buffer.from(await resp.arrayBuffer())
-    }
-
-    // CDN 模式请求
-    const resp = await fetch(url, { signal: options?.signal })
+    // 无论 CDN 模式还是直连模式，都发送 Authorization header 以支持私有桶。
+    // rclone 在 authorize 后为 rest client 设置默认 Authorization header，
+    // 所有后续请求（含下载）自动携带。CDN 模式（如 Cloudflare Workers）
+    // 同样依赖此 header 进行认证转发。
+    const resp = await fetch(effectiveDownloadUrl, {
+      headers: { Authorization: auth.authorizationToken },
+      signal: options?.signal,
+    })
 
     if (!resp.ok) {
       if (resp.status === 404) {

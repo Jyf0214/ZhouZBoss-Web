@@ -509,16 +509,28 @@ async function b2Authorize() {
   // 缓存完整响应供 b2ResolveBucketId 使用
   _b2AuthorizeData = data;
 
+  // B2 API v3/v4 响应中 apiUrl 可能在 apiInfo.storageApi.apiUrl
+  // 兼容两种格式
+  const resolvedApiUrl = data.apiUrl || data.apiInfo?.storageApi?.apiUrl || data.s3ApiUrl;
+  const resolvedDownloadUrl = process.env.B2_DOWNLOAD_URL || data.downloadUrl || data.apiInfo?.storageApi?.downloadUrl;
+
+  if (!resolvedApiUrl) {
+    throw new Error(
+      'B2 鉴权响应缺少 apiUrl,响应字段: ' +
+        Object.keys(data).filter(k => typeof data[k] === 'string').join(', ')
+    );
+  }
+
   // 通过 bucket name 查找 bucketId
   const bucketId = await b2ResolveBucketId(
     data.authorizationToken,
-    data.apiUrl,
+    resolvedApiUrl,
     bucketName
   );
 
   _b2Auth = {
-    apiUrl: data.apiUrl,
-    downloadUrl: process.env.B2_DOWNLOAD_URL || data.downloadUrl,
+    apiUrl: resolvedApiUrl,
+    downloadUrl: resolvedDownloadUrl,
     authorizationToken: data.authorizationToken,
     bucketId,
     bucketName,

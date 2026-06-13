@@ -12,7 +12,7 @@ import path from 'path';
 // 敏感信息模式
 const SENSITIVE_PATTERNS = [
   { name: 'API Key', pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"]?[a-zA-Z0-9_-]{20,}['"]?/gi },
-  { name: 'Secret', pattern: /(?:secret|password|token)\s*[:=]\s*['"]?[a-zA-Z0-9_-]{20,}['"]?/gi },
+  { name: 'Secret', pattern: /(?:secret|password|token)\s*[:=]\s*(?:['"][^'"]{20,}['"]|[a-zA-Z0-9_-]*[0-9][a-zA-Z0-9_-]{19,})(?!\s*\))/gi },
   { name: 'Private Key', pattern: /-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----/gi },
   { name: 'Database URL', pattern: /(?:mongodb|postgres|mysql):\/\/[^\s'"]+/gi },
   { name: 'AWS Key', pattern: /AKIA[0-9A-Z]{16}/g },

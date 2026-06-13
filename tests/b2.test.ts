@@ -218,8 +218,14 @@ describe('B2Provider.getFileContents', () => {
     process.env.B2_BUCKET = 'my-bucket'
   })
 
-  it('CDN 模式: 使用 download_url 下载', async () => {
+  it('CDN 模式: 使用 download_url 下载，带 Authorization header', async () => {
     process.env.B2_DOWNLOAD_URL = 'https://cdn.example.com'
+    // getAuthToken → 1st call
+    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
+      accountId: 'acc1', authorizationToken: 'token1',
+      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
+    }))
+    // download via CDN → 2nd call
     b2Mocks.fetch.mockResolvedValueOnce(mockBinaryResponse('<h1>Hello</h1>'))
 
     const { B2Provider } = await import('@/lib/storage/b2')
@@ -230,7 +236,10 @@ describe('B2Provider.getFileContents', () => {
     expect(content.toString()).toBe('<h1>Hello</h1>')
     expect(b2Mocks.fetch).toHaveBeenCalledWith(
       'https://cdn.example.com/file/my-bucket/pages/test.html',
-      expect.objectContaining({ signal: undefined })
+      expect.objectContaining({
+        headers: { Authorization: 'token1' },
+        signal: undefined,
+      })
     )
   })
 
@@ -258,6 +267,11 @@ describe('B2Provider.getFileContents', () => {
 
   it('文件不存在返回 404', async () => {
     process.env.B2_DOWNLOAD_URL = 'https://cdn.example.com'
+    // getAuthToken → 1st call
+    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
+      accountId: 'acc1', authorizationToken: 'token1',
+      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
+    }))
     b2Mocks.fetch.mockResolvedValueOnce(new Response('Not Found', { status: 404 }))
 
     const { B2Provider } = await import('@/lib/storage/b2')
