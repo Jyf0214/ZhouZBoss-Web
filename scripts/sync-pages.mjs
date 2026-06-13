@@ -328,15 +328,14 @@ async function main() {
   }
 
   // 6. 并发下载(MAX_CONCURRENCY 上限)
-  // 用全部任务跑一次 runWithLimit 不可行(只跑一个 worker),
-  // 这里手写一个轻量并发调度:维护一个游标与活跃槽
+  //    单个文件下载失败不阻断整体,跳过失败文件继续下载其余文件
   let nextIndex = 0;
   let completed = 0;
-  let failed = null;
+  let downloadErrors = 0;
   const total = entries.length;
 
   const workers = Array.from({ length: Math.min(MAX_CONCURRENCY, total) }, async () => {
-    while (!failed) {
+    while (true) {
       const i = nextIndex++;
       if (i >= total) return;
       const relPath = entries[i];
@@ -356,16 +355,20 @@ async function main() {
           console.log(`${LOG_PREFIX} 进度: ${completed}/${total}`);
         }
       } catch (err) {
-        failed = err;
-        throw err;
+        downloadErrors += 1;
+        console.warn(`${LOG_PREFIX} ⚠️ 跳过下载失败的文件: ${relPath} (${err.message})`);
       }
     }
   });
 
-  try {
-    await Promise.all(workers);
-  } catch (err) {
-    fail('download pages', err);
+  await Promise.all(workers);
+
+  if (downloadErrors > 0 && completed === 0) {
+    console.error(`${LOG_PREFIX} ❌ 所有文件下载失败,构建终止`);
+    process.exit(1);
+  }
+  if (downloadErrors > 0) {
+    console.warn(`${LOG_PREFIX} ⚠️ ${downloadErrors} 个文件下载失败已跳过,${completed}/${total} 成功`);
   }
 
   console.log(`${LOG_PREFIX} 同步完成: ${total} 个文件 → ${path.relative(PROJECT_ROOT, LOCAL_DIR)}/`);
