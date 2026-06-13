@@ -21,6 +21,7 @@ export default function SidebarItem({
   return (
     <Link
       href={item.href}
+      prefetch={false}
       onClick={onItemClick}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 group/item no-underline ${
         isActive
