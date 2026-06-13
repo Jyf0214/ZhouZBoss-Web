@@ -29,8 +29,9 @@ export const GET = apiHandler(
       });
       return NextResponse.json({ keys: rows });
     } catch (err) {
-      console.error('[api-keys.list] 查询失败', err);
-      return NextResponse.json({ error: '查询失败：api_keys 表可能未创建，请运行 prisma db push' }, { status: 500 });
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api-keys.list] 查询失败', msg);
+      return NextResponse.json({ error: `查询失败: ${msg}` }, { status: 500 });
     }
   }
 );
@@ -67,8 +68,9 @@ export const POST = apiHandler(
       // 明文仅此一次返回
       return NextResponse.json({ ...row, key: rawKey });
     } catch (err) {
-      console.error('[api-keys.create] 创建失败', err);
-      return NextResponse.json({ error: '创建失败：api_keys 表可能未创建，请运行 prisma db push' }, { status: 500 });
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api-keys.create] 创建失败', msg);
+      return NextResponse.json({ error: `创建失败: ${msg}` }, { status: 500 });
     }
   }
 );
