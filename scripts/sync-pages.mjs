@@ -185,8 +185,9 @@ async function listHtmlRecursive(client) {
 
   const out = [];
   for (const entry of rootEntries) {
-    // WebDAV 库可能返回带前导 / 的 filename,统一剥离避免路径拼接出双斜杠
-    const name = entry.filename.replace(/^\//, '');
+    // WebDAV 库可能返回完整路径(如 /pages/hello-world)或仅文件名(hello-world)
+    // 统一取 basename 避免路径拼接出 pages/pages/...
+    const name = entry.filename.split('/').pop() || entry.filename;
     if (entry.type === 'file' && /\.html?$/i.test(name)) {
       out.push(`${WEBDAV_PREFIX}/${name}`);
       continue;
@@ -195,7 +196,7 @@ async function listHtmlRecursive(client) {
       const subPath = `${WEBDAV_PREFIX}/${name}`;
       const subEntries = await listDir(client, subPath);
       for (const sub of subEntries) {
-        const subName = sub.filename.replace(/^\//, '');
+        const subName = sub.filename.split('/').pop() || sub.filename;
         if (sub.type === 'file' && /\.html?$/i.test(subName)) {
           out.push(`${subPath}/${subName}`);
         }
