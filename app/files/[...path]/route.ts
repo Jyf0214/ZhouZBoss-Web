@@ -39,13 +39,6 @@ function accessDenied(reason: string | undefined): NextResponse {
   return NextResponse.json({ error: '请先登录' }, { status: 401, headers: { 'WWW-Authenticate': 'Basic realm="Storage"' } })
 }
 
-/** 白名单:只允许透传的安全响应头 */
-const ALLOWED_RESPONSE_HEADERS = new Set([
-  'content-type', 'content-length', 'content-disposition',
-  'content-range', 'accept-ranges', 'etag', 'last-modified',
-  'cache-control', 'expires', 'content-encoding',
-])
-
 export async function GET(_req: NextRequest, { params }: { params: Promise<RouteParams> }) {
   let relativePath = ''
   try {
@@ -75,30 +68,31 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<Route
       return debugResponse(relativePath, stat, Math.round(performance.now() - start))
     }
 
-    // fetch 流式代理:直接请求 WebDAV 服务器,零缓冲流式返回
+    // fetch 流式代理:直接请求 WebDAV 服务器
     const webdavUrl = `${process.env.WEBDAV_URL!.replace(/\/+$/, '')}/${relativePath}`
     const auth = Buffer.from(`${process.env.WEBDAV_USER}:${process.env.WEBDAV_PASS}`).toString('base64')
 
     const upstream = await fetch(webdavUrl, {
       headers: { 'Authorization': `Basic ${auth}` },
     })
-
     if (!upstream.ok) {
-      console.error(`[files] fetch 失败 path="${relativePath}" status=${upstream.status}`)
-      return NextResponse.json({ error: '文件读取失败' }, { status: upstream.status })
+      return NextResponse.json({ error: `上游 ${upstream.status}` }, { status: upstream.status })
     }
 
-    // 过滤白名单响应头
-    const headers = new Headers()
+    // 缓冲响应体并返回(serverless 环境不依赖流式管道)
+    const buf = await upstream.arrayBuffer()
+    const headers: Record<string, string> = {}
     upstream.headers.forEach((val, key) => {
-      if (ALLOWED_RESPONSE_HEADERS.has(key.toLowerCase())) headers.set(key, val)
+      const lk = key.toLowerCase()
+      if (lk === 'content-type' || lk === 'content-disposition' || lk === 'last-modified') {
+        headers[key] = val
+      }
     })
-    headers.set('Cache-Control', 'private, max-age=3600')
-    headers.set('X-Content-Type-Options', 'nosniff')
-    headers.set('Content-Disposition', stat.mime === 'text/html' ? 'attachment' : 'inline')
+    headers['Cache-Control'] = 'private, max-age=3600'
+    headers['X-Content-Type-Options'] = 'nosniff'
+    headers['Content-Disposition'] = stat.mime === 'text/html' ? 'attachment' : 'inline'
 
-    console.warn(`[files] 返回流 path="${relativePath}" 耗时=${Math.round(performance.now() - start)}ms`)
-    return new NextResponse(upstream.body, { status: upstream.status, headers })
+    return new NextResponse(buf, { status: 200, headers })
   } catch (err) {
     const msg = err instanceof Error ? err.message : JSON.stringify(err)
     console.error(`[files] 未捕获异常 path="${relativePath || '?'}" error="${msg}"`)
