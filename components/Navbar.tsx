@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { UserMenu } from '@/components/UserMenu';
 import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
 import { ClerkLoginSection } from '@/components/ClerkLoginSection';
@@ -10,28 +11,22 @@ import { Button } from '@/components/ui/Button';
 import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
 import { useConfig } from '@/hooks/use-config';
-import { SearchDialog } from '@/components/SearchDialog';
 import { Clock, MapPin, Search } from 'lucide-react';
+import type { NavConfig } from '@/lib/config-schema';
 
-interface NavMenuItem {
-  name: string;
-  link: string;
-  icon?: string;
+// 搜索弹窗动态导入，避免首屏加载无关代码
+const SearchDialog = dynamic(
+  () => import('@/components/SearchDialog').then((m) => ({ default: m.SearchDialog })),
+  { ssr: false },
+);
+
+// 服务端传入的导航配置 props
+interface NavbarProps {
+  navConfig?: NavConfig;
+  siteTitle?: string;
 }
 
-interface NavMenuGroup {
-  title: string;
-  item: NavMenuItem[];
-}
-
-interface NavConfig {
-  enable: boolean;
-  travelling: boolean;
-  clock: boolean;
-  menu: NavMenuGroup[];
-}
-
-function NavMenuGroup({ config }: { config: NavConfig | null }) {
+function NavMenuGroupComponent({ config }: { config: NavConfig | null }) {
   if (!config?.enable || !config.menu?.length) return null;
   return (
     <div className="hidden md:flex items-center gap-1 ml-8">
@@ -98,11 +93,12 @@ function NavAuthSection({ user, allowRegistration, clerkAvailable, t }: { user: 
   );
 }
 
-export function Navbar() {
+export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: NavbarProps) {
   const { user, clerkAvailable } = useAuth();
   const { t } = useI18n();
   const { config: siteConfig } = useConfig();
-  const [navConfig, setNavConfig] = useState<NavConfig | null>(null);
+  // 优先使用服务端传入的配置，无则初始化为 null（降级 fetch 填充）
+  const [navConfig, setNavConfig] = useState<NavConfig | null>(navConfigProp ?? null);
   const [time, setTime] = useState('');
   const allowRegistration = siteConfig?.auth?.allowRegistration !== false;
   const [searchOpen, setSearchOpen] = useState(false);
@@ -120,7 +116,9 @@ export function Navbar() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // 仅在服务端未传入配置时，降级为客户端 fetch 获取导航配置
   useEffect(() => {
+    if (navConfigProp) return; // 已有服务端数据，跳过请求
     const fetchNav = async () => {
       try {
         const res = await fetch('/api/config');
@@ -137,7 +135,7 @@ export function Navbar() {
       }
     };
     void fetchNav();
-  }, []);
+  }, [navConfigProp]);
 
   useEffect(() => {
     if (!navConfig?.clock) return;
@@ -161,7 +159,7 @@ export function Navbar() {
               </div>
               <span className="font-display font-bold text-xl tracking-tight text-zinc-900">{t('sidebar.originiumKernel')}</span>
             </Link>
-            <NavMenuGroup config={navConfig} />
+            <NavMenuGroupComponent config={navConfig} />
           </div>
           <div className="flex items-center gap-3">
             {/* 搜索按钮 */}
