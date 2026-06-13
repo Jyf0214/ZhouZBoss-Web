@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import nodemailer from 'nodemailer';
 import { createApiLogger } from '@/lib/api-logger';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/auth/bind-send-code');
 
@@ -11,6 +12,16 @@ const logger = createApiLogger('/api/auth/bind-send-code');
  */
 export async function POST(req: NextRequest) {
   try {
+    // 频率限制：同一 IP 1 分钟内最多 1 次验证码发送
+    const rl = checkRateLimit(req, 'bind-send-code', 1, 60 * 1000);
+    if (!rl.allowed) {
+      logger.warn('POST', '验证码发送频率超限', { retryAfterMs: rl.retryAfterMs });
+      return NextResponse.json(
+        { error: `验证码发送过于频繁，请在 ${Math.ceil(rl.retryAfterMs / 1000)} 秒后重试` },
+        { status: 429 },
+      );
+    }
+
     const { email } = await req.json();
     if (!email?.includes('@')) {
       logger.warn('POST', '无效的邮箱地址');

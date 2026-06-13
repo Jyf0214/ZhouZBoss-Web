@@ -5,6 +5,7 @@ import { getUserAvatarAsync } from '@/lib/config';
 import { verifyPassword, hashPassword } from '@/lib/hash';
 import { ensureAdminUser } from '@/lib/db-init';
 import { createApiLogger } from '@/lib/api-logger';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/auth/login');
 
@@ -54,6 +55,16 @@ async function upgradePasswordHashIfNeeded(
 
 export async function POST(req: NextRequest) {
   try {
+    // 频率限制：同一 IP 5 分钟内最多 5 次登录尝试
+    const rl = checkRateLimit(req, 'login', 5, 5 * 60 * 1000);
+    if (!rl.allowed) {
+      logger.warn('POST', '登录频率超限', { retryAfterMs: rl.retryAfterMs });
+      return NextResponse.json(
+        { error: `登录尝试过于频繁，请在 ${Math.ceil(rl.retryAfterMs / 1000)} 秒后重试` },
+        { status: 429 },
+      );
+    }
+
     const { login, password } = await req.json();
 
     if (!login || !password) {

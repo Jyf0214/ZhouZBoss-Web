@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server'
 import { ApiErr } from '@/lib/api-handler'
 import { getDb } from '@/lib/db'
+import { hashPassword } from '@/lib/hash'
 import {
   catchAllHandler,
   databaseNotConfigured,
@@ -36,6 +37,58 @@ export const GET = catchAllHandler<{ path: string[] }>(
   }
 )
 
+/** 校验 PATCH 请求体字段类型 */
+function validatePatchFields(parsed: Record<string, unknown>): { error?: NextResponse } {
+  const rawPublic = parsed['public']
+  const rawDescription = parsed['description']
+  const rawPassword = parsed['password']
+
+  if (rawPublic !== undefined && typeof rawPublic !== 'boolean') {
+    return { error: ApiErr.badRequest('public 必须是 boolean') }
+  }
+  if (
+    rawDescription !== undefined &&
+    rawDescription !== null &&
+    typeof rawDescription !== 'string'
+  ) {
+    return { error: ApiErr.badRequest('description 必须是 string 或 null') }
+  }
+  if (
+    rawPassword !== undefined &&
+    rawPassword !== null &&
+    typeof rawPassword !== 'string'
+  ) {
+    return { error: ApiErr.badRequest('password 必须是 string 或 null') }
+  }
+  if (typeof rawPassword === 'string' && rawPassword.length > 128) {
+    return { error: ApiErr.badRequest('password 不能超过 128 字符') }
+  }
+  return {}
+}
+
+/** 根据请求体和已有元数据计算合并后的字段值 */
+async function mergePatchFields(
+  parsed: Record<string, unknown>,
+  existing: { public: boolean; description: string | null },
+): Promise<{ nextPublic: boolean; nextDescription: string | null; nextPassword: string | null; passwordChanged: boolean }> {
+  const rawPassword = parsed['password']
+  const nextPublic = (parsed['public'] as boolean | undefined) ?? existing.public
+  const nextDescription = (parsed['description'] as string | null | undefined) ?? existing.description
+
+  let nextPassword: string | null = null
+  let passwordChanged = false
+  if (rawPassword !== undefined) {
+    passwordChanged = true
+    if (rawPassword === null || rawPassword === '') {
+      nextPassword = null
+    } else {
+      nextPassword = await hashPassword(rawPassword as string)
+    }
+  }
+
+  return { nextPublic, nextDescription, nextPassword, passwordChanged }
+}
+
 /** 部分更新文件夹元数据(public / description) */
 export const PATCH = catchAllHandler<{ path: string[] }>(
   'PATCH',
@@ -59,29 +112,19 @@ export const PATCH = catchAllHandler<{ path: string[] }>(
       return ApiErr.badRequest('请求体不是合法 JSON')
     }
 
-    const rawPublic = parsed['public']
-    const rawDescription = parsed['description']
-    if (rawPublic !== undefined && typeof rawPublic !== 'boolean') {
-      return ApiErr.badRequest('public 必须是 boolean')
-    }
-    if (
-      rawDescription !== undefined &&
-      rawDescription !== null &&
-      typeof rawDescription !== 'string'
-    ) {
-      return ApiErr.badRequest('description 必须是 string 或 null')
-    }
+    const validation = validatePatchFields(parsed)
+    if (validation.error) return validation.error
 
-    const nextPublic = rawPublic ?? existing.public
-    const nextDescription = rawDescription ?? existing.description
+    const { nextPublic, nextDescription, nextPassword, passwordChanged } =
+      await mergePatchFields(parsed, existing)
+
     const updatedAt = new Date()
-
-    // Prisma 直接 update,保留 createdAt,刷新 updatedAt
     const updated = await prisma.storageFolder.update({
       where: { path },
       data: {
         public: nextPublic,
         description: nextDescription,
+        ...(passwordChanged ? { password: nextPassword } : {}),
         updatedAt,
       },
     })

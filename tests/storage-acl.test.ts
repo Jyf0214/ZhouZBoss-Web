@@ -42,6 +42,11 @@ vi.mock('@/lib/webdav', () => ({
   isWebDavConfigured: () => mocks.isWebDavConfigured(),
 }));
 
+vi.mock('@/lib/hash', () => ({
+  verifyPassword: (password: string, stored: string) =>
+    Promise.resolve(password === stored),
+}));
+
 // 构造一个最小可用的 IDatabase 桩 — 只实现 acl.ts 用到的 prisma 字段
 function makeDbWithFolder(row: {
   path: string;

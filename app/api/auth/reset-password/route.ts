@@ -4,11 +4,22 @@ import { sendMail, generateResetEmailHtml, isSmtpConfigured } from '@/lib/mail';
 import { randomBytes } from 'crypto';
 import { hashPassword } from '@/lib/hash';
 import { createApiLogger } from '@/lib/api-logger';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/auth/reset-password');
 
 export async function POST(req: NextRequest) {
   try {
+    // 频率限制：同一 IP 10 分钟内最多 3 次重置密码请求
+    const rl = checkRateLimit(req, 'reset-password', 3, 10 * 60 * 1000);
+    if (!rl.allowed) {
+      logger.warn('POST', '密码重置频率超限', { retryAfterMs: rl.retryAfterMs });
+      return NextResponse.json(
+        { error: `请求过于频繁，请在 ${Math.ceil(rl.retryAfterMs / 1000)} 秒后重试` },
+        { status: 429 },
+      );
+    }
+
     const { email } = await req.json();
 
     if (!email) {
