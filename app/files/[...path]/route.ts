@@ -131,6 +131,6 @@ async function proxyWebDav(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error(`[files] webdav 错误 path="${relativePath}" 耗时=${Math.round(performance.now() - start)}ms error="${msg}"`)
-    return NextResponse.json({ error: '资源不存在' }, { status: 404 })
+    return NextResponse.json({ error: `文件读取失败: ${msg}` }, { status: 404 })
   }
 }
