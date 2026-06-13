@@ -99,26 +99,22 @@ async function getSessionFromApiKey(): Promise<SessionPayload | null> {
     const token = authHeader.slice(7).trim();
     if (!token?.startsWith('sk-')) return null;
 
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-    try {
-      const hashed = hashApiKey(token);
-      const row = await prisma.apiKey.findUnique({ where: { key: hashed } });
-      if (!row) return null;
+    const { getDb } = await import('@/lib/db');
+    const db = getDb();
+    if (!db.prisma) return null;
 
-      // 更新最后使用时间(异步,不阻塞)
-      prisma.apiKey.update({ where: { id: row.id }, data: { lastUsed: new Date() } }).catch(() => { /* best-effort */ });
+    const hashed = hashApiKey(token);
+    const row = await db.prisma.apiKey.findUnique({ where: { key: hashed } });
+    if (!row) return null;
 
-      // 通过 UID 查用户信息构建 SessionPayload
-      const userRaw = await (
-        await import('@/lib/db')
-      ).getDb().get(`user:uid:${row.uid}`);
-      if (!userRaw) return null;
-      const user = JSON.parse(userRaw) as { uid: string; email: string; role: string; userGroup?: string };
-      return { uid: user.uid, email: user.email, role: user.role as SessionPayload['role'], userGroup: user.userGroup };
-    } finally {
-      await prisma.$disconnect();
-    }
+    // 更新最后使用时间(异步,不阻塞)
+    db.prisma.apiKey.update({ where: { id: row.id }, data: { lastUsed: new Date() } }).catch(() => { /* best-effort */ });
+
+    // 通过 UID 查用户信息构建 SessionPayload
+    const userRaw = await db.get(`user:uid:${row.uid}`);
+    if (!userRaw) return null;
+    const user = JSON.parse(userRaw) as { uid: string; email: string; role: string; userGroup?: string };
+    return { uid: user.uid, email: user.email, role: user.role as SessionPayload['role'], userGroup: user.userGroup };
   } catch {
     return null;
   }

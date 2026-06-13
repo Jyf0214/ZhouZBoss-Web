@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { getSession, hashApiKey, generateApiKey } from '@/lib/auth';
 import { apiHandler } from '@/lib/api-handler';
+import { getDb } from '@/lib/db';
 
 /** 列出当前用户的 API 密钥(不返回明文) */
 export const GET = apiHandler(
@@ -15,17 +16,21 @@ export const GET = apiHandler(
     const session = await getSession();
     if (!session) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
+    const db = getDb();
+    if (!db.prisma) {
+      return NextResponse.json({ error: '数据库未配置' }, { status: 503 });
+    }
+
     try {
-      const rows = await prisma.apiKey.findMany({
+      const rows = await db.prisma.apiKey.findMany({
         where: { uid: session.uid },
         select: { id: true, name: true, lastUsed: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       });
       return NextResponse.json({ keys: rows });
-    } finally {
-      await prisma.$disconnect();
+    } catch (err) {
+      console.error('[api-keys.list] 查询失败', err);
+      return NextResponse.json({ error: '查询失败：api_keys 表可能未创建，请运行 prisma db push' }, { status: 500 });
     }
   }
 );
@@ -38,6 +43,11 @@ export const POST = apiHandler(
     const session = await getSession();
     if (!session) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
+    const db = getDb();
+    if (!db.prisma) {
+      return NextResponse.json({ error: '数据库未配置' }, { status: 503 });
+    }
+
     let body: { name?: string } = {};
     try {
       body = (await req.json()) as { name?: string };
@@ -49,17 +59,16 @@ export const POST = apiHandler(
     const rawKey = generateApiKey();
     const hashed = hashApiKey(rawKey);
 
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
     try {
-      const row = await prisma.apiKey.create({
+      const row = await db.prisma.apiKey.create({
         data: { uid: session.uid, key: hashed, name },
         select: { id: true, name: true, createdAt: true },
       });
       // 明文仅此一次返回
       return NextResponse.json({ ...row, key: rawKey });
-    } finally {
-      await prisma.$disconnect();
+    } catch (err) {
+      console.error('[api-keys.create] 创建失败', err);
+      return NextResponse.json({ error: '创建失败：api_keys 表可能未创建，请运行 prisma db push' }, { status: 500 });
     }
   }
 );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Copy, Key, Plus, Trash2, Check } from 'lucide-react';
+import { Copy, Key, Plus, Trash2, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ProCard } from '@/components/ui/ProCard';
 
@@ -20,6 +20,7 @@ export function ApiKeyCard() {
   const [showNewKey, setShowNewKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const loadKeys = useCallback(async () => {
     try {
@@ -27,7 +28,13 @@ export function ApiKeyCard() {
       if (res.ok) {
         const data = (await res.json()) as { keys: ApiKeyItem[] };
         setKeys(data.keys ?? []);
+        setError(null);
+      } else {
+        const data = (await res.json()) as { error?: string };
+        setError(data.error ?? `请求失败 (${res.status})`);
       }
+    } catch {
+      setError('网络请求失败');
     } finally {
       setLoading(false);
     }
@@ -40,6 +47,7 @@ export function ApiKeyCard() {
   const handleGenerate = async () => {
     if (generating) return;
     setGenerating(true);
+    setError(null);
     try {
       const res = await fetch('/api/auth/api-keys', {
         method: 'POST',
@@ -51,7 +59,12 @@ export function ApiKeyCard() {
         setShowNewKey(data.key);
         setNewKeyName('');
         await loadKeys();
+      } else {
+        const data = (await res.json()) as { error?: string };
+        setError(data.error ?? `生成失败 (${res.status})`);
       }
+    } catch {
+      setError('网络请求失败');
     } finally {
       setGenerating(false);
     }
@@ -66,11 +79,17 @@ export function ApiKeyCard() {
   const handleDelete = async (id: string) => {
     if (deletingId) return;
     setDeletingId(id);
+    setError(null);
     try {
       const res = await fetch(`/api/auth/api-keys/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setKeys((prev) => prev.filter((k) => k.id !== id));
+      } else {
+        const data = (await res.json()) as { error?: string };
+        setError(data.error ?? `删除失败 (${res.status})`);
       }
+    } catch {
+      setError('网络请求失败');
     } finally {
       setDeletingId(null);
     }
@@ -89,6 +108,14 @@ export function ApiKeyCard() {
           <p className="text-xs text-zinc-400">用于替代 Cookie 进行 API 认证（Authorization: Bearer sk-xxx）</p>
         </div>
       </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+          <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
 
       {/* 新建密钥输入 */}
       <div className="flex gap-2 mb-4">
