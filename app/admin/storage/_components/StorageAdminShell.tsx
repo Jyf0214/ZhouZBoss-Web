@@ -50,7 +50,7 @@ export function StorageAdminShell() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await state.refreshAll();
+      await state.loadEntries(state.currentPath);
     } finally {
       setRefreshing(false);
     }

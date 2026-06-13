@@ -104,8 +104,9 @@ export function patchFolderMeta(
 }
 
 export function fetchEntries(path: string): Promise<{ entries: WebDavEntry[] }> {
+  const suffix = encodePathSegments(path);
   return request<{ entries: WebDavEntry[] }>(
-    `/api/storage/list/${encodePathSegments(path)}`
+    suffix ? `/api/storage/list/${suffix}` : '/api/storage/list'
   );
 }
 

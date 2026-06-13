@@ -41,6 +41,8 @@ interface UseStorageState {
   pendingTarget: DialogTarget;
   /** 重置整个页面(重新拉 config + folders + 当前路径) */
   refreshAll: () => Promise<void>;
+  /** 仅刷新当前路径文件列表(不重新拉 config/folders) */
+  loadEntries: (path: string) => Promise<void>;
   /** 切换浏览路径 */
   navigateTo: (path: string) => Promise<void>;
   /** 打开 / 关闭对话框 */
@@ -398,6 +400,7 @@ export function useStorageState(): UseStorageState {
     dialog,
     pendingTarget,
     refreshAll,
+    loadEntries,
     navigateTo,
     openDialog,
     closeDialog,
