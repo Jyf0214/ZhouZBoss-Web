@@ -18,7 +18,9 @@ interface PageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-export const dynamic = 'force-dynamic';
+// 公开文章使用 ISR（增量静态再生），每 600 秒（10 分钟）重新验证一次
+// 私有文章不在 generateStaticParams 中，运行时由 getSession() → cookies() 触发动态渲染
+export const revalidate = 600;
 
 export function generateStaticParams() {
   const slugs = getAllSlugs('posts');
