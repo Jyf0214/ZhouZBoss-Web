@@ -85,6 +85,7 @@ export function StorageMkdirDialog({
             variant="primary"
             size="sm"
             type="submit"
+            autoLoading={false}
             disabled={disabled || !name.trim()}
           >
             {createLabel}
