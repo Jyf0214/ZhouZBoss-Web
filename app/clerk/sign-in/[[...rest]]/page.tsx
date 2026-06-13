@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, createElement } from 'react';
-import { Navbar } from '@/components/Navbar';
 import { loadClerkClient } from '@/lib/clerk-dynamic';
 
 /**
@@ -23,7 +22,6 @@ export default function ClerkSignInPage() {
   if (!SignInComp) {
     return (
       <div className="min-h-screen flex flex-col bg-zinc-50">
-        <Navbar />
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="text-zinc-400">正在加载 Clerk...</div>
         </main>
@@ -33,7 +31,6 @@ export default function ClerkSignInPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
-      <Navbar />
       <main className="flex-1 flex items-center justify-center p-6">
         {createElement(SignInComp, {
           routing: 'path',

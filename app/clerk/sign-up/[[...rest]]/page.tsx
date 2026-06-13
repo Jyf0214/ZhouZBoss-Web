@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, createElement } from 'react';
-import { Navbar } from '@/components/Navbar';
 import { useConfig } from '@/hooks/use-config';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
@@ -31,7 +30,6 @@ export default function ClerkSignUpPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-zinc-50">
-        <Navbar />
       </div>
     );
   }
@@ -39,7 +37,6 @@ export default function ClerkSignUpPage() {
   if (!allowRegistration) {
     return (
       <div className="min-h-screen flex flex-col bg-zinc-50">
-        <Navbar />
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
             <p className="text-zinc-500 mb-1">{t('config.registrationClosed')}</p>
@@ -55,7 +52,6 @@ export default function ClerkSignUpPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
-      <Navbar />
       <main className="flex-1 flex items-center justify-center p-6">
         {SignUpComp
           ? createElement(SignUpComp, {

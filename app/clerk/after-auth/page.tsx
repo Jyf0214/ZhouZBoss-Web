@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/Button';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
@@ -52,7 +51,6 @@ export default function ClerkAfterAuthPage() {
   if (checking) {
     return (
       <div className="min-h-screen flex flex-col bg-zinc-50">
-        <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <GlobalLoading size="large" />
         </main>
@@ -62,7 +60,6 @@ export default function ClerkAfterAuthPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
-      <Navbar />
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm p-10 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center mx-auto mb-6">
