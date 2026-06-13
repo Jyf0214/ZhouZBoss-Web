@@ -3,11 +3,8 @@
  * DELETE /api/storage/rmdir/[...path]
  *
  * - WebDAV 物理删除 + Prisma 元数据清理
- * - 记录审计日志
  */
 import { NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth'
-import { logStorageAction } from '@/lib/storage/audit'
 import {
   buildWebDavTarget,
   catchAllHandler,
@@ -34,16 +31,6 @@ export const DELETE = catchAllHandler<{ path: string[] }>(
     if (rel === '') return rootNotAllowedResponse()
     if (!isValidStoragePath(rel)) return invalidPathResponse()
     const target = buildWebDavTarget(parts)
-
-    const session = await getSession()
-    const actorUid = session?.uid ?? null
-
-    await logStorageAction({
-      actorUid,
-      action: 'rmdir',
-      path: rel,
-      metadata: { recursive: false },
-    })
 
     try {
       const client = getWebDavClient()

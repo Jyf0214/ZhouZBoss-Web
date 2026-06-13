@@ -88,18 +88,3 @@ model StorageFolder {
   @@map("storage_folders")
   @@index([public])
 }
-
-/// 存储池操作审计日志(rmdir / mkdir / upload / delete_file / set_public / set_password)
-model StorageAuditLog {
-  id        String   @id @default(cuid())
-  actorUid  String?  @map("actor_uid")    // null = 系统操作
-  action    String                         // 'rmdir' | 'mkdir' | 'upload' | 'delete_file' | 'set_public' | 'set_password'
-  path      String                         // 受影响路径
-  metadata  Json?                          // 递归删除条数、文件大小等扩展上下文
-  at        DateTime @default(now()) @map("at")
-
-  @@map("storage_audit_logs")
-  @@index([actorUid])
-  @@index([action])
-  @@index([at])
-}
