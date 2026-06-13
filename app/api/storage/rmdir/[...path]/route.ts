@@ -34,7 +34,9 @@ export const DELETE = catchAllHandler<{ path: string[] }>(
 
     try {
       const provider = await getStorageProvider()
-      await provider.deleteFile(target)
+      // WebDAV deleteFile 可删除目录，但 B2 需要用 deleteDirectory
+      // 移除 .keep 占位文件。通过 StorageProvider 接口统一处理。
+      await provider.deleteDirectory(target)
     } catch (err) {
       console.error(`[storage.rmdir] target="${target}" 存储后端删除失败`, err)
       return storageErrorResponse(err, '删除目录')
