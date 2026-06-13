@@ -163,7 +163,6 @@ export async function listAllFolderMetas(): Promise<StorageFolderMeta[]> {
   if (!prisma) return []
   try {
     const rows = await prisma.storageFolder.findMany({
-      where: { deletedAt: null },
       orderBy: { path: 'asc' },
     })
     return rows.map((row) => ({
