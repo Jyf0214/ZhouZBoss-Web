@@ -398,13 +398,13 @@ export class B2Provider implements StorageProvider {
       ? `${downloadUrl.replace(/\/+$/, '')}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
       : `${auth.apiUrl}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
 
-    // 无论 CDN 模式还是直连模式，都发送 Authorization header 以支持私有桶。
-    // rclone 在 authorize 后为 rest client 设置默认 Authorization header，
-    // 所有后续请求（含下载）自动携带。CDN 模式（如 Cloudflare Workers）
-    // 同样依赖此 header 进行认证转发。
+    // B2_DOWNLOAD_URL 已设置 → 只走 CDN（用户明确要求，不回退直连）
+    // 未设置 → 走 B2 API 直连
     const mode = downloadUrl ? 'CDN' : '直连'
-    console.warn(`[B2] getFileContents path="${key}" mode=${mode} url="${effectiveDownloadUrl}"`)
-    const resp = await fetch(effectiveDownloadUrl, {
+    const url = effectiveDownloadUrl
+
+    console.warn(`[B2] getFileContents path="${key}" mode=${mode} url="${url}"`)
+    const resp = await fetch(url, {
       headers: { Authorization: auth.authorizationToken },
       signal: options?.signal,
     })
@@ -417,7 +417,7 @@ export class B2Provider implements StorageProvider {
     }
 
     const body = Buffer.from(await resp.arrayBuffer())
-    console.warn(`[B2] getFileContents path="${key}" mode=${mode} size=${body.length} status=${resp.status}`)
+    console.warn(`[B2] getFileContents path="${key}" mode=${mode} size=${body.length}`)
     return body
   }
 
