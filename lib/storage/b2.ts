@@ -245,7 +245,7 @@ async function getBucketId(): Promise<string> {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ accountId: auth.accountId }),
       authToken: auth.authorizationToken,
     }
   )

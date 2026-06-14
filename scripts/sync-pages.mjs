@@ -461,7 +461,7 @@ async function b2ResolveBucketId(authToken, apiUrl, bucketName) {
         Authorization: authToken,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ accountId: _b2AuthorizeData?.accountId }),
     });
 
     if (!resp.ok) {
