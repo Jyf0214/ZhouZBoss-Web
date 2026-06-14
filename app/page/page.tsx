@@ -14,6 +14,7 @@ import { getDb } from '@/lib/db';
 import { PAGES_PREFIX } from '@/lib/page-source/shared';
 import {
   isStorageConfigured,
+  getStorageProvider,
   getStorageProviderSync,
 } from '@/lib/storage/storage-provider';
 import { scanPagesHtmlDeep, fetchPageHtml } from '@/lib/page-source/webdav';
@@ -49,7 +50,7 @@ async function deepScanAllFiles(
   dir: string,
   depth: number
 ): Promise<{ relativePath: string }[]> {
-  if (depth > 8) return []; // 防止无线递归
+  if (depth > 3) return []; // 限制深度防止 B2 API 超时
   const provider = getStorageProviderSync();
   let entries;
   try {
@@ -107,28 +108,30 @@ export default async function PageIndex() {
 
   let scanned: { relativePath: string }[];
   try {
+    // 必须先初始化存储提供者（scanPagesHtmlDeep 内部使用 getStorageProviderSync）
+    await getStorageProvider();
     scanned = await scanPagesHtmlDeep();
   } catch {
     scanned = [];
   }
 
-  // 检测存储池中未索引的文件
-  let orphans: StorageOrphan[] = [];
-  try {
-    orphans = await detectOrphans(scanned);
-  } catch (err) {
-    console.error('[custom-page-index] detect orphans failed:', err);
-  }
-
+  // 无页面时快速返回，不执行深度扫描（避免不必要的 B2 API 调用）
   if (scanned.length === 0) {
     return (
       <PageIndexView
         notConfigured={false}
         pages={[]}
         emptyDirs={[]}
-        orphans={orphans}
       />
     );
+  }
+
+  // 有文件时才检测存储池中未索引的隐藏文件（深度限制 3 层）
+  let orphans: StorageOrphan[] = [];
+  try {
+    orphans = await detectOrphans(scanned);
+  } catch (err) {
+    console.error('[custom-page-index] detect orphans failed:', err);
   }
 
   const privateDirs = await loadPrivateDirs(

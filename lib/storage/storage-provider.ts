@@ -122,10 +122,11 @@ export async function getStorageProvider(): Promise<StorageProvider> {
  * 获取当前激活的存储提供者（同步版本）
  *
  * 仅在已初始化后使用。若未初始化则抛出错误。
+ * 调用方应先调用 getStorageProvider() 确保 provider 已初始化。
  */
 export function getStorageProviderSync(): StorageProvider {
   if (!activeProvider) {
-    throw new Error('存储提供者未初始化，请先调用 getStorageProvider()')
+    throw new Error('存储提供者未初始化')
   }
   return activeProvider
 }
