@@ -176,6 +176,14 @@ async function b2Download(provider: StorageProvider, relativePath: string): Prom
   return Buffer.alloc(0)
 }
 
+/** B2 后端下载 + 响应封装，包含 X-B2-Download-Mode 标记头 */
+async function b2FileResponse(provider: StorageProvider, stat: FileStat, relativePath: string): Promise<NextResponse> {
+  const body = await b2Download(provider, relativePath)
+  const resp = fileResponse(body, stat)
+  resp.headers.set('X-B2-Download-Mode', process.env.B2_DOWNLOAD_URL ? 'cdn' : 'direct')
+  return resp
+}
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<RouteParams> }) {
   let relativePath = ''
   try {
@@ -209,9 +217,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<Route
     }
     // B2 后端: 通过 provider.getFileContents 直接下载，跳过 WebDAV 特定逻辑
     if (provider.backend === 'backblaze') {
-      const body = await b2Download(provider, relativePath)
-      console.warn(`[files] b2 下载成功 path="${relativePath}" size=${body.length}`)
-      return fileResponse(body, stat)
+      return b2FileResponse(provider, stat, relativePath)
     }
     const webdavBase = process.env.WEBDAV_URL!.replace(/\/+$/, '')
     const auth = `Basic ${Buffer.from(`${process.env.WEBDAV_USER}:${process.env.WEBDAV_PASS}`).toString('base64')}`
