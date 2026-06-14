@@ -391,14 +391,20 @@ export class B2Provider implements StorageProvider {
       throw new Error('B2: 不能读取根路径')
     }
 
+    // 构建下载 URL
+    const downloadUrl = process.env.B2_DOWNLOAD_URL
     const auth = await getAuthToken()
-    // 使用 B2 API 直连下载（可靠，带 Authorization 认证）
-    // B2_DOWNLOAD_URL（CDN）仅在 files 路由的显式下载中使用
-    const effectiveUrl = `${auth.apiUrl}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
-    const mode = '直连'
+    const effectiveDownloadUrl = downloadUrl
+      ? `${downloadUrl.replace(/\/+$/, '')}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
+      : `${auth.apiUrl}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
 
-    console.warn(`[B2] getFileContents path="${key}" mode=${mode} url="${effectiveUrl}"`)
-    const resp = await fetch(effectiveUrl, {
+    // B2_DOWNLOAD_URL 已设置 → 只走 CDN（用户明确要求，不回退直连）
+    // 未设置 → 走 B2 API 直连
+    const mode = downloadUrl ? 'CDN' : '直连'
+    const url = effectiveDownloadUrl
+
+    console.warn(`[B2] getFileContents path="${key}" mode=${mode} url="${url}"`)
+    const resp = await fetch(url, {
       headers: { Authorization: auth.authorizationToken },
       signal: options?.signal,
     })
