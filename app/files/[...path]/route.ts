@@ -180,8 +180,7 @@ async function b2Download(provider: StorageProvider, relativePath: string): Prom
 async function b2FileResponse(provider: StorageProvider, stat: FileStat, relativePath: string): Promise<NextResponse> {
   const body = await b2Download(provider, relativePath)
   const resp = fileResponse(body, stat)
-  // getFileContents 始终使用 B2 API 直连，不走 CDN URL（避免 CDN 缓存导致脏数据）
-  resp.headers.set('X-B2-Download-Mode', 'direct')
+  resp.headers.set('X-B2-Download-Mode', process.env.B2_DOWNLOAD_URL ? 'cdn' : 'direct')
   return resp
 }
 

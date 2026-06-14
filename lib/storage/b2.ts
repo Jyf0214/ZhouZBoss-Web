@@ -391,14 +391,28 @@ export class B2Provider implements StorageProvider {
       throw new Error('B2: 不能读取根路径')
     }
 
+    const downloadUrl = process.env.B2_DOWNLOAD_URL
     const auth = await getAuthToken()
 
-    // 始终使用 B2 API 直连下载，不走 CDN URL。
-    // CDN（如 Cloudflare）会缓存文件内容，导致 B2 上文件已更新/删除后，
-    // 服务端仍然获取到旧的缓存内容。服务端请求应始终获取最新内容。
-    const url = `${auth.apiUrl}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
+    // 判断 CDN URL 是否指向本站自身
+    // B2 的 CDN URL 格式为 {download_url}/file/{bucket}/{path}，
+    // 若 download_url 指向与本站相同的域名，/file/ 路径不会匹配路由
+    // 此时应使用 B2 API 直连
+    const selfHost = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL ?? ''
+    const isSelfReferencing = !!(
+      downloadUrl && selfHost &&
+      (downloadUrl.includes(selfHost) || downloadUrl.includes('.vercel.app'))
+    )
 
-    console.warn(`[B2] getFileContents path="${key}" url="${url}"`)
+    const effectiveDownloadUrl = (downloadUrl && !isSelfReferencing)
+      ? `${downloadUrl.replace(/\/+$/, '')}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
+      : `${auth.apiUrl}/file/${bucketName}/${encodeURIComponent(key).replace(/%2F/g, '/')}`
+
+    // B2_DOWNLOAD_URL 已设置且未自引用 → 走 CDN；否则走 B2 API 直连
+    const mode = (downloadUrl && !isSelfReferencing) ? 'CDN' : '直连'
+    const url = effectiveDownloadUrl
+
+    console.warn(`[B2] getFileContents path="${key}" mode=${mode} url="${url}"`)
     const resp = await fetch(url, {
       headers: { Authorization: auth.authorizationToken },
       signal: options?.signal,
@@ -412,7 +426,7 @@ export class B2Provider implements StorageProvider {
     }
 
     const body = Buffer.from(await resp.arrayBuffer())
-    console.warn(`[B2] getFileContents path="${key}" size=${body.length}`)
+    console.warn(`[B2] getFileContents path="${key}" mode=${mode} size=${body.length}`)
     return body
   }
 
