@@ -285,17 +285,22 @@ export function StorageAdminShell() {
               <StorageFileGrid
                 entries={state.entries}
                 loading={state.loading}
+                refreshing={refreshing}
                 appUrl={appUrl}
                 currentPath={state.currentPath}
                 copyUrlLabel={labels.copyUrl}
                 copiedLabel={labels.urlCopied}
                 deleteLabel={labels.delete}
                 refreshLabel={labels.refresh}
+                newFolderLabel={labels.newFolder}
+                uploadLabel={labels.upload}
                 noFilesLabel={labels.noFiles}
                 noFilesHint={labels.noFilesHint}
                 onNavigate={state.navigateTo}
                 onDelete={handleEntryDelete}
-                onRefresh={() => void state.refreshAll()}
+                onRefresh={handleRefresh}
+                onNewFolder={() => state.openDialog('mkdir')}
+                onUpload={() => state.openDialog('upload')}
                 disabled={!state.configured}
               />
             </div>
