@@ -23,15 +23,27 @@ export interface PageIndexItem {
   folder: string;
   title: string;
   isPrivate: boolean;
+  /** 同目录下存储池中有但未显示的文件数 */
+  hiddenCount?: number;
+}
+
+/**
+ * 存储池中存在但未在索引中显示的条目
+ */
+export interface StorageOrphan {
+  relativePath: string;
+  /** 未显示的原因: depth(超 2 层) / notHtml(非 .html 后缀) / failure(读取失败) */
+  reason: 'depth' | 'notHtml' | 'failure';
 }
 
 interface PageIndexViewProps {
   notConfigured: boolean;
   pages: PageIndexItem[];
   emptyDirs: string[];
+  orphans?: StorageOrphan[];
 }
 
-export function PageIndexView({ notConfigured, pages, emptyDirs }: PageIndexViewProps) {
+export function PageIndexView({ notConfigured, pages, emptyDirs, orphans: _orphans = [] }: PageIndexViewProps) {
   const { t } = useI18n();
   const { isSudo } = useAuth();
   const router = useRouter();
@@ -195,16 +207,26 @@ function PageGrid({ pages }: { pages: PageIndexItem[] }) {
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
                 <FileCode size={18} aria-hidden />
               </div>
-              {page.isPrivate ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700 uppercase tracking-wider ring-1 ring-amber-200/60">
-                  <Lock size={10} aria-hidden />
-                  {t('page.indexPrivateBadge')}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 uppercase tracking-wider ring-1 ring-emerald-200/60">
-                  {t('page.indexPublicBadge')}
-                </span>
-              )}
+              <div className="flex items-center gap-1.5">
+                {page.hiddenCount && page.hiddenCount > 0 ? (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-bold text-orange-700 tracking-wider ring-1 ring-orange-200/60"
+                    title={`存储池中有 ${page.hiddenCount} 个文件未部署`}
+                  >
+                    +{page.hiddenCount}
+                  </span>
+                ) : null}
+                {page.isPrivate ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700 uppercase tracking-wider ring-1 ring-amber-200/60">
+                    <Lock size={10} aria-hidden />
+                    {t('page.indexPrivateBadge')}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 uppercase tracking-wider ring-1 ring-emerald-200/60">
+                    {t('page.indexPublicBadge')}
+                  </span>
+                )}
+              </div>
             </div>
             <h3
               className="text-base font-semibold text-zinc-900 mb-1 truncate"
