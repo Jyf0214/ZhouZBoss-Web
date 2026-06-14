@@ -218,7 +218,7 @@ describe('B2Provider.getFileContents', () => {
     process.env.B2_BUCKET = 'my-bucket'
   })
 
-  it('设定了 B2_DOWNLOAD_URL 时仍使用 B2 API 直连', async () => {
+  it('CDN 模式: 使用 download_url 下载，带 Authorization header', async () => {
     process.env.B2_DOWNLOAD_URL = 'https://cdn.example.com'
     // getAuthToken → 1st call
     b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
@@ -234,9 +234,8 @@ describe('B2Provider.getFileContents', () => {
 
     expect(Buffer.isBuffer(content)).toBe(true)
     expect(content.toString()).toBe('<h1>Hello</h1>')
-    // getFileContents 始终使用 B2 API 直连（不依赖 CDN）
     expect(b2Mocks.fetch).toHaveBeenCalledWith(
-      'https://api.backblazeb2.com/file/my-bucket/pages/test.html',
+      'https://cdn.example.com/file/my-bucket/pages/test.html',
       expect.objectContaining({
         headers: { Authorization: 'token1' },
         signal: undefined,
