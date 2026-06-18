@@ -59,7 +59,7 @@ export function StorageMkdirDialog({
       footer={null}
       title={title}
       destroyOnClose
-      width={440}
+      width="min(440px, 90vw)"
     >
       <form onSubmit={handleSubmit}>
         <div className="mb-3 text-xs text-zinc-500">

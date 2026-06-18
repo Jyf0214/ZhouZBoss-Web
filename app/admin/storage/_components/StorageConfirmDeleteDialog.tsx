@@ -41,7 +41,7 @@ export function StorageConfirmDeleteDialog({
       footer={null}
       title={isFolder ? folderTitleLabel : titleLabel}
       destroyOnClose
-      width={420}
+      width="min(420px, 90vw)"
     >
       <div className="flex items-start gap-3 py-2">
         <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">

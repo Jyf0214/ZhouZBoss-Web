@@ -98,7 +98,7 @@ export function StorageUploadDialog({
       title={uploadLabel}
       destroyOnClose
       maskClosable={!disabled}
-      width={520}
+      width="min(520px, 92vw)"
     >
       <div className="mb-3 text-xs text-zinc-500">
         上传到 <span className="font-mono text-zinc-700">{targetPath}</span>

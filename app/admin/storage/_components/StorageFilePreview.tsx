@@ -94,7 +94,7 @@ export function StorageFilePreview({ open, entry, appUrl, onClose }: Props) {
       open={open}
       onCancel={onClose}
       footer={null}
-      width={isImage ? 640 : 480}
+      width={isImage ? 'min(640px, 92vw)' : 'min(480px, 90vw)'}
       destroyOnClose
     >
       {/* 图片预览 */}

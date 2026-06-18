@@ -68,7 +68,7 @@ export function StorageMoveDialog({
       footer={null}
       title={title}
       destroyOnClose
-      width={400}
+      width="min(400px, 90vw)"
     >
       <div className="text-sm text-zinc-500 mb-3">{selectFolderLabel}</div>
 
