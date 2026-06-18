@@ -92,6 +92,14 @@ export const GET = apiHandler('GET', { label: '获取文章详情' }, async (req
   if (metaStr) {
     const meta = JSON.parse(metaStr) as Record<string, unknown>;
     if (meta.status === 'draft') {
+      const session = await getSession();
+      if (!session) {
+        return NextResponse.json({ error: '未授权' }, { status: 403 });
+      }
+      if (meta.authorId !== session.uid && session.role !== 'admin' && session.role !== 'sudo') {
+        logger.warn('GET', '无权限查看草稿', { id, uid: session.uid });
+        return NextResponse.json({ error: '无权限' }, { status: 403 });
+      }
       return handleDraftArticleResponse(id, meta);
     }
     const publishedResponse = await handlePublishedArticleResponse(meta, req);
