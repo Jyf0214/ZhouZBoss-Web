@@ -28,12 +28,33 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
   const [saving, setSaving] = React.useState(false);
   const [recovered, setRecovered] = React.useState(false);
   const [nowTick, setNowTick] = React.useState(Date.now());
+  const [lastSavedSnapshot, setLastSavedSnapshot] = React.useState({ title: initialTitle ?? '', content: initialContent ?? '', tags: (initialTags ?? []).join(', '), group: initialGroup ?? '默认', date: initialDate ?? new Date().toISOString().slice(0, 10) });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   const router = useRouter();
 
   React.useEffect(() => {
     const iv = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(iv);
   }, []);
+
+  // 保存成功后同步快照，防止 beforeunload 误报
+  React.useEffect(() => {
+    if (saveStatus === 'saved') {
+      setLastSavedSnapshot({ title, content, tags, group: diaryGroup, date: diaryDate });
+    }
+  }, [saveStatus, title, content, tags, diaryGroup, diaryDate]);
+
+  // 表单有未保存变更时阻止意外离开
+  React.useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    if (hasUnsavedChanges) {
+      window.addEventListener('beforeunload', handler);
+      return () => window.removeEventListener('beforeunload', handler);
+    }
+  }, [hasUnsavedChanges]);
 
   const { clearDraft, saveStatus, lastSavedAt } = useDiaryDraft({
     id: draftId,
@@ -57,6 +78,24 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
     },
   });
 
+  // 草稿恢复后同步快照，避免误报未保存变更
+  React.useEffect(() => {
+    if (recovered && (title || content)) {
+      setLastSavedSnapshot({ title, content, tags, group: diaryGroup, date: diaryDate });
+    }
+  }, [recovered]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 追踪是否有未保存变更
+  React.useEffect(() => {
+    setHasUnsavedChanges(
+      title !== lastSavedSnapshot.title ||
+      content !== lastSavedSnapshot.content ||
+      tags !== lastSavedSnapshot.tags ||
+      diaryGroup !== lastSavedSnapshot.group ||
+      diaryDate !== lastSavedSnapshot.date
+    );
+  }, [title, content, tags, diaryGroup, diaryDate, lastSavedSnapshot]);
+
   const handleSave = async () => {
     if (!title.trim()) { showError('请输入标题'); return; }
     if (!content.trim()) { showError('请输入内容'); return; }
@@ -66,6 +105,7 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
       const tagsArr = tags.split(',').map(t => t.trim()).filter(Boolean);
       const result = await onSave(title.trim(), content.trim(), tagsArr, diaryDate, diaryGroup);
       if (result !== null) {
+        setLastSavedSnapshot({ title: title.trim(), content: content.trim(), tags: tagsArr.join(', '), group: diaryGroup, date: diaryDate });
         clearDraft();
         router.push('/diary');
       }
