@@ -33,9 +33,14 @@ export default function EnvStatusPage() {
   const hasRedirected = useRef(false);
   const hasFetched = useRef(false);
 
+  const abortRef = useRef<AbortController | null>(null);
+
   const fetchEnvStatus = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
-      const res = await fetch('/api/env-status');
+      const res = await fetch('/api/env-status', { signal: controller.signal });
       if (res.ok) {
         const data = await res.json();
         setEnvStatus(data);
@@ -43,6 +48,7 @@ export default function EnvStatusPage() {
         showError('环境变量状态加载失败');
       }
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
       console.error('Failed to fetch env status:', error);
       showError('环境变量状态加载失败');
     } finally {
@@ -61,6 +67,7 @@ export default function EnvStatusPage() {
     if (isSudo && !hasFetched.current) {
       void fetchEnvStatus();
     }
+    return () => abortRef.current?.abort();
   }, [authLoading, isSudo, router, fetchEnvStatus]);
 
   const handleToggleCollapsed = useCallback((key: string) => {

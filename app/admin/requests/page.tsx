@@ -32,9 +32,10 @@ export default function RequestsPage() {
   useEffect(() => {
     if (!hasAccess) return;
 
+    const controller = new AbortController();
     const fetchRequests = async () => {
       try {
-        const response = await fetch('/api/requests?status=pending');
+        const response = await fetch('/api/requests?status=pending', { signal: controller.signal });
         const data = await response.json();
 
         if (!response.ok) {
@@ -43,6 +44,7 @@ export default function RequestsPage() {
 
         setRequests(data.requests ?? []);
       } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
         setError(err instanceof Error ? err.message : '获取申请列表失败');
       } finally {
         setLoading(false);
@@ -50,6 +52,7 @@ export default function RequestsPage() {
     };
 
     void fetchRequests();
+    return () => controller.abort();
   }, [hasAccess]);
 
   const handleApprove = async (request: Request) => {

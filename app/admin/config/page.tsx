@@ -93,10 +93,11 @@ export default function ConfigPage() {
       setLoading(false);
       return;
     }
+    const controller = new AbortController();
     const fetchConfig = async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/config');
+        const res = await fetch('/api/config', { signal: controller.signal });
         if (res.ok) {
           const data: Record<string, unknown> = await res.json();
           setGithubRepo((data._githubRepo as string) ?? '');
@@ -112,6 +113,7 @@ export default function ConfigPage() {
           showError('配置加载失败');
         }
       } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
         console.error('获取配置失败:', error);
         showError('配置加载失败');
       } finally {
@@ -119,6 +121,7 @@ export default function ConfigPage() {
       }
     };
     void fetchConfig();
+    return () => controller.abort();
   }, [userRole]);
 
   const handleSave = () => {

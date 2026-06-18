@@ -22,9 +22,10 @@ export default function UsersPage() {
 
   useEffect(() => {
     if (!hasAccess) return;
+    const controller = new AbortController();
     const fetchUsers = async () => {
       try {
-        const res = await fetch('/api/users');
+        const res = await fetch('/api/users', { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           setUsers(data);
@@ -32,13 +33,15 @@ export default function UsersPage() {
           showError('用户列表加载失败');
         }
       } catch (error) {
-		console.error('获取用户列表失败:', error);
-		showError('用户列表加载失败');
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.error('获取用户列表失败:', error);
+        showError('用户列表加载失败');
       } finally {
         setLoading(false);
       }
     };
     void fetchUsers();
+    return () => controller.abort();
   }, [hasAccess]);
 
   const handleUpdateRole = async (id: string) => {
