@@ -743,7 +743,21 @@
     "renameSuccess": "Folder renamed",
     "renameFailed": "Rename failed",
     "renameInvalidName": "Folder name cannot be empty",
-    "renameSameName": "New name is the same as current"
+    "renameSameName": "New name is the same as current",
+    "sortBy": "Sort",
+    "sortByName": "By name",
+    "sortBySize": "By size",
+    "sortByDate": "By date",
+    "preview": "Preview",
+    "previewTitle": "File Preview",
+    "copyUrl": "Copy URL",
+    "openInNewWindow": "Open in new window",
+    "download": "Download",
+    "fileName": "File name",
+    "fileSize": "Size",
+    "fileType": "Type",
+    "fileModified": "Modified",
+    "filePath": "Path"
   },
   "page": {
     "title": "Custom Page",

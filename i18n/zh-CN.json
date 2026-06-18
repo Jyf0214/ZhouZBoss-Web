@@ -743,7 +743,21 @@
     "renameSuccess": "重命名成功",
     "renameFailed": "重命名失败",
     "renameInvalidName": "文件夹名不能为空",
-    "renameSameName": "新名称与当前名称相同"
+    "renameSameName": "新名称与当前名称相同",
+    "sortBy": "排序",
+    "sortByName": "按名称",
+    "sortBySize": "按大小",
+    "sortByDate": "按日期",
+    "preview": "预览",
+    "previewTitle": "文件预览",
+    "copyUrl": "复制 URL",
+    "openInNewWindow": "新窗口打开",
+    "download": "下载",
+    "fileName": "文件名",
+    "fileSize": "大小",
+    "fileType": "类型",
+    "fileModified": "修改时间",
+    "filePath": "路径"
   },
   "page": {
     "title": "自定义页面",

@@ -25,6 +25,7 @@ import { StorageMkdirDialog } from './StorageMkdirDialog';
 import { StorageConfirmDeleteDialog } from './StorageConfirmDeleteDialog';
 import { StorageFolderSettingsPopover } from './StorageFolderSettingsPopover';
 import { StorageRenameDialog } from './StorageRenameDialog';
+import { StorageFilePreview } from './StorageFilePreview';
 import type { WebDavEntry } from '@/lib/storage/types';
 
 const APP_URL_FALLBACK = '';
@@ -108,6 +109,15 @@ export function StorageAdminShell() {
     renameFolderTitle: t('storage.renameFolderTitle'),
     newNameLabel: t('storage.newNameLabel'),
     newNamePlaceholder: t('storage.newNamePlaceholder'),
+    sortBy: t('storage.sortBy'),
+    sortByName: t('storage.sortByName'),
+    sortBySize: t('storage.sortBySize'),
+    sortByDate: t('storage.sortByDate'),
+    preview: t('storage.preview'),
+    previewTitle: t('storage.previewTitle'),
+    copyUrlAction: t('storage.copyUrl'),
+    openInNewWindow: t('storage.openInNewWindow'),
+    download: t('storage.download'),
   };
 
   const handleEntryDelete = (entry: WebDavEntry) => {
@@ -174,12 +184,29 @@ export function StorageAdminShell() {
     state.closeDialog();
   };
 
+  // 预览相关状态
+  const [previewEntry, setPreviewEntry] = useState<WebDavEntry | null>(null);
+
   // 重命名对话框当前名称
   const renameCurrentName = useMemo(() => {
     if (!renameTarget) return '';
     const segments = renameTarget.split('/');
     return segments[segments.length - 1] ?? '';
   }, [renameTarget]);
+
+  // 当前路径文件统计
+  const stats = useMemo(() => {
+    const files = state.entries.filter((e) => !e.isDirectory);
+    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+    return { fileCount: files.length, totalSize };
+  }, [state.entries]);
+
+  function formatBytesAlt(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
+    return `${(bytes / 1073741824).toFixed(2)} GB`;
+  }
 
   // 加载态
   if (state.loading) {
@@ -202,6 +229,11 @@ export function StorageAdminShell() {
             <h1 className="text-2xl font-bold text-zinc-900">{labels.title}</h1>
             <p className="text-zinc-400 text-sm">
               {state.folders.length} {labels.folders}
+              {state.currentPath && (
+                <span className="ml-2 text-zinc-300">
+                  · {stats.fileCount} 文件 · {formatBytesAlt(stats.totalSize)}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -330,11 +362,15 @@ export function StorageAdminShell() {
                 uploadLabel={labels.upload}
                 noFilesLabel={labels.noFiles}
                 noFilesHint={labels.noFilesHint}
+                sortField={state.sortField}
+                sortDirection={state.sortDirection}
                 onNavigate={state.navigateTo}
                 onDelete={handleEntryDelete}
+                onFileClick={setPreviewEntry}
                 onRefresh={handleRefresh}
                 onNewFolder={() => state.openDialog('mkdir')}
                 onUpload={() => state.openDialog('upload')}
+                onToggleSort={state.toggleSort}
                 disabled={!state.configured}
               />
             </div>
@@ -397,6 +433,13 @@ export function StorageAdminShell() {
         onCancel={handleRenameCancel}
         onRename={handleRename}
         disabled={!state.configured}
+      />
+
+      <StorageFilePreview
+        open={previewEntry !== null}
+        entry={previewEntry}
+        appUrl={appUrl}
+        onClose={() => setPreviewEntry(null)}
       />
     </PageContainer>
   );

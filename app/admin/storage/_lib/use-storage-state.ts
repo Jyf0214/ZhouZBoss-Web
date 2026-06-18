@@ -69,7 +69,16 @@ interface UseStorageState {
   ) => Promise<StorageFolderMeta | null>;
   /** 重命名文件夹 */
   renameFolder: (path: string, newName: string) => Promise<boolean>;
+  /** 排序字段 */
+  sortField: SortField;
+  /** 排序方向 */
+  sortDirection: SortDirection;
+  /** 切换排序(点击相同字段切换方向,不同字段重置为 asc) */
+  toggleSort: (field: SortField) => void;
 }
+
+export type SortField = 'name' | 'size' | 'date';
+export type SortDirection = 'asc' | 'desc';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
@@ -82,6 +91,8 @@ export function useStorageState(): UseStorageState {
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [pendingTarget, setPendingTarget] = useState<DialogTarget>(null);
+  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const hasFetched = useRef(false);
 
@@ -439,6 +450,17 @@ export function useStorageState(): UseStorageState {
     [configured, closeDialog]
   );
 
+  const toggleSort = useCallback((field: SortField) => {
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+        return prev;
+      }
+      setSortDirection('asc');
+      return field;
+    });
+  }, []);
+
   return {
     configured,
     folders,
@@ -460,5 +482,8 @@ export function useStorageState(): UseStorageState {
     toggleFolderPublic,
     setFolderPassword,
     renameFolder: renameFolderCallback,
+    sortField,
+    sortDirection,
+    toggleSort,
   };
 }

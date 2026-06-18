@@ -3,19 +3,23 @@
  *
  * - 空时展示 EmptyState
  * - 单个目录/文件用 StorageFileCard 渲染
- * - 点击文件名 = 进入目录 / 复制 URL
+ * - 双击文件名 = 进入目录 / 复制 URL
+ * - 点击文件 → 预览弹窗
+ * - 排序控件:名称/大小/日期
  * - 刷新时容器内局部加载，不替换整个页面
  * - 文件夹内顶部/底部显示快捷创建按钮
  */
 'use client';
 
-import { FolderPlus, Inbox, RefreshCw, Upload } from 'lucide-react';
+import { useMemo } from 'react';
+import { ArrowUpDown, ArrowUp, ArrowDown, FolderPlus, Inbox, RefreshCw, Upload } from 'lucide-react';
 import { Tooltip } from 'antd';
 import type { WebDavEntry } from '@/lib/storage/types';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { StorageFileCard } from './StorageFileCard';
 import type { DialogKind, DialogTarget } from '../_lib/types';
+import type { SortField, SortDirection } from '../_lib/use-storage-state';
 
 interface Props {
   entries: WebDavEntry[];
@@ -31,11 +35,15 @@ interface Props {
   uploadLabel: string;
   noFilesLabel: string;
   noFilesHint: string;
+  sortField: SortField;
+  sortDirection: SortDirection;
   onNavigate: (path: string) => void;
   onDelete: (entry: WebDavEntry) => void;
+  onFileClick: (entry: WebDavEntry) => void;
   onRefresh: () => void;
   onNewFolder: () => void;
   onUpload: () => void;
+  onToggleSort: (field: SortField) => void;
   disabled?: boolean;
 }
 
@@ -86,6 +94,59 @@ function CreateActionBar({
   );
 }
 
+/** 排序按钮 */
+function SortButton({
+  field,
+  label,
+  currentField,
+  currentDirection,
+  onToggle,
+}: {
+  field: SortField;
+  label: string;
+  currentField: SortField;
+  currentDirection: SortDirection;
+  onToggle: (field: SortField) => void;
+}) {
+  const active = currentField === field;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(field)}
+      className={[
+        'inline-flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors',
+        active
+          ? 'bg-zinc-200 text-zinc-900 font-medium'
+          : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700',
+      ].join(' ')}
+    >
+      {label}
+      {active ? (
+        currentDirection === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />
+      ) : (
+        <ArrowUpDown size={10} className="opacity-40" />
+      )}
+    </button>
+  );
+}
+
+/** 对 entries 按 sortField + sortDirection 排序(目录始终排在前面) */
+function sortEntries(entries: WebDavEntry[], field: SortField, dir: SortDirection): WebDavEntry[] {
+  const sorted = [...entries].sort((a, b) => {
+    // 目录始终优先
+    if (a.isDirectory && !b.isDirectory) return -1;
+    if (!a.isDirectory && b.isDirectory) return 1;
+
+    let cmp = 0;
+    if (field === 'name') cmp = a.filename.localeCompare(b.filename, 'zh');
+    else if (field === 'size') cmp = a.size - b.size;
+    else cmp = new Date(a.lastModified).getTime() - new Date(b.lastModified).getTime();
+
+    return dir === 'asc' ? cmp : -cmp;
+  });
+  return sorted;
+}
+
 export function StorageFileGrid({
   entries,
   loading,
@@ -100,14 +161,22 @@ export function StorageFileGrid({
   uploadLabel,
   noFilesLabel,
   noFilesHint,
+  sortField,
+  sortDirection,
   onNavigate,
   onDelete,
+  onFileClick,
   onRefresh,
   onNewFolder,
   onUpload,
+  onToggleSort,
   disabled = false,
 }: Props) {
   const showCreateButtons = !!currentPath && !loading;
+  const sortedEntries = useMemo(
+    () => sortEntries(entries, sortField, sortDirection),
+    [entries, sortField, sortDirection]
+  );
 
   if (loading) {
     return (
@@ -155,7 +224,7 @@ export function StorageFileGrid({
     <div className="relative">
       {refreshing && <LoadingSpinner />}
 
-      {/* 顶部操作栏：创建按钮 + 刷新 */}
+      {/* 顶部操作栏：创建按钮 + 排序 + 刷新 */}
       <div className="flex items-center justify-between mb-3">
         {showCreateButtons ? (
           <CreateActionBar
@@ -168,22 +237,28 @@ export function StorageFileGrid({
         ) : (
           <div />
         )}
-        <Tooltip title={refreshLabel}>
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={disabled || refreshing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
-            {refreshLabel}
-          </button>
-        </Tooltip>
+        <div className="flex items-center gap-1">
+          <SortButton field="name" label="名称" currentField={sortField} currentDirection={sortDirection} onToggle={onToggleSort} />
+          <SortButton field="size" label="大小" currentField={sortField} currentDirection={sortDirection} onToggle={onToggleSort} />
+          <SortButton field="date" label="日期" currentField={sortField} currentDirection={sortDirection} onToggle={onToggleSort} />
+          <div className="w-px h-3 bg-zinc-200 mx-1" />
+          <Tooltip title={refreshLabel}>
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={disabled || refreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
+              {refreshLabel}
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {/* 文件卡片网格 */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {entries.map((entry) => (
+        {sortedEntries.map((entry) => (
           <div
             key={entry.basename}
             onDoubleClick={() => {
@@ -194,7 +269,10 @@ export function StorageFileGrid({
                 onNavigate(next);
               }
             }}
-            className={entry.isDirectory ? 'cursor-pointer' : ''}
+            onClick={() => {
+              if (!entry.isDirectory) onFileClick(entry);
+            }}
+            className={entry.isDirectory ? 'cursor-pointer' : 'cursor-pointer'}
           >
             <StorageFileCard
               entry={entry}
