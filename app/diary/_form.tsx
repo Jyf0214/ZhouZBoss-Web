@@ -37,25 +37,6 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
     return () => clearInterval(iv);
   }, []);
 
-  // 保存成功后同步快照，防止 beforeunload 误报
-  React.useEffect(() => {
-    if (saveStatus === 'saved') {
-      setLastSavedSnapshot({ title, content, tags, group: diaryGroup, date: diaryDate });
-    }
-  }, [saveStatus, title, content, tags, diaryGroup, diaryDate]);
-
-  // 表单有未保存变更时阻止意外离开
-  React.useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    if (hasUnsavedChanges) {
-      window.addEventListener('beforeunload', handler);
-      return () => window.removeEventListener('beforeunload', handler);
-    }
-  }, [hasUnsavedChanges]);
-
   const { clearDraft, saveStatus, lastSavedAt } = useDiaryDraft({
     id: draftId,
     title,
@@ -77,6 +58,25 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
       }
     },
   });
+
+  // 保存成功后同步快照，防止 beforeunload 误报
+  React.useEffect(() => {
+    if (saveStatus === 'saved') {
+      setLastSavedSnapshot({ title, content, tags, group: diaryGroup, date: diaryDate });
+    }
+  }, [saveStatus, title, content, tags, diaryGroup, diaryDate]);
+
+  // 表单有未保存变更时阻止意外离开
+  React.useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    if (hasUnsavedChanges) {
+      window.addEventListener('beforeunload', handler);
+      return () => window.removeEventListener('beforeunload', handler);
+    }
+  }, [hasUnsavedChanges]);
 
   // 草稿恢复后同步快照，避免误报未保存变更
   React.useEffect(() => {
