@@ -119,9 +119,10 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
   // 仅在服务端未传入配置时，降级为客户端 fetch 获取导航配置
   useEffect(() => {
     if (navConfigProp) return; // 已有服务端数据，跳过请求
+    const controller = new AbortController();
     const fetchNav = async () => {
       try {
-        const res = await fetch('/api/config');
+        const res = await fetch('/api/config', { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           if (data.nav) {
@@ -130,11 +131,13 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
         } else {
           console.warn('导航配置获取失败:', res.status);
         }
-      } catch {
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
         console.warn('导航配置请求异常，使用默认导航');
       }
     };
     void fetchNav();
+    return () => controller.abort();
   }, [navConfigProp]);
 
   useEffect(() => {

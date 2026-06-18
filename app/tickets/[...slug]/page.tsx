@@ -105,7 +105,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
 
   const slug = '/' + (resolvedParams.slug?.join('/') ?? '');
 
-  const fetchTicket = React.useCallback(async () => {
+  const _fetchTicket = React.useCallback(async () => {
     try {
       const res = await fetch(`/api/tickets/${slug}`, { headers: { 'Content-Type': 'application/json' } });
       if (res.ok) {
@@ -131,10 +131,32 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
   }, [authLoading, user, router]);
 
   useEffect(() => {
-    if (user) {
-      void fetchTicket();
-    }
-  }, [user, fetchTicket]);
+    if (!user) return;
+    const controller = new AbortController();
+    const fetchWithAbort = async () => {
+      try {
+        const res = await fetch(`/api/tickets/${slug}`, {
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setTicket(data);
+          setNewStatus(data.status ?? 'open');
+        } else {
+          showError(t('tickets.detailLoadFailed'));
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.error('Failed to fetch ticket:', error);
+        showError(t('tickets.detailLoadFailed'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchWithAbort();
+    return () => controller.abort();
+  }, [user, slug, t]);
 
   const handleStatusChange = async () => {
     if (!ticket || newStatus === ticket.status) return;
