@@ -8,7 +8,7 @@
 'use client';
 
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
-import { Modal } from 'antd';
+import { Modal, message } from 'antd';
 import { Upload, X, File as FileIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -75,7 +75,7 @@ export function StorageUploadDialog({
     const oversize = files.find((f) => f.size > MAX_FILE_SIZE);
     if (oversize) {
       // 父级 hook 会再校验一次,这里仅做即时反馈
-      alert(`${fileTooLargeLabel}: ${oversize.name}`);
+      message.warning(`${fileTooLargeLabel}: ${oversize.name}`);
       return;
     }
     onUpload(files);

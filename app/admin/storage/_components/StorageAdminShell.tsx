@@ -83,6 +83,7 @@ export function StorageAdminShell() {
     privateDesc: t('storage.privateDesc'),
     settingsTitle: t('storage.currentFolder'),
     notApplicableHint: t('storage.privateDesc'),
+    fileTooLarge: t('storage.fileTooLarge'),
     delete: t('storage.delete'),
     deleteFile: t('storage.deleteFileConfirm'),
     deleteFolder: t('storage.deleteFolderConfirm'),
@@ -420,7 +421,7 @@ export function StorageAdminShell() {
         currentPath={state.currentPath}
         uploadLabel={labels.upload}
         cancelLabel={labels.cancel}
-        fileTooLargeLabel={labels.delete}
+        fileTooLargeLabel={labels.fileTooLarge}
         emptyHint={labels.noFiles}
         rootLabel={labels.root}
         onCancel={state.closeDialog}

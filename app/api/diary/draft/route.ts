@@ -15,7 +15,11 @@ export const GET = apiHandler('GET', { label: '获取草稿', requireAdmin: true
       return NextResponse.json({ draft: null });
     }
 
-    return NextResponse.json({ draft: JSON.parse(record.value) });
+    try {
+      return NextResponse.json({ draft: JSON.parse(record.value) });
+    } catch {
+      return NextResponse.json({ draft: null, error: '草稿数据损坏' });
+    }
   }
 
   const all = await prisma.originiumKV.findMany({
@@ -24,14 +28,24 @@ export const GET = apiHandler('GET', { label: '获取草稿', requireAdmin: true
   });
 
   const drafts = all.map((r) => {
-    const data = JSON.parse(r.value ?? '{}');
-    return {
-      id: r.key.replace('diary:draft:', ''),
-      title: data.title ?? '',
-      content: data.content ?? '',
-      tags: data.tags ?? [],
-      savedAt: data.savedAt ?? r.createdAt.toISOString(),
-    };
+    try {
+      const data = JSON.parse(r.value ?? '{}');
+      return {
+        id: r.key.replace('diary:draft:', ''),
+        title: data.title ?? '',
+        content: data.content ?? '',
+        tags: data.tags ?? [],
+        savedAt: data.savedAt ?? r.createdAt.toISOString(),
+      };
+    } catch {
+      return {
+        id: r.key.replace('diary:draft:', ''),
+        title: '(损坏)',
+        content: '',
+        tags: [],
+        savedAt: r.createdAt.toISOString(),
+      };
+    }
   });
 
   return NextResponse.json({ drafts });

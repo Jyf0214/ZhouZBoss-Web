@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { loadConfig, type AppConfig, type SocialConfig } from '@/lib/config';
 import { getFileFromGithub } from '@/lib/github';
 import { createApiLogger } from '@/lib/api-logger';
+import { zAppConfig } from '@/lib/config-schema';
 import yaml from 'js-yaml';
 
 const logger = createApiLogger('/api/config');
@@ -54,10 +55,15 @@ export async function GET() {
       if (remote) {
         remoteConfigRaw = remote.content;
         remoteConfigStatus = 'ok';
-        // 将远程 YAML 解析后作为主配置返回
+        // 将远程 YAML 解析后作为主配置返回，使用 Zod 校验确保数据完整
         const parsed = yaml.load(remote.content) as AppConfig | null;
         if (parsed) {
-          config = parsed;
+          const result = zAppConfig.safeParse(parsed);
+          if (result.success) {
+            config = result.data;
+          } else {
+            logger.warn('GET', '远程 YAML Zod 校验失败，回退到本地配置', { issues: result.error.issues.map(i => i.path.join('.')) });
+          }
         }
         logger.info('GET', '远程配置已获取并作为主配置');
       } else {
@@ -359,8 +365,13 @@ export async function PUT() {
       return NextResponse.json({ error: 'config.yaml 不存在' }, { status: 404 });
     }
     const parsed = yaml.load(remote.content) as Partial<AppConfig>;
+    const validated = zAppConfig.safeParse(parsed);
+    if (!validated.success) {
+      logger.warn('PUT', '远程 YAML Zod 校验失败', { issues: validated.error.issues.map(i => i.path.join('.')) });
+      return NextResponse.json({ error: '远程配置校验失败: ' + validated.error.issues.map(i => i.path.join('.')).join(', ') }, { status: 400 });
+    }
     const currentConfig = loadConfig();
-    const mergedConfig = mergeAppConfig(currentConfig, parsed);
+    const mergedConfig = mergeAppConfig(currentConfig, validated.data);
 
     logger.info('PUT', '从 GitHub 同步配置成功');
     return NextResponse.json({ success: true, config: mergedConfig });

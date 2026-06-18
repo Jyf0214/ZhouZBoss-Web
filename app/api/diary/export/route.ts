@@ -46,6 +46,7 @@ export const GET = apiHandler('GET', { label: '导出日记', requireAdmin: true
     headers: {
       'Content-Type': 'text/markdown; charset=utf-8',
       'Content-Disposition': `attachment; filename="diary-export-${new Date().toISOString().slice(0, 10)}.md"`,
+      'Cache-Control': 'private, no-store, no-cache',
     },
   });
 });
