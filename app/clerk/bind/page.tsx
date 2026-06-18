@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Input, Steps, message } from 'antd';
@@ -25,6 +25,7 @@ export default function ClerkBindPage() {
   const [countdown, setCountdown] = useState(0);
   const [checking, setChecking] = useState(true);
   const [clerkLoggedIn, setClerkLoggedIn] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 检查 Clerk 登录状态
   useEffect(() => {
@@ -78,9 +79,13 @@ export default function ClerkBindPage() {
         message.success('验证码已发送');
         // 60 秒倒计时
         setCountdown(60);
-        const timer = setInterval(() => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = setInterval(() => {
           setCountdown((prev) => {
-            if (prev <= 1) { clearInterval(timer); return 0; }
+            if (prev <= 1) {
+              if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+              return 0;
+            }
             return prev - 1;
           });
         }, 1000);
@@ -121,6 +126,16 @@ export default function ClerkBindPage() {
       setLoading(false);
     }
   };
+
+  // 清理倒计时定时器，防止组件卸载后内存泄漏
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
 
   if (checking) return <GlobalLoading />;
 

@@ -65,7 +65,7 @@ export default function DiaryDraftsPage() {
       `diary:draft:${d.id}`,
       JSON.stringify({ title: d.title, content: d.content, tags: d.tags, savedAt: d.savedAt }),
     );
-    router.push(`/diary/new`);
+    router.push(`/diary/new?draft=${encodeURIComponent(d.id)}`);
   };
 
   if (authLoading) return <GlobalLoading />;
@@ -110,8 +110,8 @@ export default function DiaryDraftsPage() {
                         <Calendar size={12} />
                         {new Date(d.savedAt).toLocaleString('zh-CN')}
                       </span>
-                      {d.tags.length > 0 && (
-                        <span className="text-zinc-300">{d.tags.join(', ')}</span>
+                      {(d.tags ?? []).length > 0 && (
+                        <span className="text-zinc-300">{(d.tags ?? []).join(', ')}</span>
                       )}
                     </div>
                   </div>

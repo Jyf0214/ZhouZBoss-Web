@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GlobalLoading } from '@/components/Loading';
 import DiaryForm from '../_form';
 
@@ -16,7 +16,9 @@ function genId(): string {
 export default function NewDiaryPage() {
   const { user, isSudo, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [draftId] = React.useState(genId);
+  const searchParams = useSearchParams();
+  const existingDraftId = searchParams.get('draft');
+  const [draftId] = React.useState(existingDraftId ?? genId);
 
   React.useEffect(() => {
     if (authLoading) return;

@@ -28,15 +28,16 @@ export default function TicketsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const fetchTickets = useCallback(async () => {
+  const fetchTickets = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch('/api/tickets');
+      const res = await fetch('/api/tickets', { signal });
       if (res.ok) { const data = await res.json(); setTickets(data); } else { showError(t('tickets.listLoadFailed')); }
     } catch (error) {
+		if (signal?.aborted) return;
 		console.error('Failed to fetch tickets:', error);
 		showError(t('tickets.listLoadFailed'));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [t]);
 
@@ -49,7 +50,9 @@ export default function TicketsPage() {
 
   useEffect(() => {
     if (user) {
-      void fetchTickets();
+      const controller = new AbortController();
+      void fetchTickets(controller.signal);
+      return () => controller.abort();
     }
   }, [user, fetchTickets]);
 

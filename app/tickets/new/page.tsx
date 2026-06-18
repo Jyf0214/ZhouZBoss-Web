@@ -45,10 +45,24 @@ export default function NewTicketPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.push('/login'); return; }
-    fetch('/api/ticket-templates')
-      .then(res => { if (!res.ok) throw new Error(t('tickets.templateLoadFailed')); return res.json(); })
-      .then(data => setTemplates(data))
-		.catch(err => { console.error('Failed to fetch templates:', err); showError(t('tickets.templateLoadFailed')); });
+
+    const controller = new AbortController();
+
+    async function fetchTemplates() {
+      try {
+        const res = await fetch('/api/ticket-templates', { signal: controller.signal });
+        if (!res.ok) throw new Error(t('tickets.templateLoadFailed'));
+        const data = await res.json();
+        setTemplates(data);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error('Failed to fetch templates:', err);
+        showError(t('tickets.templateLoadFailed'));
+      }
+    }
+    void fetchTemplates();
+
+    return () => controller.abort();
   }, [authLoading, user, router, t]);
 
   const handleTemplateSelect = (template: TicketTemplate) => {

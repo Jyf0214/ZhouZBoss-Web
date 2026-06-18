@@ -10,6 +10,7 @@ function CodeToolbar({
   language,
   cfg,
   copied,
+  copyError,
   collapsed,
   wrap,
   exceedsLimit,
@@ -21,6 +22,7 @@ function CodeToolbar({
   language: string;
   cfg: HighlightConfig;
   copied: boolean;
+  copyError: boolean;
   collapsed: boolean;
   wrap: boolean;
   exceedsLimit: boolean;
@@ -36,6 +38,9 @@ function CodeToolbar({
           <Tag size="xs" variant="dark">
             {language}
           </Tag>
+        )}
+        {copyError && (
+          <span className="text-xs text-red-400 animate-pulse">复制失败</span>
         )}
       </div>
       <div className="flex items-center gap-1">
@@ -85,6 +90,7 @@ function HighlightedCodeBlock({
   collapsed,
   wrap,
   copied,
+  copyError,
   exceedsLimit,
   onCopy,
   onToggleCollapse,
@@ -97,6 +103,7 @@ function HighlightedCodeBlock({
   collapsed: boolean;
   wrap: boolean;
   copied: boolean;
+  copyError: boolean;
   exceedsLimit: boolean;
   onCopy: () => void;
   onToggleCollapse: () => void;
@@ -108,6 +115,7 @@ function HighlightedCodeBlock({
         language={language}
         cfg={cfg}
         copied={copied}
+        copyError={copyError}
         collapsed={collapsed}
         wrap={wrap}
         exceedsLimit={exceedsLimit}
@@ -137,6 +145,7 @@ function PlainCodeBlock({
   cfg,
   collapsed,
   copied,
+  copyError,
   exceedsLimit,
   onCopy,
   onToggleCollapse,
@@ -146,6 +155,7 @@ function PlainCodeBlock({
   cfg: HighlightConfig;
   collapsed: boolean;
   copied: boolean;
+  copyError: boolean;
   exceedsLimit: boolean;
   onCopy: () => void;
   onToggleCollapse: () => void;
@@ -156,6 +166,7 @@ function PlainCodeBlock({
         language={language}
         cfg={cfg}
         copied={copied}
+        copyError={copyError}
         collapsed={collapsed}
         wrap={false}
         exceedsLimit={exceedsLimit}
@@ -183,6 +194,7 @@ export function CodeBlock({
   cfg: HighlightConfig;
 }) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [collapsed, setCollapsed] = useState(cfg.shrink);
   const [wrap, setWrap] = useState(cfg.wordWrap);
 
@@ -190,7 +202,10 @@ export function CodeBlock({
     navigator.clipboard.writeText(children).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    }).catch(() => undefined);
+    }).catch(() => {
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 2000);
+    });
   }, [children]);
 
   const exceedsLimit = cfg.heightLimit > 0 && children.length > cfg.heightLimit;
@@ -205,6 +220,7 @@ export function CodeBlock({
         collapsed={collapsed}
         wrap={wrap}
         copied={copied}
+        copyError={copyError}
         exceedsLimit={exceedsLimit}
         onCopy={handleCopy}
         onToggleCollapse={() => setCollapsed(!collapsed)}
@@ -220,6 +236,7 @@ export function CodeBlock({
       cfg={cfg}
       collapsed={collapsed}
       copied={copied}
+      copyError={copyError}
       exceedsLimit={exceedsLimit}
       onCopy={handleCopy}
       onToggleCollapse={() => setCollapsed(!collapsed)}

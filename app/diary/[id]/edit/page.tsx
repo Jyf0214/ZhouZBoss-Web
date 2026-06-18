@@ -23,6 +23,12 @@ export default function EditDiaryPage({ params }: PageProps) {
   const router = useRouter();
 
   React.useEffect(() => {
+    if (authLoading) return;
+    if (!user || !isSudo) {
+      router.push('/login');
+      return;
+    }
+
     async function init() {
       const { id: resolvedId } = await params;
       setId(resolvedId);
@@ -45,14 +51,7 @@ export default function EditDiaryPage({ params }: PageProps) {
       }
     }
     void init();
-  }, [params, router]);
-
-  React.useEffect(() => {
-    if (authLoading) return;
-    if (!user || !isSudo) {
-      router.push('/login');
-    }
-  }, [user, isSudo, authLoading, router]);
+  }, [params, router, authLoading, user, isSudo]);
 
   if (authLoading || pageLoading) return <GlobalLoading />;
   if (!user || !isSudo) return null;
