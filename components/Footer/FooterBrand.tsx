@@ -39,8 +39,23 @@ export function FooterRuntimeStatus({ launchTime, enable }: FooterRuntimeStatusP
     };
 
     update();
-    const timer = setInterval(update, 1000);
-    return () => clearInterval(timer);
+    let timer = setInterval(update, 1000);
+
+    // 页面不可见时暂停定时器，恢复时重置，避免后台累积触发
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        clearInterval(timer);
+      } else {
+        update();
+        timer = setInterval(update, 1000);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [enable, launchTime]);
 
   if (!text) return null;

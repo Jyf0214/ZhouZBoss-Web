@@ -27,6 +27,10 @@ export function getSecret(): string {
 
 let _secret: Uint8Array | null = null;
 function getSecretEncoder(): Uint8Array {
+  // 开发环境下每次重新生成，避免热重载后使用过期的随机密钥
+  if (process.env.NODE_ENV !== 'production') {
+    return new TextEncoder().encode(getSecret());
+  }
   _secret ??= new TextEncoder().encode(getSecret());
   return _secret;
 }

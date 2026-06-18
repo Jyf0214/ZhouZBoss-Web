@@ -4,6 +4,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import ToggleField from './ToggleField';
 
 interface QRCodeItem {
+  id?: string;
   img: string;
   link: string;
   text: string;
@@ -21,7 +22,7 @@ interface RewardConfigProps {
 
 export default function RewardConfig({ config, onChange }: RewardConfigProps) {
   const addQR = () => {
-    onChange({ ...config, qrCodes: [...config.qrCodes, { img: '', link: '', text: '' }] });
+    onChange({ ...config, qrCodes: [...config.qrCodes, { id: crypto.randomUUID(), img: '', link: '', text: '' }] });
   };
 
   const removeQR = (i: number) => {
@@ -45,7 +46,7 @@ export default function RewardConfig({ config, onChange }: RewardConfigProps) {
         </div>
 
         {config.qrCodes.map((qr, i) => (
-          <div key={i} className="mb-3 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+          <div key={qr.id ?? i} className="mb-3 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
             <div className="flex items-center gap-2 mb-2">
               <input type="text" value={qr.text} onChange={e => updateQR(i, { ...qr, text: e.target.value })} placeholder="名称 (如微信)" className="flex-1 h-9 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400" />
               <Button variant="danger" size="sm" iconOnly icon={<Trash2 size={14} />} onClick={() => removeQR(i)} />

@@ -7,11 +7,24 @@ import { generateUID } from '@/lib/auth';
 
 let initAttempted = false;
 let initResult: { created: boolean; error?: string } | null = null;
+let initPromise: Promise<{ created: boolean; error?: string }> | null = null;
 
 export async function ensureAdminUser(): Promise<{ created: boolean; error?: string }> {
+  // 已完成初始化，直接返回缓存结果
   if (initAttempted && initResult) {
     return initResult;
   }
+  // 有正在进行的初始化，等待其完成（防止并发竞态）
+  if (initPromise) {
+    return initPromise;
+  }
+  initPromise = doInit();
+  const result = await initPromise;
+  initPromise = null;
+  return result;
+}
+
+async function doInit(): Promise<{ created: boolean; error?: string }> {
   initAttempted = true;
 
   const adminEmail = process.env.ADMIN_EMAIL;
@@ -81,4 +94,5 @@ export async function ensureAdminUser(): Promise<{ created: boolean; error?: str
 export function resetInitState(): void {
   initAttempted = false;
   initResult = null;
+  initPromise = null;
 }

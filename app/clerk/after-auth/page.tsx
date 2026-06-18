@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { GlobalLoading } from '@/components/Loading';
 import { showError } from '@/lib/error';
-import { Link } from 'lucide-react';
+import { Link as LinkIcon } from 'lucide-react';
 import { isClerkConfigured } from '@/lib/clerk-dynamic';
 
 /**
@@ -63,7 +63,7 @@ export default function ClerkAfterAuthPage() {
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm p-10 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Link size={28} className="text-white" />
+            <LinkIcon size={28} className="text-white" />
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 mb-2">
             登录成功

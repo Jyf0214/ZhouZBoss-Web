@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { TOAST_DURATION_MS, COPY_FEEDBACK_DURATION_MS } from './share-modal-styles';
 
 /* ============================================================
@@ -14,17 +14,29 @@ import { TOAST_DURATION_MS, COPY_FEEDBACK_DURATION_MS } from './share-modal-styl
 export function useCopyFeedback(shareUrl: string) {
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState('');
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 组件卸载时清理所有定时器
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const showToast = useCallback((message: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(message);
-    setTimeout(() => setToast(''), TOAST_DURATION_MS);
+    toastTimerRef.current = setTimeout(() => setToast(''), TOAST_DURATION_MS);
   }, []);
 
   const copy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS);
     } catch {
       showToast('复制失败');
     }

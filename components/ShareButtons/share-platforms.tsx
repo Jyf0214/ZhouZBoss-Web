@@ -124,8 +124,11 @@ function buildPlatforms(): Record<string, PlatformDef> {
   };
 }
 
+/** 模块级缓存，避免每次渲染重新构建 JSX 元素 */
+let _platformsCache: Record<string, PlatformDef> | null = null;
 function getPlatforms(): Record<string, PlatformDef> {
-  return buildPlatforms();
+  _platformsCache ??= buildPlatforms();
+  return _platformsCache;
 }
 
 /* ============================================================

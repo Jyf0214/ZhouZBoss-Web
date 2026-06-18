@@ -5,12 +5,14 @@ import FormField from './FormField';
 import ToggleField from './ToggleField';
 
 interface NavMenuItemData {
+  id?: string;
   name: string;
   link: string;
   icon?: string;
 }
 
 interface NavMenuGroupData {
+  id?: string;
   title: string;
   item: NavMenuItemData[];
 }
@@ -31,7 +33,7 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
   const updateMenu = (menu: NavMenuGroupData[]) => onChange({ ...config, menu });
 
   const addGroup = () => {
-    updateMenu([...config.menu, { title: '', item: [] }]);
+    updateMenu([...config.menu, { id: crypto.randomUUID(), title: '', item: [] }]);
   };
 
   const removeGroup = (gi: number) => {
@@ -46,7 +48,7 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
 
   const addItem = (gi: number) => {
     const group = config.menu[gi]!;
-    updateGroup(gi, { ...group, item: [...group.item, { name: '', link: '', icon: '' }] });
+    updateGroup(gi, { ...group, item: [...group.item, { id: crypto.randomUUID(), name: '', link: '', icon: '' }] });
   };
 
   const removeItem = (gi: number, ii: number) => {
@@ -100,7 +102,7 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
         )}
 
         {config.menu.map((group, gi) => (
-          <div key={gi} className="mb-4 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+          <div key={group.id ?? gi} className="mb-4 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
             <div className="flex items-center gap-3 mb-3">
               <div className="flex-1">
                 <FormField
@@ -123,7 +125,7 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
 
             <div className="space-y-2">
               {group.item.map((item, ii) => (
-                <div key={ii} className="flex items-center gap-2">
+                <div key={item.id ?? ii} className="flex items-center gap-2">
                   <div className="flex-1 grid grid-cols-3 gap-2">
                     <input
                       type="text"

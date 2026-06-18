@@ -60,9 +60,25 @@ const SHARE_WINDOW_FEATURES = 'noopener,noreferrer,width=600,height=500';
 
 export default function ShareButtons({ title, url, config, locale: _locale }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const [wechatHintOpen, setWechatHintOpen] = useState(false);
   const [wechatCopied, setWechatCopied] = useState(false);
+  const [wechatFailed, setWechatFailed] = useState(false);
   const wechatBtnRef = useRef<HTMLDivElement>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wechatCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyFailedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wechatFailedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 组件卸载时清理所有定时器
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      if (wechatCopiedTimerRef.current) clearTimeout(wechatCopiedTimerRef.current);
+      if (copyFailedTimerRef.current) clearTimeout(copyFailedTimerRef.current);
+      if (wechatFailedTimerRef.current) clearTimeout(wechatFailedTimerRef.current);
+    };
+  }, []);
 
   // 关闭微信提示浮层（点击外部时）
   useEffect(() => {
@@ -82,9 +98,12 @@ export default function ShareButtons({ title, url, config, locale: _locale }: Sh
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      // 静默处理 — 剪贴板 API 在某些浏览器或 HTTPS 下受限
+      setCopyFailed(true);
+      if (copyFailedTimerRef.current) clearTimeout(copyFailedTimerRef.current);
+      copyFailedTimerRef.current = setTimeout(() => setCopyFailed(false), 2000);
     }
   }, [url]);
 
@@ -96,9 +115,12 @@ export default function ShareButtons({ title, url, config, locale: _locale }: Sh
     try {
       await navigator.clipboard.writeText(url);
       setWechatCopied(true);
-      setTimeout(() => setWechatCopied(false), 2000);
+      if (wechatCopiedTimerRef.current) clearTimeout(wechatCopiedTimerRef.current);
+      wechatCopiedTimerRef.current = setTimeout(() => setWechatCopied(false), 2000);
     } catch {
-      // 静默处理
+      setWechatFailed(true);
+      if (wechatFailedTimerRef.current) clearTimeout(wechatFailedTimerRef.current);
+      wechatFailedTimerRef.current = setTimeout(() => setWechatFailed(false), 2000);
     }
   }, [url]);
 
@@ -127,7 +149,7 @@ export default function ShareButtons({ title, url, config, locale: _locale }: Sh
         title="复制链接"
       >
         {copied ? <Check size={16} /> : <Link size={16} />}
-        复制链接
+        {copyFailed ? <span className="text-red-500">复制失败</span> : '复制链接'}
       </button>
 
       {/* 平台分享按钮 */}
@@ -160,7 +182,7 @@ export default function ShareButtons({ title, url, config, locale: _locale }: Sh
                       }`}
                     >
                       {wechatCopied ? <Check size={12} /> : <Link size={12} />}
-                      {wechatCopied ? '已复制' : '复制链接'}
+                      {wechatFailed ? '复制失败' : wechatCopied ? '已复制' : '复制链接'}
                     </button>
                   </div>
                   {/* 小三角箭头 */}

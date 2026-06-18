@@ -22,13 +22,20 @@ export default function NewDiaryPage() {
 
   React.useEffect(() => {
     if (authLoading) return;
-    if (!user || !isSudo) {
+    if (!user) {
       router.push('/login');
     }
-  }, [user, isSudo, authLoading, router]);
+  }, [user, authLoading, router]);
 
   if (authLoading) return <GlobalLoading />;
-  if (!user || !isSudo) return null;
+  if (!user) return null;
+  if (!isSudo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+        <p className="text-zinc-400 text-lg">无权访问</p>
+      </div>
+    );
+  }
 
   return (
     <DiaryForm

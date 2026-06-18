@@ -107,6 +107,8 @@ export function CopyrightNotice({
             Published by{' '}
             <a
               href={config.authorLink}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-zinc-500 hover:text-zinc-700 underline underline-offset-2 decoration-zinc-300 transition-colors"
             >
               {displayAuthor}
@@ -127,6 +129,8 @@ export function CopyrightNotice({
             本文由{' '}
             <a
               href={config.authorLink}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-zinc-500 hover:text-zinc-700 underline underline-offset-2 decoration-zinc-300 transition-colors"
             >
               {displayAuthor}

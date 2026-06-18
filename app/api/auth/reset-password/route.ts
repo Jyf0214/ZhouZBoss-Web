@@ -72,6 +72,16 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    // 频率限制：同一 IP 10 分钟内最多 10 次执行重置密码
+    const rl = checkRateLimit(req, 'reset-password-exec', 10, 10 * 60 * 1000);
+    if (!rl.allowed) {
+      logger.warn('PUT', '密码重置执行频率超限', { retryAfterMs: rl.retryAfterMs });
+      return NextResponse.json(
+        { error: `请求过于频繁，请在 ${Math.ceil(rl.retryAfterMs / 1000)} 秒后重试` },
+        { status: 429 },
+      );
+    }
+
     const { token, password } = await req.json();
 
     if (!token || !password) {

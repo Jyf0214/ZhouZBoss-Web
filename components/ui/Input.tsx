@@ -1,4 +1,4 @@
-import { type InputHTMLAttributes, memo, forwardRef } from 'react';
+import { type InputHTMLAttributes, memo, forwardRef, useId } from 'react';
 import { cn } from '@/lib/ui';
 
 export type InputSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -44,12 +44,14 @@ const ringStyles: Record<InputRing, string> = {
 export const Input = memo(
   forwardRef<HTMLInputElement, InputProps>(
     ({ className, label, error, id, size = 'md', rounded = 'sm', ring = 'default', ...props }, ref) => {
-      const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+      const uniqueId = useId();
+      const inputId = id ?? (label ? `${label.toLowerCase().replace(/\s+/g, '-')}-${uniqueId}` : undefined);
 
       const inputEl = (
         <input
           ref={ref}
           id={inputId}
+          aria-describedby={error ? `${inputId}-error` : undefined}
           className={cn(
             'w-full border border-zinc-200 outline-none transition-colors',
             sizeStyles[size],
@@ -73,7 +75,7 @@ export const Input = memo(
             </label>
           )}
           {inputEl}
-          {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+          {error && <p id={`${inputId}-error`} className="mt-1 text-xs text-red-500">{error}</p>}
         </div>
       );
     },

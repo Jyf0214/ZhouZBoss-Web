@@ -1,4 +1,4 @@
-import { type TextareaHTMLAttributes, memo, forwardRef } from 'react';
+import { type TextareaHTMLAttributes, memo, forwardRef, useId } from 'react';
 import { cn } from '@/lib/ui';
 
 export type TextareaSize = 'sm' | 'md' | 'lg';
@@ -50,12 +50,14 @@ export const Textarea = memo(
       },
       ref,
     ) => {
-      const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+      const uniqueId = useId();
+      const inputId = id ?? (label ? `${label.toLowerCase().replace(/\s+/g, '-')}-${uniqueId}` : undefined);
 
       const taEl = (
         <textarea
           ref={ref}
           id={inputId}
+          aria-describedby={error ? `${inputId}-error` : undefined}
           className={cn(
             'w-full p-3 border border-zinc-200 text-sm outline-none transition-colors resize-y',
             minH,
@@ -79,7 +81,7 @@ export const Textarea = memo(
             </label>
           )}
           {taEl}
-          {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+          {error && <p id={`${inputId}-error`} className="mt-1 text-xs text-red-500">{error}</p>}
         </div>
       );
     },

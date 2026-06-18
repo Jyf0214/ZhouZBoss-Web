@@ -104,6 +104,7 @@ function Sidebar({ variant = 'user' }: { variant?: SidebarVariant }) {
       {isOpen && (
         <div
           className="md:hidden fixed inset-0 bg-zinc-900/40 backdrop-blur-md z-[998] transition-opacity duration-300"
+          aria-hidden="true"
           onClick={close}
         />
       )}

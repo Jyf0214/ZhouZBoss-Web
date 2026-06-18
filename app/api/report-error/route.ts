@@ -25,6 +25,20 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 5;
 const rateLimitMap = new Map<string, number[]>();
 
+/** 清理过期条目，防止 map 无限增长 */
+function pruneRateLimitMap(): void {
+  if (rateLimitMap.size <= 1000) return;
+  const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
+  for (const [ip, timestamps] of rateLimitMap) {
+    const recent = timestamps.filter((t) => t > cutoff);
+    if (recent.length === 0) {
+      rateLimitMap.delete(ip);
+    } else {
+      rateLimitMap.set(ip, recent);
+    }
+  }
+}
+
 // 业务字段联合类型
 const STRING_FIELDS = ['stack', 'endpoint', 'requestId', 'userAgent', 'url'] as const;
 type StringField = (typeof STRING_FIELDS)[number];
@@ -126,6 +140,7 @@ function validateReport(raw: RawReport): ValidationResult {
  * 按 IP 做滑窗速率限制。返回 true 表示已放行并消耗一次配额，false 表示受限。
  */
 function consumeRateLimitToken(ip: string): boolean {
+  pruneRateLimitMap();
   const now = Date.now();
   const windowStart = now - RATE_LIMIT_WINDOW_MS;
   const recent = (rateLimitMap.get(ip) ?? []).filter((t) => t > windowStart);

@@ -33,7 +33,7 @@ export function FilterPill({
     .join(' ');
 
   return (
-    <button type="button" className={classes} onClick={onClick}>
+    <button type="button" className={classes} aria-pressed={selected} onClick={onClick}>
       {icon && <span className="shrink-0">{icon}</span>}
       <span>{children}</span>
     </button>

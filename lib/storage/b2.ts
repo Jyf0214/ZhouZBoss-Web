@@ -73,9 +73,13 @@ interface B2ApiError {
   message: string
 }
 
+/** B2 认证令牌缓存时间戳 */
+const AUTH_TOKEN_TTL_MS = 20 * 60 * 60 * 1000; // 20 小时
+
 /** globalThis 缓存（与 lib/webdav.ts 模式一致） */
 const globalForB2 = globalThis as unknown as {
   __b2AuthToken?: AuthToken | undefined
+  __b2AuthTokenTime?: number | undefined
   __b2UploadUrl?: UploadUrl | undefined
   __b2BucketId?: string | undefined
 }
@@ -180,8 +184,10 @@ function parseAuthorizeResponse(data: Record<string, unknown>): AuthToken {
  * 缓存策略: 令牌有效期通常 24h，这里在 globalThis 缓存
  */
 async function getAuthToken(): Promise<AuthToken> {
-  if (globalForB2.__b2AuthToken) {
-    return globalForB2.__b2AuthToken
+  const cached = globalForB2.__b2AuthToken
+  const cachedTime = globalForB2.__b2AuthTokenTime ?? 0
+  if (cached && (Date.now() - cachedTime) < AUTH_TOKEN_TTL_MS) {
+    return cached
   }
 
   const keyId = process.env.B2_KEY_ID
@@ -198,6 +204,7 @@ async function getAuthToken(): Promise<AuthToken> {
   const data = await resp.json() as Record<string, unknown>
   const authToken = parseAuthorizeResponse(data)
   globalForB2.__b2AuthToken = authToken
+  globalForB2.__b2AuthTokenTime = Date.now()
   return authToken
 }
 

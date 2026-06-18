@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { email } = await req.json();
-    if (!email?.includes('@')) {
+    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       logger.warn('POST', '无效的邮箱地址');
       return NextResponse.json({ error: '请输入有效的邮箱地址' }, { status: 400 });
     }

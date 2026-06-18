@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 /**
  * 按钮自动加载状态管理 Hook
@@ -71,6 +71,15 @@ export function useAutoLoading(
   const [internalLoading, setInternalLoading] = useState(false);
   const isControlled = loading !== undefined;
   const isLoading = isControlled ? loading : internalLoading;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    const timer = timerRef.current;
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (isLoading || disabled) return;

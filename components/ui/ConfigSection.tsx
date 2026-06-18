@@ -60,7 +60,7 @@ export default function ConfigSection({
       <div
         className={cn(
           'overflow-hidden transition-all duration-200',
-          open ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0',
+          open ? 'max-h-none opacity-100' : 'max-h-0 opacity-0',
         )}
       >
         <div className="p-6 pt-4">{children}</div>

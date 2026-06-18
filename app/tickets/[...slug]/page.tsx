@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, use } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, notFound } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Clock, AlertCircle, Save } from 'lucide-react';
 import { message } from 'antd';
 import { Button } from '@/components/ui/Button';
@@ -104,6 +104,10 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
   const [saving, setSaving] = useState(false);
 
   const slug = '/' + (resolvedParams.slug?.join('/') ?? '');
+
+  if (!slug || slug === '/') {
+    notFound();
+  }
 
   const _fetchTicket = React.useCallback(async () => {
     try {

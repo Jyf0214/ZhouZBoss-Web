@@ -21,7 +21,6 @@ export default function ClerkBindPage() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [checking, setChecking] = useState(true);
   const [clerkLoggedIn, setClerkLoggedIn] = useState(false);
@@ -74,7 +73,6 @@ export default function ClerkBindPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setCodeSent(true);
         setStep(1);
         message.success('验证码已发送');
         // 60 秒倒计时

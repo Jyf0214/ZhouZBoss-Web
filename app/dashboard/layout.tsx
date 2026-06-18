@@ -17,7 +17,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (loading) {
     return <div className="flex items-center justify-center h-screen bg-zinc-50"><GlobalLoading size="large" /></div>;
   }
-  if (!user) return null;
+  if (!user) {
+    return <div className="flex items-center justify-center h-screen bg-zinc-50"><GlobalLoading size="large" /></div>;
+  }
 
   return (
     <div className="flex min-h-screen">

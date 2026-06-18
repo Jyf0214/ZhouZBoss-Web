@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { useI18n } from '@/hooks/use-i18n';
 import { loadClerkClient } from '@/lib/clerk-dynamic';
+import { GlobalLoading } from '@/components/Loading';
 
 /**
  * Clerk 注册页面 — 组件通过运行时动态导入加载
@@ -29,7 +30,8 @@ export default function ClerkSignUpPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-zinc-50">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+        <GlobalLoading size="large" />
       </div>
     );
   }

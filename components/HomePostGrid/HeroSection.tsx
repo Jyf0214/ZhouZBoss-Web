@@ -1,9 +1,8 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from 'antd';
-import { Button } from '@/components/ui/Button';
 import { HeroBanner } from '@/app/HeroBanner';
 
 export function HeroSection({
@@ -61,9 +60,6 @@ export function HeroSection({
               variant="outlined"
             />
           </div>
-          <Button size="lg" variant="default" rounded="lg" icon={<Filter size={20} />} className="hover:bg-zinc-50">
-            {t('common.sort')}
-          </Button>
         </div>
       </motion.div>
     </section>

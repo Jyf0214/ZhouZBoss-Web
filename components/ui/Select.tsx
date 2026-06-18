@@ -1,4 +1,4 @@
-import { type SelectHTMLAttributes, memo, forwardRef, type ReactNode } from 'react';
+import { type SelectHTMLAttributes, memo, forwardRef, type ReactNode, useId } from 'react';
 import { cn } from '@/lib/ui';
 
 export type SelectSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -60,12 +60,14 @@ export const Select = memo(
       },
       ref,
     ) => {
-      const inputId = id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+      const uniqueId = useId();
+      const inputId = id ?? (label ? `${label.toLowerCase().replace(/\s+/g, '-')}-${uniqueId}` : undefined);
 
       const selectEl = (
         <select
           ref={ref}
           id={inputId}
+          aria-describedby={error ? `${inputId}-error` : undefined}
           className={cn(
             'w-full border border-zinc-200 outline-none transition-colors bg-white',
             sizeStyles[size],
@@ -91,7 +93,7 @@ export const Select = memo(
             </label>
           )}
           {selectEl}
-          {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+          {error && <p id={`${inputId}-error`} className="mt-1 text-xs text-red-500">{error}</p>}
         </div>
       );
     },

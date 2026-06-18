@@ -191,6 +191,8 @@ export default function ShareModal({
 
           {/* 卡片 */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
             className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

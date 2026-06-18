@@ -49,6 +49,11 @@ export function apiHandler<
   return async (req: NextRequest, ctx?: ApiCtx<P>) => {
     const pathname = req.nextUrl.pathname;
 
+    // 校验 HTTP 方法
+    if (req.method !== method) {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+
     try {
       // 权限验证
       if (options.requireAuth || options.requireAdmin) {
