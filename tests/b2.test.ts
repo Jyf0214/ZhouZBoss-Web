@@ -162,12 +162,13 @@ describe('B2Provider.listDirectory', () => {
   it('列出根目录文件和子目录', async () => {
     mockAuthAndBucket()
     // list_file_names → 3rd call
+    // B2 API: 目录项以 action='folder' 混在 files 数组中
     b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
       files: [
         { fileId: 'f1', fileName: 'pages/index.html', contentType: 'text/html', contentLength: 1024, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 },
         { fileId: 'f2', fileName: 'pages/style.css', contentType: 'text/css', contentLength: 512, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 },
+        { fileId: 'd1', fileName: 'pages/blog/', contentType: '', contentLength: 0, contentSha1: null, fileInfo: {}, action: 'folder', uploadTimestamp: 0 },
       ],
-      folders: ['pages/blog/'],
     }))
 
     const { B2Provider } = await import('@/lib/storage/b2')
@@ -185,7 +186,7 @@ describe('B2Provider.listDirectory', () => {
 
   it('空目录返回空数组', async () => {
     mockAuthAndBucket()
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [], folders: [] }))
+    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
 
     const { B2Provider } = await import('@/lib/storage/b2')
     const provider = new B2Provider()
@@ -200,7 +201,6 @@ describe('B2Provider.listDirectory', () => {
         { fileId: 'f1', fileName: 'pages/visible.html', contentType: 'text/html', contentLength: 100, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 },
         { fileId: 'f2', fileName: 'pages/hidden.html', contentType: 'text/html', contentLength: 0, contentSha1: null, fileInfo: {}, action: 'hide', uploadTimestamp: 1700000000000 },
       ],
-      folders: [],
     }))
 
     const { B2Provider } = await import('@/lib/storage/b2')
@@ -420,7 +420,6 @@ describe('B2Provider.stat', () => {
     // list_file_names (exact match) → 3rd call
     b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
       files: [{ fileId: 'f1', fileName: 'pages/test.html', contentType: 'text/html', contentLength: 1024, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 }],
-      folders: [],
     }))
 
     const { B2Provider } = await import('@/lib/storage/b2')
@@ -444,9 +443,9 @@ describe('B2Provider.stat', () => {
   it('不存在的路径返回 404', async () => {
     mockAuthAndBucket()
     // list_file_names (file check, no match) → 3rd call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [], folders: [] }))
+    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
     // list_file_names (dir check, getBucketId cached) → 4th call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [], folders: [] }))
+    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
 
     const { B2Provider } = await import('@/lib/storage/b2')
     const provider = new B2Provider()
@@ -474,7 +473,7 @@ describe('B2Provider.createDirectory', () => {
   it('创建目录上传 .keep 占位文件', async () => {
     mockAuthAndBucket()
     // ensureDirectory → list_file_names (check exists) → 3rd call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [], folders: [] }))
+    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
     // ensureDirectory → putFileContents → get_upload_url (getAuthToken cached, getBucketId cached) → 4th call
     b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
       uploadUrl: 'https://upload.backblazeb2.com/b2api/v3/b2_upload_file/bid1',

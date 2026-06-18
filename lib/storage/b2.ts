@@ -62,7 +62,7 @@ interface B2FileInfo {
   contentLength: number
   contentSha1: string | null
   fileInfo: Record<string, string>
-  action: 'upload' | 'hide'
+  action: 'upload' | 'hide' | 'folder'
   uploadTimestamp: number
 }
 
@@ -322,34 +322,39 @@ export class B2Provider implements StorageProvider {
 
     const data = await resp.json() as {
       files: B2FileInfo[]
-      folders: string[]
     }
 
     const entries: FileStat[] = []
 
-    // 添加子目录（folders 字段包含虚拟目录名）
-    for (const folder of data.folders ?? []) {
-      // folder 格式: "pages/subdir/" — 提取最后一段目录名
-      const folderName = folder.replace(fullPrefix, '').replace(/\/$/, '')
-      if (!folderName) continue
+    // B2 使用 delimiter 时，目录项以 action='folder' 混在 files 数组中
+    // fileName 格式: "pages/subdir/" — 以 '/' 结尾
+    const seenFolders = new Set<string>()
 
-      entries.push({
-        filename: folderName,
-        basename: fullPrefix ? `${fullPrefix}${folderName}` : folderName,
-        type: 'directory',
-        size: 0,
-        lastmod: new Date().toISOString(),
-        mime: undefined,
-        etag: null,
-      })
-    }
-
-    // 添加文件
-    for (const file of data.files) {
-      // 跳过目录占位文件（B2 的隐藏文件）
+    for (const file of data.files ?? []) {
       if (file.action === 'hide') continue
 
-      // 提取相对文件名（去掉前缀）
+      // 目录项: fileName 以 '/' 结尾
+      if (file.action === 'folder' || file.fileName.endsWith('/')) {
+        // 提取目录名（去掉前缀和尾部 '/'）
+        const dirName = file.fileName
+          .replace(fullPrefix, '')
+          .replace(/\/$/, '')
+        if (!dirName || seenFolders.has(dirName)) continue
+        seenFolders.add(dirName)
+
+        entries.push({
+          filename: dirName,
+          basename: fullPrefix ? `${fullPrefix}${dirName}` : dirName,
+          type: 'directory',
+          size: 0,
+          lastmod: new Date().toISOString(),
+          mime: undefined,
+          etag: null,
+        })
+        continue
+      }
+
+      // 普通文件
       const relativeName = fullPrefix ? file.fileName.slice(fullPrefix.length) : file.fileName
       if (!relativeName || relativeName.includes('/')) continue
 
