@@ -7,6 +7,9 @@ import { prisma } from '@/lib/db';
 /** 最大历史版本数（防止无限增长） */
 const MAX_VERSIONS = 50;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const prismaAny = prisma as any;
+
 /**
  * 保存日记版本快照（加密前调用）
  * 自动清理超出上限的旧版本
@@ -19,7 +22,7 @@ export async function saveDiaryVersion(
 ): Promise<void> {
   const tagsJson = tags ? JSON.stringify(tags) : null;
 
-  await prisma.diaryVersion.create({
+  await prismaAny.diaryVersion.create({
     data: {
       diaryId,
       content,
@@ -29,18 +32,18 @@ export async function saveDiaryVersion(
   });
 
   // 清理超出上限的旧版本（保留最新的 MAX_VERSIONS 条）
-  const count = await prisma.diaryVersion.count({ where: { diaryId } });
+  const count: number = await prismaAny.diaryVersion.count({ where: { diaryId } });
   if (count > MAX_VERSIONS) {
     const excess = count - MAX_VERSIONS;
-    const oldVersions = await prisma.diaryVersion.findMany({
+    const oldVersions: { id: string }[] = await prismaAny.diaryVersion.findMany({
       where: { diaryId },
       orderBy: { createdAt: 'asc' },
       take: excess,
       select: { id: true },
     });
     if (oldVersions.length > 0) {
-      await prisma.diaryVersion.deleteMany({
-        where: { id: { in: oldVersions.map((v) => v.id) } },
+      await prismaAny.diaryVersion.deleteMany({
+        where: { id: { in: oldVersions.map((v: { id: string }) => v.id) } },
       });
     }
   }
@@ -59,7 +62,7 @@ export async function getDiaryVersions(
   tags: string | null;
   createdAt: Date;
 }[]> {
-  return prisma.diaryVersion.findMany({
+  return prismaAny.diaryVersion.findMany({
     where: { diaryId },
     orderBy: { createdAt: 'desc' },
     take: limit,
@@ -77,7 +80,7 @@ export async function getDiaryVersions(
  * 获取单个版本详情（含内容）
  */
 export async function getDiaryVersion(versionId: string) {
-  return prisma.diaryVersion.findUnique({
+  return prismaAny.diaryVersion.findUnique({
     where: { id: versionId },
   });
 }

@@ -6,6 +6,7 @@ import { verifyPassword, hashPassword } from '@/lib/hash';
 import { ensureAdminUser } from '@/lib/db-init';
 import { createApiLogger } from '@/lib/api-logger';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { isLoginLocked, recordLoginFailure, clearLoginAttempts } from '@/lib/login-attempts';
 
 const logger = createApiLogger('/api/auth/login');
 
@@ -72,6 +73,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少登录信息或密码' }, { status: 400 });
     }
 
+    // 登录异常检测：检查是否因连续失败被临时锁定
+    if (isLoginLocked(login)) {
+      logger.warn('POST', '账号已锁定，连续失败次数过多', { login });
+      return NextResponse.json(
+        { error: '账号因多次登录失败已临时锁定，请 15 分钟后重试' },
+        { status: 429 },
+      );
+    }
+
     const db = getDb();
 
     let uid = await lookupUserByLogin(db, login);
@@ -97,9 +107,13 @@ export async function POST(req: NextRequest) {
     const passwordMatch = await verifyPassword(password, user.password);
 
     if (!passwordMatch) {
+      recordLoginFailure(login);
       logger.warn('POST', '账号或密码错误', { login });
       return NextResponse.json({ error: '账号或密码错误' }, { status: 401 });
     }
+
+    // 密码验证通过，清除失败计数
+    clearLoginAttempts(login);
 
     await upgradePasswordHashIfNeeded(user, password, db);
 

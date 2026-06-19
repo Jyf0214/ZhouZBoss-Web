@@ -48,6 +48,7 @@
     "next-intl": "^4.8.3",
     "nodemailer": "^8.0.4",
     "octokit": "^5.0.5",
+    "otplib": "^13.4.1",
     "postcss": "^8.5.15",
     "prisma": "^6.19.2",
     "react": "^19.2.1",
