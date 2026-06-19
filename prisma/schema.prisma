@@ -41,22 +41,28 @@ model OriginiumKV {
 
 // 日记表
 model Diary {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  tags      String[] @default([])
-  group     String?  @default("默认")
-  references Json?   @default("[]")
-  date      DateTime @default(now()) @map("diary_date")
-  pinned    Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  tags        String[]  @default([])
+  group       String?   @default("默认")
+  references  Json?     @default("[]")
+  date        DateTime  @default(now()) @map("diary_date")
+  pinned      Boolean   @default(false)
+  status      String    @default("published")
+  scheduledAt DateTime? @map("scheduled_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  versions DiaryVersion[]
 
   @@map("diaries")
   @@index([date])
   @@index([createdAt])
   @@index([pinned])
   @@index([group])
+  @@index([status])
+  @@index([scheduledAt])
 }
 
 // 文章删除申请表
@@ -130,5 +136,21 @@ model AuditLog {
   @@map("audit_logs")
   @@index([action])
   @@index([userId])
+  @@index([createdAt])
+}
+
+// 日记版本历史表(保存每次编辑前的内容快照)
+model DiaryVersion {
+  id        String   @id @default(cuid())
+  diaryId   String   @map("diary_id")
+  content   String   // 内容快照(加密前的明文)
+  title     String?
+  tags      String?  // JSON 序列化的标签数组
+  createdAt DateTime @default(now()) @map("created_at")
+
+  diary Diary @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+
+  @@map("diary_versions")
+  @@index([diaryId])
   @@index([createdAt])
 }
