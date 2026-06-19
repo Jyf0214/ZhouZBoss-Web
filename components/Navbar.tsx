@@ -14,6 +14,7 @@ import { useConfig } from '@/hooks/use-config';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { Clock, MapPin, Search, Sun, Moon, Monitor, Keyboard } from 'lucide-react';
 import { useThemeMode } from '@/hooks/use-theme-mode';
+import LanguageSwitcher from '@/components/LanguageSwitcher/index';
 import type { NavConfig } from '@/lib/config-schema';
 
 // 搜索弹窗动态导入，避免首屏加载无关代码
@@ -195,6 +196,8 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
               aria-label={mode === 'light' ? '浅色模式' : mode === 'dark' ? '深色模式' : '跟随系统'}
               title={mode === 'light' ? '浅色模式' : mode === 'dark' ? '深色模式' : '跟随系统'}
             />
+            {/* 语言切换器 */}
+            <LanguageSwitcher />
             {/* 搜索按钮 */}
             <Button
               onClick={() => setSearchOpen(true)}

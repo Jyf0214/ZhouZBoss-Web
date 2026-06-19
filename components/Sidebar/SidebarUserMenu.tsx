@@ -1,6 +1,5 @@
 import { LogOut } from 'lucide-react';
 import { useI18n } from '@/hooks/use-i18n';
-import LanguageSwitcher from '@/components/LanguageSwitcher/index';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/ui/Button';
 import type { SidebarUser } from './types';
@@ -15,10 +14,6 @@ export default function SidebarUserMenu({ user, onLogout }: SidebarUserMenuProps
 
   return (
     <div className="p-4 space-y-4 bg-zinc-50/50 border-b border-zinc-100">
-      <div className="px-2">
-        <LanguageSwitcher />
-      </div>
-
       <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white border border-zinc-100 shadow-sm group">
         <Avatar name={user?.name ?? 'U'} avatarUrl={user?.avatar} size={40} />
         <div className="flex-1 min-w-0">
