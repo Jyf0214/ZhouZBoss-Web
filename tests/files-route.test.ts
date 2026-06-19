@@ -14,8 +14,8 @@ const mocks = vi.hoisted(() => ({
   _isWebDavConfigured: vi.fn<() => boolean>(),
   _http2Connect: vi.fn(),
   _httpsGet: vi.fn(),
-  _rateLimit: vi.fn(() => ({ allowed: true, retryAfterMs: 0 })),
-  _getClientIp: vi.fn(() => '127.0.0.1'),
+  _rateLimit: vi.fn((_key: string, _limit: number, _windowMs: number) => ({ allowed: true, retryAfterMs: 0 })),
+  _getClientIp: vi.fn((_req: NextRequest) => '127.0.0.1'),
 }));
 
 vi.mock('@/lib/storage/storage-provider', () => ({
@@ -25,8 +25,8 @@ vi.mock('@/lib/storage/storage-provider', () => ({
 vi.mock('@/lib/auth', () => ({ getSession: () => mocks._getSession() }));
 vi.mock('@/lib/storage/acl', () => ({ checkAccess: () => mocks._checkAccess() }));
 vi.mock('@/lib/rate-limit', () => ({
-  rateLimit: (...a: unknown[]) => mocks._rateLimit(...a),
-  getClientIp: (...a: unknown[]) => mocks._getClientIp(...a),
+  rateLimit: (key: string, limit: number, windowMs: number) => mocks._rateLimit(key, limit, windowMs),
+  getClientIp: (req: NextRequest) => mocks._getClientIp(req),
 }));
 vi.mock('node:http2', () => ({
   default: { connect: (...a: unknown[]) => mocks._http2Connect(...a) },
