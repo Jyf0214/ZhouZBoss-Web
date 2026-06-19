@@ -206,6 +206,66 @@ export async function getSession(): Promise<SessionPayload | null> {
 }
 
 /**
+ * 从 Cookie / API 密钥获取当前会话，同时返回 API 密钥 ID
+ * 若通过 Cookie 认证，currentKeyId 为 null
+ */
+export async function getSessionWithKeyId(): Promise<{ session: SessionPayload; currentKeyId: string | null }> {
+  // 1. 尝试 Cookie session
+  const session = (await cookies()).get('session')?.value;
+  if (session) {
+    try {
+      const { payload } = await jwtVerify(session, getSecretEncoder(), {
+        algorithms: ['HS256'],
+      });
+      return { session: payload as unknown as SessionPayload, currentKeyId: null };
+    } catch {
+      // Cookie 无效,继续尝试 API 密钥
+    }
+  }
+
+  // 2. 尝试 API 密钥
+  try {
+    const hdrs = await headers();
+    const authHeader = hdrs.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return { session: { uid: '', email: '', role: 'user' }, currentKeyId: null };
+    }
+
+    const token = authHeader.slice(7).trim();
+    if (!token?.startsWith('sk-')) {
+      return { session: { uid: '', email: '', role: 'user' }, currentKeyId: null };
+    }
+
+    const { getDb } = await import('@/lib/db');
+    const db = getDb();
+    if (!db.prisma) {
+      return { session: { uid: '', email: '', role: 'user' }, currentKeyId: null };
+    }
+
+    const hashed = hashApiKey(token);
+    const row = await db.prisma.apiKey.findUnique({ where: { key: hashed } });
+    if (!row) {
+      return { session: { uid: '', email: '', role: 'user' }, currentKeyId: null };
+    }
+
+    // 更新最后使用时间(异步,不阻塞)
+    db.prisma.apiKey.update({ where: { id: row.id }, data: { lastUsed: new Date() } }).catch(() => { /* best-effort */ });
+
+    const userRaw = await db.get(`user:uid:${row.uid}`);
+    if (!userRaw) {
+      return { session: { uid: '', email: '', role: 'user' }, currentKeyId: null };
+    }
+    const user = JSON.parse(userRaw) as { uid: string; email: string; role: string; userGroup?: string };
+    return {
+      session: { uid: user.uid, email: user.email, role: user.role as SessionPayload['role'], userGroup: user.userGroup },
+      currentKeyId: row.id,
+    };
+  } catch {
+    return { session: { uid: '', email: '', role: 'user' }, currentKeyId: null };
+  }
+}
+
+/**
  * 删除当前会话
  */
 export async function deleteSession() {
