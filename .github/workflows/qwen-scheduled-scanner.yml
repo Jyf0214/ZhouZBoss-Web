@@ -1,185 +1,73 @@
-name: "Qwen Scheduled Bug Hunter"
+name: "JS/TS Continuous Integration"
 
 on:
-  schedule:
-    # 每周日凌晨 00:00 (UTC) 自动定时启动巡检
-    - cron: '0 0 * * 0'
-  workflow_dispatch: # 允许项目合作者在 Actions 页面手动点击触发
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+# 避免重复的 CI 在同个 PR 上堆积运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  scheduled-inspect:
+  ci-verification:
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: write      # 用于拉取和推送修复分支
-      pull-requests: write # 用于自动开启巡检 PR
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # 获取完整 Git 历史
 
-      - name: Set up Environment (Node.js)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm' 
 
-      # 安装 TS 语言服务（确保并行扫描时能跨文件解析符号和依赖关系）
-      - name: Install TypeScript Language Server for LSP Support
+      - name: Install Dependencies
         run: |
-          npm install -g typescript-language-server typescript
-
-      - name: Install Qwen Code CLI Globally
-        run: npm install -g @qwen-code/qwen-code@latest
-
-      # 物理防线：绝对禁止直推主分支
-      - name: Enforce Local Branch Protection (Git Hook Security)
-        run: |
-          mkdir -p .git/hooks
-          cat << 'EOF' > .git/hooks/pre-push
-          #!/bin/sh
-          while read local_ref local_sha remote_ref remote_sha
-          do
-            if [ "$remote_ref" = "refs/heads/main" ] || [ "$remote_ref" = "refs/heads/master" ]; then
-              echo "========================================================="
-              echo " [SECURITY ERROR] Direct push to main/master is PROHIBITED!"
-              echo "========================================================="
-              exit 1
-            fi
-          done
-          exit 0
-          EOF
-          chmod +x .git/hooks/pre-push
-
-      # 配置读取：写入 Qwen 全局配置（包含联网 Fetch，便于 AI 联网查阅最新漏洞补丁方案）
-      - name: Configure Qwen Settings
-        run: |
-          mkdir -p ~/.qwen
-          cat << 'EOF' > ~/.qwen/settings.json
-          ${{ secrets.QWEN_SETTINGS_JSON }}
-          EOF
-
-      # 创建 LSP 运行时配置
-      - name: Create LSP Server Configuration
-        run: |
-          cat << 'EOF' > .lsp.json
-          {
-            "typescript": {
-              "command": "typescript-language-server",
-              "args": ["--stdio"],
-              "extensionToLanguage": {
-                ".ts": "typescript",
-                ".tsx": "typescriptreact",
-                ".js": "javascript",
-                ".jsx": "javascriptreact"
-              }
-            }
-          }
-          EOF
-
-      # 执行每周定时巡检与并行修复自愈
-      - name: Run Scheduled Inspection & Parallel Healing
-        env:
-          UNLIMITED_OPENAI_API_KEY: ${{ secrets.UNLIMITED_OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -o pipefail
-          export NODE_PENDING_DEPRECATION=0
-          export QWEN_CODE_UNATTENDED_RETRY=1
-          export QWEN_CODE_SUPPRESS_YOLO_WARNING=1
-          
-          # 1. 动态生成周度专属 UUID Session ID，确保每周会话干净且可断点自愈
-          SESSION_ID=$(cat /proc/sys/kernel/random/uuid)
-          CURRENT_DATE=$(date +%Y%m%d)
-          echo "Weekly Session ID: $SESSION_ID on Date: $CURRENT_DATE"
-          
-          # 2. 并行调度巡检 Prompt
-          PROMPT="
-          /goal 启动本周度代码库自动安全巡检、漏洞扫描与修复任务。
-          
-          ## 并行审计分工（Multi-Agent Orchestration）：
-          作为一个高智力的系统协调器，你必须充分利用内置的 'task' 工具，并行（同时发起多个 tool_call）指派不同的子智能体对项目执行分布式扫描，以降低你的上下文负担：
-          1. **并发派发探索任务**：
-             - 指派子智能体 A (subagent_type: 'Explore') 并行分析项目中的所有输入源（如 API 路由、用户输入、网关接收点），审计是否存在未鉴权访问、SQL 注入或路径穿越漏洞。
-             - 指派子智能体 B (subagent_type: 'Explore') 并行审查项目的业务逻辑、数据持久化存储和核心算法，排查未捕获的边界异常与高风险死锁隐患。
-             - 指派子智能体 C (subagent_type: 'Explore') 扫描当前项目的代码规范、遗留的 TODO / FIXME 占位符、过期的废弃函数，评估系统稳定性。
-          2. **报告汇总与评估**：
-             - 回收以上子智能体提交的扫描信息，在你的上下文中汇总出一份《项目本周质量与安全风险报告》。
-          3. **指派并行自愈**：
-             - 从清单中筛选出 1-2 个确定性最高且危害较大的漏洞或 Bug。
-             - 启动内置的研发子智能体 (subagent_type: 'general-purpose') 针对这些文件进行代码自愈和修复。
-          4. **严格质量验收**：
-             - 修复后，你必须在内置终端运行项目的单元测试（如 pytest, npm run test 或打包编译验证），确保没有引入 Regression 问题。
-          5. **自动化创建 PR**：
-             - 基于当前最新主分支，切出新分支 'scheduled/audit-patch-$CURRENT_DATE'。
-             - commit 你的修改并推送。
-             - 使用内置的 'gh' 命令行工具自动发起一个 PR。PR 的标题需命名为 'chore(audit): scheduled inspection & vulnerability patch $CURRENT_DATE'，并在 PR 详情中附上你刚才汇总的《项目本周质量与安全风险报告》。
-          
-          ## 安全限制：
-          - 严禁直接向主分支提交 commit，严禁向主分支执行 push 操作！
-          "
-          
-          # 初始化自愈与重试控制参数（最大尝试5次，防止单次超时或网络断开）
-          MAX_ATTEMPTS=5
-          ATTEMPT=1
-          SUCCESS=false
-          TRIGGER_COMPRESSION=false
-          
-          echo "Starting Weekly Scheduled Inspection Loop..."
-          START_TIME=$(date +%s)
-          
-          # 首次启动任务（定时巡检均为 First-run，一律使用 --session-id 初始化）
-          if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
-            SUCCESS=true
+          if [ -f package-lock.json ]; then
+            npm ci
           else
-            END_TIME=$(date +%s)
-            DURATION=$((END_TIME - START_TIME))
-            echo "::warning:: 首次运行中断。单次耗时: ${DURATION} 秒。"
-            if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
-              TRIGGER_COMPRESSION=true
-            fi
+            npm install
           fi
-          
-          # 断点续传自愈循环（自愈期间，因会话已被初始化，一律采用 --resume 恢复）
-          while [ "$SUCCESS" = false ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
-            ATTEMPT=$((ATTEMPT + 1))
-            echo "=========================================="
-            echo "正在启动自愈流程 (Attempt $ATTEMPT/$MAX_ATTEMPTS)..."
-            echo "=========================================="
-            sleep 15
-            
-            # 弹性自愈压缩
-            if [ "$TRIGGER_COMPRESSION" = true ]; then
-              if [ "$ATTEMPT" -eq 2 ]; then
-                echo "【Attempt 2 自愈】分步执行快速规则压缩 /compress-fast..."
-                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
-              elif [ "$ATTEMPT" -ge 3 ]; then
-                echo "【Attempt $ATTEMPT 自愈】分步执行双重压缩：/compress-fast 紧跟 /compress..."
-                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
-                sleep 5
-                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "/compress" || echo "Warning: /compress 失败"
-              fi
-            fi
-            
-            RESUME_PROMPT="由于网络或上下文限制中断，请读取周度巡检历史会话并继续完成所有步骤。请注意：必须继续调度并等候子任务完成，在本地测试验证无误后，完成代码分支推送与 gh pr create 定时补丁处理。"
-            
-            START_TIME=$(date +%s)
-            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "$RESUME_PROMPT" 2>&1 | tee qwen_output.log; then
-              SUCCESS=true
-              echo "自愈成功，周度扫描修复任务已顺利完成。"
-            else
-              END_TIME=$(date +%s)
-              DURATION=$((END_TIME - START_TIME))
-              echo "::warning:: 第 $ATTEMPT 次尝试失败。单次耗时: ${DURATION} 秒。"
-              if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
-                TRIGGER_COMPRESSION=true
-              fi
-            fi
-          done
-          
-          # 最终成功状态判定
-          if [ "$SUCCESS" = false ]; then
-            echo "Error: Qwen Scheduled Audit failed to complete."
-            exit 1
+
+      - name: Syntax & Lint Check (语法与风格校验)
+        run: |
+          npm run lint --if-present
+
+      - name: Type Check (TypeScript 类型安全排查)
+        run: |
+          if [ -f tsconfig.json ]; then
+            npx tsc --noEmit
+          else
+            echo "No tsconfig.json found. Skipping."
           fi
+
+      - name: Build Check (构建与编译校验)
+        run: |
+          npm run build --if-present
+
+      - name: Run Tests (单元测试验证)
+        run: |
+          npm run test --if-present
+
+  # 新增：CI 失败时自动召回 AI 修复机制（不含 AI 的正常 CI 报错后，拉起 AI 修复器）
+  auto-recall-ai-fixer:
+    needs: ci-verification
+    if: failure() && github.event_name == 'pull_request' # 仅在 PR 检查失败时运行
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # 允许在 PR 上评论
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Comment on PR to trigger Qwen Fixer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # 自动在 PR 留评，以 @qwen-code /fix 开头，从而激活 Solver 工作流
+          gh pr comment "$PR_NUMBER" --body "@qwen-code /fix ⚠️ 自动化 CI 检查（构建/测试/类型/风格）未通过！请结合 CI 的报错日志，分析并修复代码中的 Bug 或测试问题，确保 CI 检查顺利通过。"
