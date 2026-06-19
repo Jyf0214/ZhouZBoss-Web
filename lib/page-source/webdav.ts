@@ -15,7 +15,7 @@
  */
 import type { FileStat } from 'webdav'
 import { isStorageConfigured, getStorageProviderSync } from '@/lib/storage/storage-provider';
-import { isHtmlPath, normalizeWebDavContent } from './shared';
+import { isHtmlPath, normalizeWebDavContent, buildMetaPath, validatePageMeta, type PageMeta } from './shared';
 
 /**
  * 拉取存储后端上 HTML 文件内容,统一转 UTF-8 字符串
@@ -79,4 +79,52 @@ export async function scanPagesHtmlDeep(): Promise<{ relativePath: string }[]> {
     }
   }
   return out;
+}
+
+/* ── 页面元数据读写 ── */
+
+/** 读取指定页面的 meta.json，不存在返回 null */
+export async function fetchPageMeta(relativePath: string): Promise<PageMeta | null> {
+  if (!isStorageConfigured()) return null;
+  const metaPath = buildMetaPath(relativePath);
+  if (!metaPath) return null;
+  try {
+    const provider = getStorageProviderSync();
+    const raw = await provider.getFileContents(metaPath);
+    if (raw === null || raw === undefined) return null;
+    const text = normalizeWebDavContent(raw);
+    if (!text) return null;
+    return validatePageMeta(JSON.parse(text) as unknown);
+  } catch { return null; }
+}
+
+/** 写入/合并 meta.json（保留已有字段，自动设置 updatedAt） */
+export async function putPageMeta(relativePath: string, meta: PageMeta): Promise<{ ok: boolean; error?: string }> {
+  if (!isStorageConfigured()) return { ok: false, error: '存储后端未配置' };
+  const metaPath = buildMetaPath(relativePath);
+  if (!metaPath) return { ok: false, error: '无法推导 meta.json 路径' };
+  try {
+    const provider = getStorageProviderSync();
+    let existing: PageMeta = {};
+    try {
+      const raw = await provider.getFileContents(metaPath);
+      if (raw !== null && raw !== undefined) {
+        const text = normalizeWebDavContent(raw);
+        if (text) { const v = validatePageMeta(JSON.parse(text) as unknown); if (v) existing = v; }
+      }
+    } catch { /* 文件不存在 */ }
+    const merged: PageMeta = { ...existing, ...meta, updatedAt: new Date().toISOString() };
+    if (!existing.createdAt) merged.createdAt = merged.updatedAt;
+    await provider.putFileContents(metaPath, Buffer.from(JSON.stringify(merged, null, 2), 'utf-8'), { headers: { overwrite: 'true' } });
+    return { ok: true };
+  } catch (err) { return { ok: false, error: err instanceof Error ? err.message : String(err) }; }
+}
+
+/** 删除指定页面的 meta.json */
+export async function deletePageMeta(relativePath: string): Promise<{ ok: boolean; error?: string }> {
+  if (!isStorageConfigured()) return { ok: false, error: '存储后端未配置' };
+  const metaPath = buildMetaPath(relativePath);
+  if (!metaPath) return { ok: false, error: '无法推导 meta.json 路径' };
+  try { await getStorageProviderSync().deleteFile(metaPath); return { ok: true }; }
+  catch (err) { return { ok: false, error: err instanceof Error ? err.message : String(err) }; }
 }
