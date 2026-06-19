@@ -69,6 +69,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
+          QWEN_CODE_SUPPRESS_YOLO_WARNING=1
         run: |
           # 开启无监督异常重试机制
           export QWEN_CODE_UNATTENDED_RETRY=1
