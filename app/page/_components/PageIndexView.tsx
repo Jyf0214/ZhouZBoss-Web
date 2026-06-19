@@ -67,6 +67,11 @@ export function PageIndexView({ notConfigured, pages, emptyDirs, orphans: _orpha
     setTimeout(() => setRefreshing(false), 800);
   };
 
+  const handleEditMeta = (page: PageIndexItem) => {
+    // 跳转到对应页面进行元数据编辑
+    router.push(page.href);
+  };
+
   return (
     <div className="flex min-h-screen">
       <Sidebar variant="user" />
@@ -117,7 +122,7 @@ export function PageIndexView({ notConfigured, pages, emptyDirs, orphans: _orpha
               <EmptyCard />
             ) : (
               <>
-                {pages.length > 0 && <PageGrid pages={pages} />}
+                {pages.length > 0 && <PageGrid pages={pages} isSudo={isSudo} onEditMeta={handleEditMeta} />}
                 {emptyDirs.length > 0 && (
                   <div className="mt-6">
                     <h3 className="text-sm font-medium text-zinc-500 mb-3">空文件夹（尚未添加页面文件）</h3>
@@ -203,7 +208,7 @@ function EmptyCard() {
   );
 }
 
-function PageGrid({ pages }: { pages: PageIndexItem[] }) {
+function PageGrid({ pages, isSudo, onEditMeta }: { pages: PageIndexItem[]; isSudo: boolean; onEditMeta: (page: PageIndexItem) => void }) {
   const { t } = useI18n();
   return (
     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
