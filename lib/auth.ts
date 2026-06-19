@@ -213,3 +213,34 @@ export function hasRole(session: SessionPayload | null, roles: ('user' | 'admin'
   if (!session) return false;
   return roles.includes(session.role);
 }
+
+/* ---------- 密码复杂度校验 ---------- */
+
+const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * 校验密码复杂度
+ * 要求: 最少 8 位，至少包含 1 个大写字母、1 个小写字母、1 个数字
+ * 返回 { valid: true } 或 { valid: false, reasons: [...] }
+ */
+export function validatePasswordStrength(password: string): { valid: true } | { valid: false; reasons: string[] } {
+  const reasons: string[] = [];
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    reasons.push(`密码长度不能少于 ${MIN_PASSWORD_LENGTH} 位`);
+  }
+  if (!/[A-Z]/.test(password)) {
+    reasons.push('密码必须包含至少 1 个大写字母');
+  }
+  if (!/[a-z]/.test(password)) {
+    reasons.push('密码必须包含至少 1 个小写字母');
+  }
+  if (!/[0-9]/.test(password)) {
+    reasons.push('密码必须包含至少 1 个数字');
+  }
+
+  if (reasons.length > 0) {
+    return { valid: false, reasons };
+  }
+  return { valid: true };
+}

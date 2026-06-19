@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db';
 import { sendMail, generateResetEmailHtml, isSmtpConfigured } from '@/lib/mail';
 import { randomBytes } from 'crypto';
 import { hashPassword } from '@/lib/hash';
+import { validatePasswordStrength } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
 import { checkRateLimit } from '@/lib/rate-limit';
 
@@ -89,9 +90,10 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      logger.warn('PUT', '密码长度不足');
-      return NextResponse.json({ error: '密码至少6位' }, { status: 400 });
+    const strength = validatePasswordStrength(password);
+    if (!strength.valid) {
+      logger.warn('PUT', '密码复杂度不足', { reasons: strength.reasons });
+      return NextResponse.json({ error: '密码不符合安全要求', reasons: strength.reasons }, { status: 400 });
     }
 
     const db = getDb();
