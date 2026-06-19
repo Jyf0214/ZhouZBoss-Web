@@ -118,7 +118,7 @@ jobs:
           export QWEN_CODE_UNATTENDED_RETRY=1
           export QWEN_CODE_SUPPRESS_YOLO_WARNING=1
           
-          # 【核心修复点】初始化自愈与重试控制参数（最大尝试5次）
+          # 初始化自愈与重试控制参数（最大尝试5次）
           MAX_ATTEMPTS=5
           ATTEMPT=1
           SUCCESS=false
@@ -170,7 +170,7 @@ jobs:
             4. **自主生动回复（消除人机感要求）**：
                - PR 创建成功后，使用 'gh issue comment ${{ env.ISSUE_NUMBER }}' 回复此 Issue。
                - 回复语言必须生动、活泼，富有开发者温度。不要用机器官腔，多用 Emoji（如 🚀, 🤖, ✨, 🛠️）。
-               - 包含：欢快的打招呼与自我介绍、你是怎么排查到这个 Bug 的（通俗解释排查路径和受影响的文件）、你的修复思路，以及附上生成的 PR 链接。
+               - 包含：欢快的打招呼与自我介绍、你是怎么排查到这个 Bug 的（通俗解释排查路径 and 受影响的文件）、你的修复思路，以及附上生成的 PR 链接。
             
             ## 安全限制：
             - 严禁直接向主分支（main/master）提交 commit 或执行 push 操作。
@@ -180,18 +180,34 @@ jobs:
           echo "Starting Qwen Agent Core Loop..."
           START_TIME=$(date +%s)
           
-          if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
-            SUCCESS=true
+          # 3. 首次或恢复启动分流（增量运行下，改用 --resume 承接会话，避免 already in use 冲突）
+          if [ "$IS_RESUME" = "true" ]; then
+            echo "Executing in RESUME mode using --resume..."
+            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
+              SUCCESS=true
+            else
+              END_TIME=$(date +%s)
+              DURATION=$((END_TIME - START_TIME))
+              echo "::warning:: 运行中断。单次耗时: ${DURATION} 秒。"
+              if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
+                TRIGGER_COMPRESSION=true
+              fi
+            fi
           else
-            END_TIME=$(date +%s)
-            DURATION=$((END_TIME - START_TIME))
-            echo "::warning:: 运行中断。单次耗时: ${DURATION} 秒。"
-            if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
-              TRIGGER_COMPRESSION=true
+            echo "Executing in INITIAL mode using --session-id..."
+            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
+              SUCCESS=true
+            else
+              END_TIME=$(date +%s)
+              DURATION=$((END_TIME - START_TIME))
+              echo "::warning:: 运行中断。单次耗时: ${DURATION} 秒。"
+              if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
+                TRIGGER_COMPRESSION=true
+              fi
             fi
           fi
           
-          # 弹性自愈断点续传循环（这里会正常运行，因为 ATTEMPT 变量已正常声明）
+          # 弹性自愈断点续传循环（自愈期间，因会话已被初始化，一律采用 --resume 恢复）
           while [ "$SUCCESS" = false ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
             ATTEMPT=$((ATTEMPT + 1))
             echo "=========================================="
@@ -203,12 +219,12 @@ jobs:
             if [ "$TRIGGER_COMPRESSION" = true ]; then
               if [ "$ATTEMPT" -eq 2 ]; then
                 echo "【Attempt 2 自愈】分步执行快速规则压缩 /compress-fast..."
-                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
+                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
               elif [ "$ATTEMPT" -ge 3 ]; then
                 echo "【Attempt $ATTEMPT 自愈】分步执行双重压缩：/compress-fast 紧跟 /compress..."
-                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
+                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
                 sleep 5
-                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress" || echo "Warning: /compress 失败"
+                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "/compress" || echo "Warning: /compress 失败"
               fi
             fi
             
@@ -216,21 +232,10 @@ jobs:
             RESUME_PROMPT="由于网络或上下文限制中断，请读取会话历史并继续完成所有步骤。请注意：必须在本地运行并成功通过单元测试，确认无误后完成代码提交与 PR 处理。最后通过 gh issue comment 提交生动活泼的说明回复。"
             
             START_TIME=$(date +%s)
-            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$RESUME_PROMPT" 2>&1 | tee qwen_output.log; then
+            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "$RESUME_PROMPT" 2>&1 | tee qwen_output.log; then
               SUCCESS=true
               echo "自愈成功，任务已顺利完成。"
             else
               END_TIME=$(date +%s)
               DURATION=$((END_TIME - START_TIME))
-              echo "::warning:: 第 $ATTEMPT 次尝试失败。单次耗时: ${DURATION} 秒。"
-              if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
-                TRIGGER_COMPRESSION=true
-              fi
-            fi
-          done
-          
-          # 最终成功状态判定
-          if [ "$SUCCESS" = false ]; then
-            echo "Error: Qwen Autonomous execution failed to complete and verify the task."
-            exit 1
-          fi
+              echo "::warning:: 第
