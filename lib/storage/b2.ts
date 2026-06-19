@@ -382,8 +382,10 @@ export class B2Provider implements StorageProvider {
           const cdnUrl = `${cdnBase}/file/${bucketName}/${key}`
           console.warn(`[B2] getFileContents path="${key}" mode=CDN url="${cdnUrl}"`)
 
+          // 安全:剥离 Authorization 头,避免 B2 凭据泄露给第三方 CDN
+          const { Authorization: _auth, ...safeHeaders } = request.httpRequest.headers
           const resp = await fetch(cdnUrl, {
-            headers: request.httpRequest.headers,
+            headers: safeHeaders,
             signal: options?.signal,
           })
 

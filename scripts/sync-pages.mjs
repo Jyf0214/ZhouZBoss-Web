@@ -164,6 +164,14 @@ async function downloadAll(entries, downloader) {
       const relNoPrefix = relPath.slice(WEBDAV_PREFIX.length + 1);
       const localPath = path.join(LOCAL_DIR, relNoPrefix);
 
+      // 安全:路径逃逸检测,防止远程路径含 ../ 等遍历攻击
+      const resolved = path.resolve(localPath);
+      const allowedDir = path.resolve(LOCAL_DIR);
+      if (!resolved.startsWith(allowedDir + path.sep) && resolved !== allowedDir) {
+        console.error(`[sync-pages] 路径逃逸，跳过: ${relPath}`);
+        continue;
+      }
+
       let lastErr = null;
       for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
