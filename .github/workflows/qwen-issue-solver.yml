@@ -34,13 +34,12 @@ jobs:
       - name: Install Qwen Code CLI Globally
         run: npm install -g @qwen-code/qwen-code@latest
 
-      # 关键步骤 1：物理防线 - 注入本地 Git 钩子阻止直推主分支
+      # 物理防线：注入本地 Git 钩子，绝对禁止直推主分支
       - name: Enforce Local Branch Protection (Git Hook Security)
         run: |
           mkdir -p .git/hooks
           cat << 'EOF' > .git/hooks/pre-push
           #!/bin/sh
-          # 提取即将推送的目标分支名称
           while read local_ref local_sha remote_ref remote_sha
           do
             if [ "$remote_ref" = "refs/heads/main" ] || [ "$remote_ref" = "refs/heads/master" ]; then
@@ -54,7 +53,7 @@ jobs:
           EOF
           chmod +x .git/hooks/pre-push
 
-      # 关键步骤 2：配置读取 - 使用 cat 动态写入 Qwen 全局配置文件
+      # 配置读取：使用 cat 动态写入 Qwen 全局配置文件
       - name: Configure Qwen Settings
         run: |
           mkdir -p ~/.qwen
@@ -62,37 +61,116 @@ jobs:
           ${{ secrets.QWEN_SETTINGS_JSON }}
           EOF
 
-      # 关键步骤 3：执行自主修复及 PR 开设
-      - name: Run Qwen Autonomous Goal Loop
+      # 核心执行步骤：使用 Qwen 纯自带能力实现的代码审查、断点压缩与自动开 PR 
+      - name: Run Qwen Autonomous Loop
         env:
-          # 提供 settings.json 中声明引用的 API Key 变量
           UNLIMITED_OPENAI_API_KEY: ${{ secrets.UNLIMITED_OPENAI_API_KEY }}
-          # 供 GitHub CLI (gh) 认证使用，以运行 gh pr create 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
-          # 开启无监督异常重试机制
+          # 开启 pipefail 确保 tee 不会吞掉真实命令的退出状态
+          set -o pipefail
+          
+          # 优化 Node.js 相关的网络生命周期，减小 Socket 意外中断概率
+          export NODE_PENDING_DEPRECATION=0
           export QWEN_CODE_UNATTENDED_RETRY=1
           export QWEN_CODE_SUPPRESS_YOLO_WARNING=1
           
-          # 在指令中明确增加“严格限制（STRICT CONSTRAINTS）”
-          qwen -p "
-          /goal 分析 #${{ env.ISSUE_NUMBER }} 号 Issue 描述的问题。
+          # 为当前 Issue 分配固定的 Session ID 以支持断点续传
+          SESSION_ID="issue-solver-session-${{ env.ISSUE_NUMBER }}"
+          
+          # 初始化自愈式重试控制参数
+          MAX_ATTEMPTS=4
+          ATTEMPT=1
+          SUCCESS=false
+          TRIGGER_COMPRESSION=false
+          
+          # 纯原生内置功能的 Prompt
+          PROMPT="
+          /goal 解决 #${{ env.ISSUE_NUMBER }} 号 Issue 描述的问题。
           - 标题: ${{ env.ISSUE_TITLE }}
           - 详情: ${{ env.ISSUE_BODY }}
           
-          ## 核心任务步骤：
-          1. 阅读相关代码，寻找原因。
-          2. 基于当前主分支切出新分支 'fix/issue-${{ env.ISSUE_NUMBER }}'。
-          3. 修改代码并运行项目的单元测试（根据检测到的技术栈执行对应测试指令），确保修复有效。
-          4. 本地 commit 提交修改（符合 Conventional Commits 规范，结尾附加 'Closes #${{ env.ISSUE_NUMBER }}'）。
-          5. 将新分支推送到 GitHub。
-          6. 使用内置工具（如 gh 命令行客户端）在 GitHub 上自动创建一个 PR 目标指向主分支。
+          ## 核心流程（仅使用项目内置能力）：
+          1. **代码库分析**：如需深入分析或检索代码库文件，请灵活调用内置子智能体 (subagent_type: 'Explore') 以节省你的上下文。
+          2. **修复代码**：直接使用你的文件读写工具（或分发给内置 'general-purpose' 子智能体）来编辑修改受影响的代码。
+          3. **严格质量验收（核心红线）**：
+             - 编写或修改代码后，**绝不能直接 Commit**。
+             - 你必须通过内置终端工具运行该项目本就存在的本地测试命令（如 pytest, npm run test 或对应语言的构建/校验命令）。
+             - 只有确保测试命令 100% 成功通过、没有任何报错时，才能视修改为成功。
+             - 如果测试未通过，请根据测试日志打回重修，直至验收通过。
+          4. **代码提交与开 PR**：
+             - 基于当前最新主分支切出新分支 'fix/issue-${{ env.ISSUE_NUMBER }}'。
+             - 在新分支上提交符合 Conventional Commits 规范的 Commit（结尾附带 'Closes #${{ env.ISSUE_NUMBER }}'）。
+             - 将分支推送至 GitHub，并直接调用系统内置的 'gh' 客户端在云端发起 PR。
           
-          ## 严格限制与安全红线（STRICT SECURITY CONSTRAINTS）：
-          - 严禁直接向主分支（main 或 master）提交任何 commit！
-          - 严禁向主分支（main 或 master）执行 push 操作！
-          - 所有代码修改必须在本地新建的 'fix/issue-${{ env.ISSUE_NUMBER }}' 分支上进行，并且必须通过 Pull Request 方式请求合并。如果尝试直推主分支，本地 Git 钩子将强制报错。
-          " -y
+          ## 安全限制：
+          - 严禁直接向主分支（main/master）提交 commit 或执行 push 操作。
+          "
+          
+          echo "Starting Qwen Autonomous Loop..."
+          
+          START_TIME=$(date +%s)
+          
+          # 第一次尝试运行（使用正确的 -y 开启 YOLO 模式）
+          if qwen -y --session-id "$SESSION_ID" -p "$PROMPT" 2>&1 | tee qwen_output.log; then
+            SUCCESS=true
+          else
+            END_TIME=$(date +%s)
+            DURATION=$((END_TIME - START_TIME))
+            echo "::warning:: 首次运行中断。单次耗时: ${DURATION} 秒。"
+            
+            # 判定条件：如果运行了20分钟以上，或者日志包含 "524"、"terminated"、"closed"
+            if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
+              echo "::warning:: 检测到 524 超时或运行超过20分钟，在下一次重试前将应用压缩逻辑。"
+              TRIGGER_COMPRESSION=true
+            fi
+          fi
+          
+          # 弹性自愈循环
+          while [ "$SUCCESS" = false ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "=========================================="
+            echo "正在启动自愈流程 (Attempt $ATTEMPT/$MAX_ATTEMPTS)..."
+            echo "=========================================="
+            sleep 15
+            
+            # 判定并执行分步压缩命令
+            if [ "$TRIGGER_COMPRESSION" = true ]; then
+              if [ "$ATTEMPT" -eq 2 ]; then
+                echo "【Attempt 2 自愈】分步执行快速规则压缩 /compress-fast..."
+                qwen -y --session-id "$SESSION_ID" -p "/compress-fast" || echo "Warning: /compress-fast 失败，尝试继续任务"
+              elif [ "$ATTEMPT" -ge 3 ]; then
+                echo "【Attempt $ATTEMPT 自愈】分步执行双重压缩：/compress-fast 紧跟 /compress..."
+                qwen -y --session-id "$SESSION_ID" -p "/compress-fast" || echo "Warning: /compress-fast 失败"
+                sleep 5
+                qwen -y --session-id "$SESSION_ID" -p "/compress" || echo "Warning: /compress 失败"
+              fi
+            fi
+            
+            # 续传指令
+            RESUME_PROMPT="由于网络或上下文限制中断，请读取会话历史并继续完成所有步骤。请注意：必须在本地运行并成功通过项目自身的单元测试，确认无误后方可推送分支并创建 PR。"
+            
+            START_TIME=$(date +%s)
+            if qwen -y --session-id "$SESSION_ID" -p "$RESUME_PROMPT" 2>&1 | tee qwen_output.log; then
+              SUCCESS=true
+              echo "自愈成功，任务已顺利完成。"
+            else
+              END_TIME=$(date +%s)
+              DURATION=$((END_TIME - START_TIME))
+              echo "::warning:: 第 $ATTEMPT 次尝试失败。单次耗时: ${DURATION} 秒。"
+              
+              # 重新评估下一次重试是否需要应用/继续应用压缩策略
+              if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
+                TRIGGER_COMPRESSION=true
+              fi
+            fi
+          done
+          
+          # 最终成功状态判定
+          if [ "$SUCCESS" = false ]; then
+            echo "Error: Qwen Autonomous execution failed to complete and verify the task after $MAX_ATTEMPTS attempts."
+            exit 1
+          fi
