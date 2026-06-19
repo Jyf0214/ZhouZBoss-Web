@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   _isWebDavConfigured: vi.fn<() => boolean>(),
   _http2Connect: vi.fn(),
   _httpsGet: vi.fn(),
+  _rateLimit: vi.fn(() => ({ allowed: true, retryAfterMs: 0 })),
+  _getClientIp: vi.fn(() => '127.0.0.1'),
 }));
 
 vi.mock('@/lib/storage/storage-provider', () => ({
@@ -22,6 +24,10 @@ vi.mock('@/lib/storage/storage-provider', () => ({
 }));
 vi.mock('@/lib/auth', () => ({ getSession: () => mocks._getSession() }));
 vi.mock('@/lib/storage/acl', () => ({ checkAccess: () => mocks._checkAccess() }));
+vi.mock('@/lib/rate-limit', () => ({
+  rateLimit: (...a: unknown[]) => mocks._rateLimit(...a),
+  getClientIp: (...a: unknown[]) => mocks._getClientIp(...a),
+}));
 vi.mock('node:http2', () => ({
   default: { connect: (...a: unknown[]) => mocks._http2Connect(...a) },
 }));
@@ -83,9 +89,12 @@ async function callGet(path: string[]) {
 beforeEach(() => {
   mocks._stat.mockReset(); mocks._getSession.mockReset(); mocks._checkAccess.mockReset();
   mocks._isWebDavConfigured.mockReset(); mocks._http2Connect.mockReset(); mocks._httpsGet.mockReset();
+  mocks._rateLimit.mockReset(); mocks._getClientIp.mockReset();
   mocks._isWebDavConfigured.mockReturnValue(true);
   mocks._getSession.mockResolvedValue(null);
   mocks._checkAccess.mockResolvedValue({ allowed: true });
+  mocks._rateLimit.mockReturnValue({ allowed: true, retryAfterMs: 0 });
+  mocks._getClientIp.mockReturnValue('127.0.0.1');
   mocks._stat.mockResolvedValue(makeStat());
   mocks._http2Connect.mockImplementation(makeMockSession('ok'));
   process.env.WEBDAV_URL = 'https://app.koofr.net/dav/Koofr/Pages';
