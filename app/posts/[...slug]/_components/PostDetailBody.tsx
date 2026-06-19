@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { BacklinkPanel } from '@/components/BacklinkPanel';
 import { Giscus } from '@/components/Comments/Giscus';
 import { CopyrightNotice } from '@/components/ui/CopyrightNotice';
 import ShareButtons from '@/components/ui/ShareButtons';
@@ -17,6 +18,8 @@ import { PostAdjacent } from './PostAdjacent';
 import { PostNavigationShortcuts } from '@/components/PostNavigationShortcuts';
 import type { RelatedPost } from '../_lib/related-posts';
 import type { FrontendConfig } from '@/hooks/use-config';
+import type { WikiLinkMap } from '@/components/MarkdownRenderer/types';
+import type { BacklinkInfo, RegistryEntry } from '@/lib/content-registry';
 import { buildCopyrightConfig, buildShareConfig } from '../_lib/post-page-config';
 import { tPosts } from '../_lib/post-i18n';
 
@@ -32,6 +35,9 @@ export function PostDetailBody({
   showWordCount,
   highlight,
   appConfig,
+  wikiLinkMap,
+  backlinks,
+  outgoingRefs,
 }: {
   file: { content: string; meta: Record<string, unknown> };
   fullPath: string;
@@ -44,6 +50,9 @@ export function PostDetailBody({
   showWordCount: boolean;
   highlight: FrontendConfig['highlight'];
   appConfig: FrontendConfig;
+  wikiLinkMap?: WikiLinkMap;
+  backlinks?: BacklinkInfo[];
+  outgoingRefs?: RegistryEntry[];
 }) {
   const [qrOpen, setQrOpen] = useState(false);
 
@@ -70,8 +79,16 @@ export function PostDetailBody({
         <div className="h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent mb-12" />
 
         <div>
-          <MarkdownRenderer content={file.content} highlight={highlight} />
+          <MarkdownRenderer content={file.content} highlight={highlight} wikiLinkMap={wikiLinkMap} />
         </div>
+
+        {/* 关联引用面板 */}
+        <BacklinkPanel
+          section="posts"
+          slug={fullPath}
+          initialBacklinks={backlinks}
+          initialOutgoing={outgoingRefs}
+        />
       </article>
 
       <div className="mt-12 max-w-3xl">

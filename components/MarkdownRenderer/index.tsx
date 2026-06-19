@@ -1,13 +1,33 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useMarkdownConfig } from './use-markdown-config';
 import { buildComponents } from './renderer-config';
 import { Lightbox } from '@/components/ui/Lightbox';
 import { LazyImage } from '@/components/ui/LazyImage';
-import type { MarkdownRendererProps } from './types';
+import type { MarkdownRendererProps, WikiLinkMap } from './types';
+
+/** [[标题]] 预处理正则 */
+const WIKI_LINK_RE = /\[\[([^\[\]]+?)\]\]/g;
+
+/**
+ * 在客户端将 [[标题]] 转换为 Markdown 链接
+ * 复用服务端构建的 wikiLinkMap 进行标题解析
+ */
+function preprocessWikiLinks(content: string, map?: WikiLinkMap): string {
+  if (!map) return content;
+  return content.replace(WIKI_LINK_RE, (_match, rawTitle: string) => {
+    const title = rawTitle.trim();
+    const key = title.toLowerCase();
+    const resolved = map[key];
+    if (resolved) {
+      return `[${resolved.title}](${resolved.url})`;
+    }
+    return `[[${title}]]`;
+  });
+}
 
 interface LightboxState {
   open: boolean;
@@ -15,7 +35,7 @@ interface LightboxState {
   index: number;
 }
 
-export function MarkdownRenderer({ content, highlight }: MarkdownRendererProps) {
+export function MarkdownRenderer({ content, highlight, wikiLinkMap }: MarkdownRendererProps) {
   const { cfg, highlighter } = useMarkdownConfig(highlight);
   const [lightbox, setLightbox] = useState<LightboxState>({
     open: false,
@@ -27,6 +47,12 @@ export function MarkdownRenderer({ content, highlight }: MarkdownRendererProps) 
   const imagesRef = useRef<string[]>([]);
 
   const components = buildComponents(cfg, highlighter);
+
+  // 预处理 wiki-link：[[标题]] → [标题](url)
+  const processedContent = useMemo(
+    () => preprocessWikiLinks(content, wikiLinkMap),
+    [content, wikiLinkMap],
+  );
 
   // 覆盖 img 组件，收集图片并处理点击，使用 LazyImage 懒加载
   const imgComponent = (props: Record<string, unknown>) => {
@@ -65,7 +91,7 @@ export function MarkdownRenderer({ content, highlight }: MarkdownRendererProps) 
       prose-hr:border-zinc-100 prose-hr:my-12
     ">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ ...components, img: imgComponent as never }}>
-        {content}
+        {processedContent}
       </ReactMarkdown>
       {lightbox.open && (
         <Lightbox

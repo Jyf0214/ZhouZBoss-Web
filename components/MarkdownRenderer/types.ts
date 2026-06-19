@@ -10,10 +10,15 @@ export interface HighlightConfig {
   wordWrap: boolean;
 }
 
+/** Wiki-link 标题解析映射（小写标题 → URL） */
+export type WikiLinkMap = Record<string, { url: string; title: string }>;
+
 /** MarkdownRenderer 组件 props */
 export interface MarkdownRendererProps {
   content: string;
   highlight?: HighlightConfig;
+  /** 可选：wiki-link 标题解析映射，启用后 [[标题]] 会转为可点击链接 */
+  wikiLinkMap?: WikiLinkMap;
 }
 
 /** react-syntax-highlighter 组件接收的 props */

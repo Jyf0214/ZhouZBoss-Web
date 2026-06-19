@@ -1,10 +1,40 @@
 'use client';
 
+import React from 'react';
 import { Calendar, Tag, Eye, X, Loader2, Edit3, Trash2, Pin, History } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { Button } from '@/components/ui/Button';
 import { formatShortDate, renderReferenceLinks } from './diary-utils';
 import type { DiaryEntry } from './types';
+import type { WikiLinkMap } from '@/components/MarkdownRenderer/types';
+
+/** 缓存 wiki-link 映射表，避免重复请求 */
+let cachedWikiLinkMap: WikiLinkMap | null = null;
+let wikiLinkMapPromise: Promise<WikiLinkMap> | null = null;
+
+function useWikiLinkMap(): WikiLinkMap | undefined {
+  const [map, setMap] = React.useState<WikiLinkMap | undefined>(
+    cachedWikiLinkMap ?? undefined,
+  );
+
+  React.useEffect(() => {
+    if (cachedWikiLinkMap) {
+      setMap(cachedWikiLinkMap);
+      return;
+    }
+
+    wikiLinkMapPromise ??= fetch('/api/wiki-link-map')
+      .then((res) => (res.ok ? res.json() : {}))
+      .catch(() => ({}));
+
+    void wikiLinkMapPromise.then((data) => {
+      cachedWikiLinkMap = data;
+      setMap(data);
+    });
+  }, []);
+
+  return map;
+}
 
 export function DiaryCard({
   diary,
@@ -32,6 +62,8 @@ export function DiaryCard({
   onVersionHistory?: (id: string) => void;
 }) {
   const isViewing = viewingId === diary.id;
+  const wikiLinkMap = useWikiLinkMap();
+
   return (
     <div className="bg-white rounded-2xl border border-zinc-100 overflow-hidden">
       <div
@@ -127,9 +159,9 @@ export function DiaryCard({
           ) : (
             <>
               <div className="prose prose-zinc max-w-none prose-sm sm:prose-base">
-                <MarkdownRenderer content={viewContent} />
+                <MarkdownRenderer content={viewContent} wikiLinkMap={wikiLinkMap} />
               </div>
-              {renderReferenceLinks(diary.references)}
+              {renderReferenceLinks(diary.references, viewContent, wikiLinkMap)}
             </>
           )}
         </div>

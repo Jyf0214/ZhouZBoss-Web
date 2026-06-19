@@ -4,6 +4,7 @@ import React from 'react';
 import { type ContentFile } from '@/types/content';
 import { Avatar } from '@/components/Avatar';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { BacklinkPanel } from '@/components/BacklinkPanel';
 import Link from 'next/link';
 import { ArrowLeft, Code, Eye } from 'lucide-react';
 import { GlobalLoading } from '@/components/Loading';
@@ -104,10 +105,11 @@ function FaceDetailHeader({ file, isSudo, rawContent, showRaw, setShowRaw }: {
   );
 }
 
-function FaceDetailContent({ file, showRaw, rawContent }: {
+function FaceDetailContent({ file, showRaw, rawContent, fullPath }: {
   file: ContentFile;
   showRaw: boolean;
   rawContent: string;
+  fullPath: string;
 }) {
   const { config: siteConfig } = useConfig();
   return (
@@ -118,6 +120,10 @@ function FaceDetailContent({ file, showRaw, rawContent }: {
         </pre>
       ) : (
         <MarkdownRenderer content={file.content} highlight={siteConfig?.highlight} />
+      )}
+      {/* 关联引用面板（客户端动态加载） */}
+      {!showRaw && (
+        <BacklinkPanel section="faces" slug={fullPath} />
       )}
     </div>
   );
@@ -173,7 +179,7 @@ export default function FaceDetailPage() {
             showRaw={showRaw}
             setShowRaw={setShowRaw}
           />
-          <FaceDetailContent file={file} showRaw={showRaw} rawContent={rawContent} />
+          <FaceDetailContent file={file} showRaw={showRaw} rawContent={rawContent} fullPath={fullPath} />
         </article>
       </PageContainer>
       <Footer />

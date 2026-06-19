@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { getContentFile, getAllSlugs, getAdjacentPosts } from '@/lib/content';
+import { buildWikiLinkMap, getBacklinks, getOutgoingReferences } from '@/lib/content-registry';
 import { getSession } from '@/lib/auth';
 import { loadConfig } from '@/lib/config';
 import { getSiteUrl } from '@/const/url';
@@ -83,6 +84,9 @@ function buildViewModel(
   const appConfig = loadConfig();
   const stats = computeWordStats(content);
   const tocConfig = buildTocConfig(appConfig);
+  const wikiLinkMap = buildWikiLinkMap();
+  const backlinks = getBacklinks('posts', fullPath);
+  const outgoingRefs = getOutgoingReferences('posts', fullPath);
 
   return {
     file: { content, meta },
@@ -98,6 +102,9 @@ function buildViewModel(
     highlight: appConfig.highlight,
     tocConfig,
     appConfig,
+    wikiLinkMap,
+    backlinks,
+    outgoingRefs,
   };
 }
 
