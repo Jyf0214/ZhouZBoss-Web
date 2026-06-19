@@ -110,7 +110,7 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           EVENT_NAME: ${{ github.event_name }}
-          # 提取评论内容，并移除指派前缀
+          # 提取评论内容，并本着环境隔离原则使用变量
           COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           set -o pipefail
@@ -136,54 +136,56 @@ jobs:
             echo "Created brand new Session ID: $SESSION_ID (First-run Mode)"
           fi
           
-          # 2. 根据事件动态分发 Prompt（区分“首轮修复”和“用户增量反馈”）
+          # 2. 安全构建 Prompt 临时文件（通过环境重定向机制，物理防堵任何 Markdown 字符注入）
+          > prompt.txt
+          
           if [ "$IS_RESUME" = "true" ] && [ "$EVENT_NAME" = "issue_comment" ]; then
             # 清理指派标志
             USER_FEEDBACK=$(echo "$COMMENT_BODY" | sed 's/^@qwen-code \/fix//g' | xargs)
             
-            PROMPT="
-            /goal 收到用户最新的评审反馈，请在当前会话和现有分支上继续完善代码。
-            
-            ## 用户最新的修改要求：
-            \"$USER_FEEDBACK\"
-            
-            ## 执行流程：
-            1. 请直接在现有的本地分支 'fix/issue-${{ env.ISSUE_NUMBER }}' 上继续调整和修改。
-            2. 修改后，必须运行本地单元测试并通过验收（验收失败需继续修改）。
-            3. 提交新的 commit 并推送到 GitHub，此时远程 Pull Request 会自动更新，你**不需要**重复调用 'gh pr create' 创建新 PR（如果提示 PR 已存在请忽略）。
-            4. 任务完成后，调用 'gh issue comment' 生动地回复用户，并说明此次增量修改的内容。
-            "
+            echo "/goal 收到用户最新的评审反馈，请在当前会话和现有分支上继续完善代码。" >> prompt.txt
+            echo "" >> prompt.txt
+            echo "## 用户最新的修改要求：" >> prompt.txt
+            echo "$USER_FEEDBACK" >> prompt.txt
+            echo "" >> prompt.txt
+            echo "## 执行流程：" >> prompt.txt
+            echo "1. 请直接在现有的本地分支 'fix/issue-$ISSUE_NUMBER' 上继续调整和修改。" >> prompt.txt
+            echo "2. 修改后，必须运行本地单元测试并通过验收（验收失败需继续修改）。" >> prompt.txt
+            echo "3. 提交新的 commit 并推送到 GitHub，此时远程 Pull Request 会自动更新，你不需要重复调用 'gh pr create' 创建新 PR（如果提示 PR 已存在请忽略）。" >> prompt.txt
+            echo "4. 任务完成后，调用 'gh issue comment' 生动地回复用户，并说明此次增量修改的内容。" >> prompt.txt
           else
-            PROMPT="
-            /goal 解决 #${{ env.ISSUE_NUMBER }} 号 Issue 描述的问题。
-            - 标题: ${{ env.ISSUE_TITLE }}
-            - 详情: ${{ env.ISSUE_BODY }}
-            
-            ## 核心工作步骤：
-            1. **语义定位**：请充分利用 '--experimental-lsp' 精准定位需要修改的文件。如果遇到不懂的语法或第三方库，可运行 MCP-Fetch 联网查询。
-            2. **代码修改与质量控制（核心红线）**：
-               - 修改后必须通过本地测试验收，否则不予提交。
-               - 修改必须在隔离的分支 'fix/issue-${{ env.ISSUE_NUMBER }}' 上完成。
-            3. **提交代码与开 PR**：
-               - 验收通过后，commit 修改并推送该分支。
-               - 使用系统内置的 'gh pr create' 工具创建一个 Pull Request 指向主分支。
-            4. **自主生动回复（消除人机感要求）**：
-               - PR 创建成功后，使用 'gh issue comment ${{ env.ISSUE_NUMBER }}' 回复此 Issue。
-               - 回复语言必须生动、活泼，富有开发者温度。不要用机器官腔，多用 Emoji（如 🚀, 🤖, ✨, 🛠️）。
-               - 包含：欢快的打招呼与自我介绍、你是怎么排查到这个 Bug 的（通俗解释排查路径 and 受影响的文件）、你的修复思路，以及附上生成的 PR 链接。
-            
-            ## 安全限制：
-            - 严禁直接向主分支（main/master）提交 commit 或执行 push 操作。
-            "
+            echo "/goal 解决 #$ISSUE_NUMBER 号 Issue 描述的问题。" >> prompt.txt
+            echo "- 标题: $ISSUE_TITLE" >> prompt.txt
+            echo "- 详情:" >> prompt.txt
+            echo "$ISSUE_BODY" >> prompt.txt
+            echo "" >> prompt.txt
+            echo "## 核心工作步骤：" >> prompt.txt
+            echo "1. **语义定位**：请充分利用 '--experimental-lsp' 精准定位需要修改的文件。如果遇到不懂的语法或第三方库，可运行 MCP-Fetch 联网查询。" >> prompt.txt
+            echo "2. **代码修改与质量控制（核心红线）**：" >> prompt.txt
+            echo "   - 修改后必须通过本地测试验收，否则不予提交。" >> prompt.txt
+            echo "   - 修改必须在隔离的分支 'fix/issue-$ISSUE_NUMBER' 上完成。" >> prompt.txt
+            echo "3. **提交代码与开 PR**：" >> prompt.txt
+            echo "   - 验收通过后，commit 修改并推送该分支。" >> prompt.txt
+            echo "   - 使用系统内置的 'gh pr create' 工具创建一个 Pull Request 指向主分支。" >> prompt.txt
+            echo "4. **自主生动回复（消除人机感要求）**：" >> prompt.txt
+            echo "   - PR 创建成功后，使用 'gh issue comment $ISSUE_NUMBER' 回复此 Issue。" >> prompt.txt
+            echo "   - 回复语言必须生动、活泼，富有开发者温度。不要用机器官腔，多用 Emoji（如 🚀, 🤖, ✨, 🛠️）。" >> prompt.txt
+            echo "   - 包含：欢快的打招呼与自我介绍、你是怎么排查到这个 Bug 的（通俗解释排查路径 and 受影响的文件）、你的修复思路，以及附上生成的 PR 链接。" >> prompt.txt
+            echo "" >> prompt.txt
+            echo "## 安全限制：" >> prompt.txt
+            echo "- 严禁直接向主分支（main/master）提交 commit 或执行 push 操作。" >> prompt.txt
           fi
+          
+          # 从 prompt.txt 读取内容（在双引号内通过 cat 传递，绝不发生 Shell 敏感字符重解析）
+          FINAL_PROMPT="$(cat prompt.txt)"
           
           echo "Starting Qwen Agent Core Loop..."
           START_TIME=$(date +%s)
           
-          # 3. 首次或恢复启动分流（增量运行下，改用 --resume 承接会话，避免 already in use 冲突）
+          # 3. 首次或恢复启动分流
           if [ "$IS_RESUME" = "true" ]; then
             echo "Executing in RESUME mode using --resume..."
-            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
+            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "$FINAL_PROMPT" 2>&1 | tee qwen_output.log; then
               SUCCESS=true
             else
               END_TIME=$(date +%s)
@@ -195,7 +197,7 @@ jobs:
             fi
           else
             echo "Executing in INITIAL mode using --session-id..."
-            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
+            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$FINAL_PROMPT" 2>&1 | tee qwen_output.log; then
               SUCCESS=true
             else
               END_TIME=$(date +%s)
