@@ -9,13 +9,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Globe, Folder, Lock, FileCode, Plus, FolderOpen, RotateCw } from 'lucide-react';
+import { Globe, Folder, Lock, FileCode, Plus, FolderOpen, RotateCw, Copy } from 'lucide-react';
 import { useI18n } from '@/hooks/use-i18n';
 import { useAuth } from '@/hooks/use-auth';
 import Sidebar from '@/components/Sidebar/index';
 import TopHeader from '@/components/TopHeader';
 import { Button } from '@/components/ui/Button';
 import { CreatePageDialog } from './CreatePageDialog';
+import { CopyPageDialog } from './CopyPageDialog';
 import { EditPageMetaDialog } from './EditPageMetaDialog';
 
 export interface PageIndexItem {
@@ -59,6 +60,7 @@ export function PageIndexView({ notConfigured, pages, emptyDirs, orphans: _orpha
   const { isSudo } = useAuth();
   const router = useRouter();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [copyPage, setCopyPage] = useState<PageIndexItem | null>(null);
   const [editMetaPage, setEditMetaPage] = useState<PageIndexItem | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -123,7 +125,7 @@ export function PageIndexView({ notConfigured, pages, emptyDirs, orphans: _orpha
               <EmptyCard />
             ) : (
               <>
-                {pages.length > 0 && <PageGrid pages={pages} isSudo={isSudo} onEditMeta={handleEditMeta} />}
+                {pages.length > 0 && <PageGrid pages={pages} isSudo={isSudo} onEditMeta={handleEditMeta} onCopy={(page) => setCopyPage(page)} />}
                 {emptyDirs.length > 0 && (
                   <div className="mt-6">
                     <h3 className="text-sm font-medium text-zinc-500 mb-3">空文件夹（尚未添加页面文件）</h3>
@@ -157,6 +159,14 @@ export function PageIndexView({ notConfigured, pages, emptyDirs, orphans: _orpha
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
         onCreated={() => router.refresh()}
+      />
+
+      {/* 复制页面弹窗 */}
+      <CopyPageDialog
+        open={!!copyPage}
+        sourcePage={copyPage ? { title: copyPage.title, folder: copyPage.folder, filename: copyPage.filename } : null}
+        onClose={() => setCopyPage(null)}
+        onCopied={() => router.refresh()}
       />
 
       {/* 编辑元数据弹窗 */}
@@ -219,7 +229,7 @@ function EmptyCard() {
   );
 }
 
-function PageGrid({ pages, isSudo, onEditMeta }: { pages: PageIndexItem[]; isSudo: boolean; onEditMeta: (page: PageIndexItem) => void }) {
+function PageGrid({ pages, isSudo, onEditMeta, onCopy }: { pages: PageIndexItem[]; isSudo: boolean; onEditMeta: (page: PageIndexItem) => void; onCopy: (page: PageIndexItem) => void }) {
   const { t } = useI18n();
   return (
     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -268,13 +278,23 @@ function PageGrid({ pages, isSudo, onEditMeta }: { pages: PageIndexItem[]; isSud
             </p>
           </Link>
           {isSudo && (
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditMeta(page); }}
-              className="mt-2 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
-            >
-              编辑元数据
-            </button>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCopy(page); }}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+              >
+                <Copy size={12} aria-hidden />
+                复制
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditMeta(page); }}
+                className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+              >
+                编辑元数据
+              </button>
+            </div>
           )}
         </li>
       ))}
