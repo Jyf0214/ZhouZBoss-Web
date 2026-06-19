@@ -25,6 +25,16 @@ export interface PageIndexItem {
   isPrivate: boolean;
   /** 同目录下存储池中有但未显示的文件数 */
   hiddenCount?: number;
+  /** 页面描述 */
+  description?: string;
+  /** 封面图 URL */
+  coverImage?: string;
+  /** 标签列表 */
+  tags?: string[];
+  /** 创建时间 */
+  createdAt?: string;
+  /** 更新时间 */
+  updatedAt?: string;
 }
 
 /**
