@@ -49,3 +49,5 @@ bun.lockb
 
 # 构建期同步产物(由 npm run sync:pages 生成)
 /pages/
+*.md
+!README.md
