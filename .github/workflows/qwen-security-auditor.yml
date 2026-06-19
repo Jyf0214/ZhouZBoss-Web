@@ -68,7 +68,7 @@ jobs:
           }
           EOF
 
-      # 执行自愈式安全审计逻辑
+      # 执行自愈式安全审计逻辑（已适配 --session-id / --resume 会话分流）
       - name: Run Qwen AI Code Vulnerability Audit
         env:
           UNLIMITED_OPENAI_API_KEY: ${{ secrets.UNLIMITED_OPENAI_API_KEY }}
@@ -80,15 +80,19 @@ jobs:
           export QWEN_CODE_UNATTENDED_RETRY=1
           export QWEN_CODE_SUPPRESS_YOLO_WARNING=1
           
-          # 【修复点】确保在写入任何持久化文件之前，先创建 ~/.qwen-audit 目录
+          # 确保在写入任何持久化文件之前，先创建 ~/.qwen-audit 目录
           mkdir -p ~/.qwen-audit
           
-          # 1. 恢复或创建 Auditor 的持久化 Session ID
+          # 1. 恢复或创建 Auditor 的持久化 Session ID，并标记分流状态
           if [ -f ~/.qwen-audit/current_session_id.txt ]; then
             SESSION_ID=$(cat ~/.qwen-audit/current_session_id.txt)
+            IS_RESUME=true
+            echo "Successfully loaded persistent Session ID: $SESSION_ID (Incremental Audit Mode)"
           else
             SESSION_ID=$(cat /proc/sys/kernel/random/uuid)
             echo "$SESSION_ID" > ~/.qwen-audit/current_session_id.txt
+            IS_RESUME=false
+            echo "Created brand new Session ID: $SESSION_ID (First-run Audit Mode)"
           fi
           
           # 2. 防死循环判定：通过 git log 检查最后一次 Commit 是否由 AI Bot 提交
@@ -137,10 +141,16 @@ jobs:
             - 绝对不要生成 'audit_report.txt'。直接结束。
           "
           
-          # 执行审计
-          qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$PROMPT"
+          # 4. 执行审计（分流启动，防止 ID already in use 冲突）
+          if [ "$IS_RESUME" = "true" ]; then
+            echo "Executing Security Audit in RESUME mode using --resume..."
+            qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --resume "$SESSION_ID" "$PROMPT"
+          else
+            echo "Executing Security Audit in INITIAL mode using --session-id..."
+            qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$PROMPT"
+          fi
           
-          # 4. 判定审计结果与闭环触发
+          # 5. 判定审计结果与闭环触发
           if [ -f audit_report.txt ]; then
             echo "::error:: Security vulnerabilities detected!"
             
