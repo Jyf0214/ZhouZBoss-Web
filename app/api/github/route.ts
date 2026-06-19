@@ -71,7 +71,7 @@ async function executeDeleteAction(
   return NextResponse.json({ success: true, data: result.data });
 }
 
-export const POST = apiHandler('POST', { label: 'GitHub 操作', requireAuth: true }, async (req) => {
+export const POST = apiHandler('POST', { label: 'GitHub 操作', requireAdmin: true }, async (req) => {
   const { action, path, content, message, frontMatter, body } = await req.json();
   logger.info('POST', '开始 GitHub 操作', { action, path });
 
@@ -104,7 +104,7 @@ export const POST = apiHandler('POST', { label: 'GitHub 操作', requireAuth: tr
   return NextResponse.json({ success: true, data: result.data });
 });
 
-export const GET = apiHandler('GET', { label: '读取 GitHub 文件', requireAuth: true }, async (req) => {
+export const GET = apiHandler('GET', { label: '读取 GitHub 文件', requireAdmin: true }, async (req) => {
   const path = new URL(req.url).searchParams.get('path');
   if (!path) {
     logger.warn('GET', '缺少路径参数');
