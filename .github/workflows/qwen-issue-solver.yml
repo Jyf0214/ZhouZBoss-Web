@@ -58,7 +58,18 @@ jobs:
           EOF
           chmod +x .git/hooks/pre-push
 
-      # 配置读取：使用 cat 动态写入 Qwen 全局配置文件
+      # 核心升级：安全恢复会话缓存（通过 GitHub 加密缓存，不提供公开下载通道）
+      - name: Restore Qwen Secure Session Cache
+        id: cache-qwen
+        uses: actions/cache@v4
+        with:
+          path: ~/.qwen
+          # 使用 Issue 编号作为隔离的主键，确保每个 Issue 的会话完全独立且能安全持久化
+          key: qwen-session-issue-${{ github.event.issue.number }}-${{ github.run_id }}
+          restore-keys: |
+            qwen-session-issue-${{ github.event.issue.number }}-
+
+      # 配置读取：使用 cat 动态写入 Qwen 全局配置文件（包含 MCP 联网 Fetch）
       - name: Configure Qwen Settings
         run: |
           mkdir -p ~/.qwen
@@ -84,71 +95,91 @@ jobs:
           }
           EOF
 
-      # 核心执行步骤：使用 Qwen 纯自带能力实现的代码审查、断点压缩与自动开 PR 
-      - name: Run Qwen Autonomous Loop with LSP & MCP Fetch
+      # 执行自愈式多 Agent 增量修复逻辑
+      - name: Run Qwen Autonomous Loop with Session Persistence
         env:
           UNLIMITED_OPENAI_API_KEY: ${{ secrets.UNLIMITED_OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
+          EVENT_NAME: ${{ github.event_name }}
+          # 提取评论内容，并移除指派前缀
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
-          # 开启 pipefail 确保 tee 不会吞掉真实命令的退出状态
           set -o pipefail
-          
-          # 优化 Node.js 相关的网络生命周期，减小 Socket 意外中断概率
           export NODE_PENDING_DEPRECATION=0
           export QWEN_CODE_UNATTENDED_RETRY=1
           export QWEN_CODE_SUPPRESS_YOLO_WARNING=1
           
-          # 1. 动态生成符合 Qwen 校验标准的 UUID v4 格式 Session ID
-          SESSION_ID=$(cat /proc/sys/kernel/random/uuid)
-          echo "Generated valid UUID Session ID: $SESSION_ID"
+          # 1. 判断并获取持久化的 Session ID
+          if [ -f ~/.qwen/current_session_id.txt ]; then
+            SESSION_ID=$(cat ~/.qwen/current_session_id.txt)
+            IS_RESUME=true
+            echo "Successfully loaded persistent Session ID: $SESSION_ID (Incremental Mode)"
+          else
+            SESSION_ID=$(cat /proc/sys/kernel/random/uuid)
+            echo "$SESSION_ID" > ~/.qwen/current_session_id.txt
+            IS_RESUME=false
+            echo "Created brand new Session ID: $SESSION_ID (First-run Mode)"
+          fi
           
-          # 2. 纯原生内置功能的 Prompt
-          PROMPT="
-          /goal 解决 #${{ env.ISSUE_NUMBER }} 号 Issue 描述的问题。
-          - 标题: ${{ env.ISSUE_TITLE }}
-          - 详情: ${{ env.ISSUE_BODY }}
+          # 2. 根据事件动态分发 Prompt（区分“首轮修复”和“用户增量反馈”）
+          if [ "$IS_RESUME" = "true" ] && [ "$EVENT_NAME" = "issue_comment" ]; then
+            # 清理指派标志
+            USER_FEEDBACK=$(echo "$COMMENT_BODY" | sed 's/^@qwen-code \/fix//g' | xargs)
+            
+            PROMPT="
+            /goal 收到用户最新的评审反馈，请在当前会话和现有分支上继续完善代码。
+            
+            ## 用户最新的修改要求：
+            \"$USER_FEEDBACK\"
+            
+            ## 执行流程：
+            1. 请直接在现有的本地分支 'fix/issue-${{ env.ISSUE_NUMBER }}' 上继续调整和修改。
+            2. 修改后，必须运行本地单元测试并通过验收（验收失败需继续修改）。
+            3. 提交新的 commit 并推送到 GitHub，此时远程 Pull Request 会自动更新，你**不需要**重复调用 'gh pr create' 创建新 PR（如果提示 PR 已存在请忽略）。
+            4. 任务完成后，调用 'gh issue comment' 生动地回复用户，并说明此次增量修改的内容。
+            "
+          else
+            PROMPT="
+            /goal 解决 #${{ env.ISSUE_NUMBER }} 号 Issue 描述的问题。
+            - 标题: ${{ env.ISSUE_TITLE }}
+            - 详情: ${{ env.ISSUE_BODY }}
+            
+            ## 核心工作步骤：
+            1. **语义定位**：请充分利用 '--experimental-lsp' 精准定位需要修改的文件。如果遇到不懂的语法或第三方库，可运行 MCP-Fetch 联网查询。
+            2. **代码修改与质量控制（核心红线）**：
+               - 修改后必须通过本地测试验收，否则不予提交。
+               - 修改必须在隔离的分支 'fix/issue-${{ env.ISSUE_NUMBER }}' 上完成。
+            3. **提交代码与开 PR**：
+               - 验收通过后，commit 修改并推送该分支。
+               - 使用系统内置的 'gh pr create' 工具创建一个 Pull Request 指向主分支。
+            4. **自主生动回复（消除人机感要求）**：
+               - PR 创建成功后，使用 'gh issue comment ${{ env.ISSUE_NUMBER }}' 回复此 Issue。
+               - 回复语言必须生动、活泼，富有开发者温度。不要用机器官腔，多用 Emoji（如 🚀, 🤖, ✨, 🛠️）。
+               - 包含：欢快的打招呼与自我介绍、你是怎么排查到这个 Bug 的（通俗解释排查路径和受影响的文件）、你的修复思路，以及附上生成的 PR 链接。
+            
+            ## 安全限制：
+            - 严禁直接向主分支（main/master）提交 commit 或执行 push 操作。
+            "
+          fi
           
-          ## 核心流程（使用项目内置及联网工具）：
-          1. **语义定位**：请充分利用底座已经连接的 '--experimental-lsp' 语言服务进行精准的语义代码跳转，避免盲目搜索。
-          2. **知识检索**：如果你遇到了不熟悉的依赖库、框架或需要查询外部的 API 接口，请调用已配置的 MCP-Fetch 工具直接联网获取官方技术规范。
-          3. **修复代码**：直接使用你的文件读写工具来编辑修改受影响的代码。
-          4. **严格质量验收（核心红线）**：
-             - 编写或修改代码后，**绝不能直接 Commit**。
-             - 你必须通过内置终端工具运行该项目本就存在的本地测试命令（如 pytest, npm run test 或对应语言的构建/校验命令）。
-             - 只有确保测试命令 100% 成功通过、没有任何报错时，才能视修改为成功。
-             - 如果测试未通过，请根据测试日志打回重修，直至验收通过。
-          5. **代码提交与开 PR**：
-             - 基于当前最新主分支切出新分支 'fix/issue-${{ env.ISSUE_NUMBER }}'。
-             - 在新分支上提交符合 Conventional Commits 规范的 Commit（结尾附带 'Closes #${{ env.ISSUE_NUMBER }}'）。
-             - 将分支推送至 GitHub，并直接调用系统内置的 'gh' 客户端在云端发起 PR。
-          
-          ## 安全限制：
-          - 严禁直接向主分支（main/master）提交 commit 或执行 push 操作。
-          "
-          
-          echo "Starting Qwen Autonomous Loop..."
-          
+          echo "Starting Qwen Agent Core Loop..."
           START_TIME=$(date +%s)
           
-          # 第一次尝试运行（解除会话深度和工具调用上限：turns = 100, tool-calls = -1）
           if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
             SUCCESS=true
           else
             END_TIME=$(date +%s)
             DURATION=$((END_TIME - START_TIME))
-            echo "::warning:: 首次运行中断。单次耗时: ${DURATION} 秒。"
-            
-            # 判定条件：如果运行了20分钟以上，或者日志包含 "524"、"terminated"、"closed"
+            echo "::warning:: 运行中断。单次耗时: ${DURATION} 秒。"
             if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
-              echo "::warning:: 检测到 524 超时或运行超过20分钟，在下一次重试前将应用压缩逻辑。"
               TRIGGER_COMPRESSION=true
             fi
           fi
           
-          # 弹性自愈循环
+          # 弹性自愈断点续传循环
           while [ "$SUCCESS" = false ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
             ATTEMPT=$((ATTEMPT + 1))
             echo "=========================================="
@@ -160,7 +191,7 @@ jobs:
             if [ "$TRIGGER_COMPRESSION" = true ]; then
               if [ "$ATTEMPT" -eq 2 ]; then
                 echo "【Attempt 2 自愈】分步执行快速规则压缩 /compress-fast..."
-                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败，尝试继续任务"
+                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
               elif [ "$ATTEMPT" -ge 3 ]; then
                 echo "【Attempt $ATTEMPT 自愈】分步执行双重压缩：/compress-fast 紧跟 /compress..."
                 qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
@@ -169,8 +200,8 @@ jobs:
               fi
             fi
             
-            # 续传指令
-            RESUME_PROMPT="由于网络或上下文限制中断，请读取会话历史并继续完成所有步骤。请注意：必须在本地运行并成功通过项目自身的单元测试，确认无误后方可推送分支并创建 PR。"
+            # 弹性恢复指令
+            RESUME_PROMPT="由于网络或上下文限制中断，请读取会话历史并继续完成所有步骤。请注意：必须在本地运行并成功通过单元测试，确认无误后完成代码提交与 PR 处理。最后通过 gh issue comment 提交生动活泼的说明回复。"
             
             START_TIME=$(date +%s)
             if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$RESUME_PROMPT" 2>&1 | tee qwen_output.log; then
@@ -180,8 +211,6 @@ jobs:
               END_TIME=$(date +%s)
               DURATION=$((END_TIME - START_TIME))
               echo "::warning:: 第 $ATTEMPT 次尝试失败。单次耗时: ${DURATION} 秒。"
-              
-              # 重新评估下一次重试是否需要应用/继续应用压缩策略
               if [ $DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
                 TRIGGER_COMPRESSION=true
               fi
@@ -190,6 +219,6 @@ jobs:
           
           # 最终成功状态判定
           if [ "$SUCCESS" = false ]; then
-            echo "Error: Qwen Autonomous execution failed to complete and verify the task after $MAX_ATTEMPTS attempts."
+            echo "Error: Qwen Autonomous execution failed to complete and verify the task."
             exit 1
           fi
