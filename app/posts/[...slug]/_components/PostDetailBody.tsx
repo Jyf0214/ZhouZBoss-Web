@@ -1,9 +1,11 @@
-import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { Giscus } from '@/components/Comments/Giscus';
 import { CopyrightNotice } from '@/components/ui/CopyrightNotice';
 import ShareButtons from '@/components/ui/ShareButtons';
+import QRCodeDialog from '@/components/ui/QRCodeDialog';
 import { ReadingProgressBar } from '@/components/ui/ReadingProgressBar';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import { PostBreadcrumb, type Crumb } from './PostBreadcrumb';
@@ -40,6 +42,8 @@ export function PostDetailBody({
   highlight: FrontendConfig['highlight'];
   appConfig: FrontendConfig;
 }) {
+  const [qrOpen, setQrOpen] = useState(false);
+
   return (
     <>
       <ReadingProgressBar />
@@ -87,13 +91,29 @@ export function PostDetailBody({
         />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 flex items-center gap-3">
         <ShareButtons
           title={file.meta.title as string}
           url={fullUrl}
           config={buildShareConfig(appConfig)}
         />
+        <button
+          type="button"
+          onClick={() => setQrOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 transition-colors text-sm text-zinc-600"
+          title="分享二维码"
+        >
+          <QrCode size={16} />
+          二维码
+        </button>
       </div>
+
+      <QRCodeDialog
+        open={qrOpen}
+        url={fullUrl}
+        title={file.meta.title as string}
+        onClose={() => setQrOpen(false)}
+      />
 
       <PostRelated posts={relatedPosts} />
 

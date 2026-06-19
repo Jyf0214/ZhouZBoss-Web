@@ -4,6 +4,8 @@ import { AuthProvider } from '../hooks/use-auth';
 import { CustomHead } from '../components/CustomHead';
 import { Providers } from './providers';
 import { Navbar } from '../components/Navbar';
+import { WebVitalsTracker } from '../components/WebVitalsTracker';
+import { RouteTransition } from '../components/RouteTransition';
 import { loadConfig } from '@/lib/config';
 
 export const metadata: Metadata = {
@@ -26,9 +28,10 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         </a>
         <Providers>
           <AuthProvider>
+            <WebVitalsTracker />
             <Navbar navConfig={config.nav} siteTitle={config.site.title} />
             <div id="main-content" tabIndex={-1}>
-              {children}
+              <RouteTransition>{children}</RouteTransition>
             </div>
           </AuthProvider>
         </Providers>
