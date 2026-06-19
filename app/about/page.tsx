@@ -6,6 +6,7 @@ import { HeroBanner } from '@/components/ui/HeroBanner';
 import { BookOpen, Github, Shield, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { FeedbackForm } from '@/components/FeedbackForm';
 
 const features = [
   {
@@ -128,6 +129,12 @@ export default function AboutPage() {
             </div>
           </section>
         )}
+
+        {/* 反馈 */}
+        <section className="mb-10 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 mb-4">反馈与建议</h2>
+          <FeedbackForm />
+        </section>
 
         {/* 链接 */}
         <section className="mb-6">

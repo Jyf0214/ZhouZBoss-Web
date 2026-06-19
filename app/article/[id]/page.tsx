@@ -3,16 +3,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft, User, Clock } from 'lucide-react';
 import { GlobalLoading } from '@/components/Loading';
 import Link from 'next/link';
 import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
 import { showError } from '@/lib/error';
+import { estimateReadingTime } from '@/lib/reading-time';
 import { PageContainer } from '@/components/ui/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Tag';
 import ShareButtons from '@/components/ShareButtons';
+import { ReadingProgressBar } from '@/components/ui/ReadingProgressBar';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 
 /**
  * 文章详情页 — 通过 API 获取内容（草稿从数据库，已发布从 GitHub）
@@ -83,6 +86,8 @@ export default function ArticlePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <ReadingProgressBar />
+      <ScrollToTop />
       <PageContainer maxWidth="4xl" padding="wide">
         <Link href="/" className="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-900 mb-10 transition-colors group">
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -118,6 +123,15 @@ export default function ArticlePage() {
                   <time className="text-sm font-medium" dateTime={articleData.date}>
                     {new Date(articleData.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </time>
+                </>
+              )}
+              {articleData.content && (
+                <>
+                  <span className="text-zinc-200">|</span>
+                  <span className="flex items-center gap-1 text-sm font-medium">
+                    <Clock size={14} />
+                    <span>阅读 {estimateReadingTime(articleData.content)} 分钟</span>
+                  </span>
                 </>
               )}
             </div>

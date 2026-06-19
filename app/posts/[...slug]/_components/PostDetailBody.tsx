@@ -4,6 +4,8 @@ import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { Giscus } from '@/components/Comments/Giscus';
 import { CopyrightNotice } from '@/components/ui/CopyrightNotice';
 import ShareButtons from '@/components/ui/ShareButtons';
+import { ReadingProgressBar } from '@/components/ui/ReadingProgressBar';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import { PostBreadcrumb, type Crumb } from './PostBreadcrumb';
 import { PostHeader } from './PostHeader';
 import { PostRelated } from './PostRelated';
@@ -39,7 +41,10 @@ export function PostDetailBody({
   appConfig: FrontendConfig;
 }) {
   return (
-    <div className="flex-1 min-w-0 max-w-3xl">
+    <>
+      <ReadingProgressBar />
+      <ScrollToTop />
+      <div className="flex-1 min-w-0 max-w-3xl">
       <PostBreadcrumb slug={fullPath} crumbs={breadcrumbs} t={tPosts} />
 
       <article>
@@ -104,5 +109,6 @@ export function PostDetailBody({
         </Link>
       </div>
     </div>
+    </>
   );
 }

@@ -35,3 +35,55 @@ article header h1 {
   pointer-events: none;
   cursor: not-allowed;
 }
+
+/* 标题锚点复制按钮 */
+.anchor-copy-btn {
+  position: absolute;
+  left: -1.5em;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  color: var(--main-tone, #18181b);
+  padding: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.group:hover > .anchor-copy-btn {
+  opacity: 0.4;
+}
+
+.anchor-copy-btn:hover {
+  opacity: 1 !important;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 标题锚点复制 Toast */
+.anchor-copy-toast {
+  position: absolute;
+  left: -1.5em;
+  bottom: 100%;
+  margin-bottom: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  background: #18181b;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: anchor-toast-fade 2s ease forwards;
+}
+
+@keyframes anchor-toast-fade {
+  0% { opacity: 1; transform: translateY(0); }
+  75% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-4px); }
+}

@@ -7,6 +7,8 @@ export interface PostItem {
   cover?: string;
   description?: string;
   pinned?: boolean;
+  /** 预估阅读时间（分钟） */
+  readingTime?: number;
 }
 
 export interface CoverConfig {

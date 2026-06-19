@@ -1,5 +1,6 @@
 import { getContentFiles, getContentIndexes } from '@/lib/content';
 import { loadConfig, hasDatabase, canAccess } from '@/lib/config';
+import { estimateReadingTime } from '@/lib/reading-time';
 import { HomePostGrid } from '@/components/HomePostGrid';
 import { getSession } from '@/lib/auth';
 import type { Metadata } from 'next';
@@ -40,6 +41,7 @@ export default async function HomePage() {
     cover: f.meta.cover,
     description: f.meta.description,
     pinned: f.meta.pinned === true,
+    readingTime: f.content ? estimateReadingTime(f.content) : undefined,
   }));
 
   // facesCount - 游客无法看到通讯录

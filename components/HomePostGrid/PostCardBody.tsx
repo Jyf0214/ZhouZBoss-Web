@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Pin, User as UserIcon, Calendar } from 'lucide-react';
+import { Pin, User as UserIcon, Calendar, Clock } from 'lucide-react';
 import { Tag } from '@/components/ui/Tag';
 import type { PostItem } from './types';
 
@@ -46,14 +46,22 @@ export function PostCardBody({
             {post.author ?? t('home.anonymous')}
           </span>
         </div>
-        {post.date && (
-          <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-            <Calendar size={12} />
-            <span>
-              {new Date(post.date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
+        <div className="flex items-center gap-3 text-[11px] text-zinc-400">
+          {post.readingTime && post.readingTime > 0 && (
+            <span className="flex items-center gap-1">
+              <Clock size={11} />
+              <span>阅读 {post.readingTime} 分钟</span>
             </span>
-          </div>
-        )}
+          )}
+          {post.date && (
+            <span className="flex items-center gap-1.5">
+              <Calendar size={12} />
+              <span>
+                {new Date(post.date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
+              </span>
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
