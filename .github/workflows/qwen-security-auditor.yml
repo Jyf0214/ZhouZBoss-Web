@@ -80,6 +80,9 @@ jobs:
           export QWEN_CODE_UNATTENDED_RETRY=1
           export QWEN_CODE_SUPPRESS_YOLO_WARNING=1
           
+          # 【修复点】确保在写入任何持久化文件之前，先创建 ~/.qwen-audit 目录
+          mkdir -p ~/.qwen-audit
+          
           # 1. 恢复或创建 Auditor 的持久化 Session ID
           if [ -f ~/.qwen-audit/current_session_id.txt ]; then
             SESSION_ID=$(cat ~/.qwen-audit/current_session_id.txt)
