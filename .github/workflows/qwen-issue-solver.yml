@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: '22'
 
-      # 新增 LSP 底座安装：安装 TypeScript 语言服务
+      # 安装 TypeScript 语言服务（用于 LSP 功能）
       - name: Install TypeScript Language Server for LSP Support
         run: |
           npm install -g typescript-language-server typescript
@@ -66,7 +66,7 @@ jobs:
           ${{ secrets.QWEN_SETTINGS_JSON }}
           EOF
 
-      # 新增 LSP 运行时配置：动态创建 .lsp.json 文件
+      # 创建 LSP 运行时配置
       - name: Create LSP Server Configuration
         run: |
           cat << 'EOF' > .lsp.json
@@ -84,8 +84,8 @@ jobs:
           }
           EOF
 
-      # 核心执行步骤：自愈式、带 LSP 语义分析、级联压缩与质量验收的工作流
-      - name: Run Qwen Multi-Agent Loop with LSP
+      # 核心执行步骤：使用 Qwen 纯自带能力实现的代码审查、断点压缩与自动开 PR 
+      - name: Run Qwen Autonomous Loop with LSP & MCP Fetch
         env:
           UNLIMITED_OPENAI_API_KEY: ${{ secrets.UNLIMITED_OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,25 +101,20 @@ jobs:
           export QWEN_CODE_UNATTENDED_RETRY=1
           export QWEN_CODE_SUPPRESS_YOLO_WARNING=1
           
-          # 为当前 Issue 分配固定的 Session ID 以支持断点续传
-          SESSION_ID="issue-solver-session-${{ env.ISSUE_NUMBER }}"
+          # 1. 动态生成符合 Qwen 校验标准的 UUID v4 格式 Session ID
+          SESSION_ID=$(cat /proc/sys/kernel/random/uuid)
+          echo "Generated valid UUID Session ID: $SESSION_ID"
           
-          # 初始化自愈式重试控制参数
-          MAX_ATTEMPTS=4
-          ATTEMPT=1
-          SUCCESS=false
-          TRIGGER_COMPRESSION=false
-          
-          # 纯原生内置功能的 Prompt
+          # 2. 纯原生内置功能的 Prompt
           PROMPT="
           /goal 解决 #${{ env.ISSUE_NUMBER }} 号 Issue 描述的问题。
           - 标题: ${{ env.ISSUE_TITLE }}
           - 详情: ${{ env.ISSUE_BODY }}
           
-          ## 核心流程（仅使用项目内置能力）：
-          1. **语义定位**：请充分利用底座已经连接的 '--experimental-lsp' 语言服务进行精准的语义代码跳转和跳转到定义，提高重构与查找引用效率，减少无意义的全局文本扫描。
-          2. **代码库分析**：如需深入分析或检索代码库文件，请灵活调用内置子智能体 (subagent_type: 'Explore') 以节省你的上下文。
-          3. **修复代码**：直接使用你的文件读写工具（或分发给内置 'general-purpose' 子智能体）来编辑修改受影响的代码。
+          ## 核心流程（使用项目内置及联网工具）：
+          1. **语义定位**：请充分利用底座已经连接的 '--experimental-lsp' 语言服务进行精准的语义代码跳转，避免盲目搜索。
+          2. **知识检索**：如果你遇到了不熟悉的依赖库、框架或需要查询外部的 API 接口，请调用已配置的 MCP-Fetch 工具直接联网获取官方技术规范。
+          3. **修复代码**：直接使用你的文件读写工具来编辑修改受影响的代码。
           4. **严格质量验收（核心红线）**：
              - 编写或修改代码后，**绝不能直接 Commit**。
              - 你必须通过内置终端工具运行该项目本就存在的本地测试命令（如 pytest, npm run test 或对应语言的构建/校验命令）。
@@ -134,12 +129,12 @@ jobs:
           - 严禁直接向主分支（main/master）提交 commit 或执行 push 操作。
           "
           
-          echo "Starting Qwen Autonomous Loop with LSP..."
+          echo "Starting Qwen Autonomous Loop..."
           
           START_TIME=$(date +%s)
           
-          # 第一次尝试运行（注意：这里追加了 --experimental-lsp 参数，并移除了 -p 参数）
-          if qwen -y --experimental-lsp --session-id "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
+          # 第一次尝试运行（解除会话深度和工具调用上限：turns = 100, tool-calls = -1）
+          if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$PROMPT" 2>&1 | tee qwen_output.log; then
             SUCCESS=true
           else
             END_TIME=$(date +%s)
@@ -161,24 +156,24 @@ jobs:
             echo "=========================================="
             sleep 15
             
-            # 判定并执行分步压缩命令（追加了 --experimental-lsp，移除了 -p 标志）
+            # 判定并执行分步压缩命令
             if [ "$TRIGGER_COMPRESSION" = true ]; then
-              if [ "$ATTEMPT" = 2 ]; then
+              if [ "$ATTEMPT" -eq 2 ]; then
                 echo "【Attempt 2 自愈】分步执行快速规则压缩 /compress-fast..."
-                qwen -y --experimental-lsp --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败，尝试继续任务"
+                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败，尝试继续任务"
               elif [ "$ATTEMPT" -ge 3 ]; then
                 echo "【Attempt $ATTEMPT 自愈】分步执行双重压缩：/compress-fast 紧跟 /compress..."
-                qwen -y --experimental-lsp --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
+                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress-fast" || echo "Warning: /compress-fast 失败"
                 sleep 5
-                qwen -y --experimental-lsp --session-id "$SESSION_ID" "/compress" || echo "Warning: /compress 失败"
+                qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "/compress" || echo "Warning: /compress 失败"
               fi
             fi
             
-            # 续传指令（追加了 --experimental-lsp，移除了 -p 标志）
+            # 续传指令
             RESUME_PROMPT="由于网络或上下文限制中断，请读取会话历史并继续完成所有步骤。请注意：必须在本地运行并成功通过项目自身的单元测试，确认无误后方可推送分支并创建 PR。"
             
             START_TIME=$(date +%s)
-            if qwen -y --experimental-lsp --session-id "$SESSION_ID" "$RESUME_PROMPT" 2>&1 | tee qwen_output.log; then
+            if qwen -y --experimental-lsp --max-session-turns 100 --max-tool-calls -1 --session-id "$SESSION_ID" "$RESUME_PROMPT" 2>&1 | tee qwen_output.log; then
               SUCCESS=true
               echo "自愈成功，任务已顺利完成。"
             else
