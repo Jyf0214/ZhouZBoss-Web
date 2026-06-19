@@ -6,6 +6,7 @@ import { apiHandler } from '@/lib/api-handler';
 import { createApiLogger } from '@/lib/api-logger';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
+import { logAudit } from '@/lib/audit';
 
 const logger = createApiLogger('/api/auth/change-password');
 
@@ -102,6 +103,7 @@ export const POST = apiHandler(
     }
 
     logger.info('POST', '密码修改成功', { uid: session.uid, revokedKeys: revokedCount });
+    void logAudit('password_change', 'auth', '密码已修改', session.uid);
     return NextResponse.json({
       success: true,
       message: '密码修改成功',

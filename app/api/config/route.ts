@@ -4,6 +4,7 @@ import { loadConfig, type AppConfig, type SocialConfig } from '@/lib/config';
 import { getFileFromGithub } from '@/lib/github';
 import { createApiLogger } from '@/lib/api-logger';
 import { zAppConfig } from '@/lib/config-schema';
+import { logAudit } from '@/lib/audit';
 import yaml from 'js-yaml';
 
 const logger = createApiLogger('/api/config');
@@ -333,6 +334,7 @@ export async function POST(req: NextRequest) {
     const mergedConfig = mergeAppConfig(currentConfig, newConfig);
 
     logger.info('POST', '配置已合并');
+    void logAudit('config_update', 'config', '站点配置已更新', session.uid);
     // 配置已更新，清除缓存使下次 GET 重新拉取
     configCache = null;
     return NextResponse.json({ success: true, config: mergedConfig });
@@ -377,6 +379,7 @@ export async function PUT() {
     const mergedConfig = mergeAppConfig(currentConfig, validated.data);
 
     logger.info('PUT', '从 GitHub 同步配置成功');
+    void logAudit('config_update', 'config', '站点配置已从 GitHub 同步更新', session.uid);
     return NextResponse.json({ success: true, config: mergedConfig });
   } catch (error) {
     logger.error('PUT', '从 GitHub 同步配置失败', { error: error instanceof Error ? error.message : '未知错误' });

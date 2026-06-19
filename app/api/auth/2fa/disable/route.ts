@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { verifyTotp } from '@/lib/totp';
 import { createApiLogger } from '@/lib/api-logger';
+import { logAudit } from '@/lib/audit';
 
 const logger = createApiLogger('/api/auth/2fa/disable');
 
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
     await db.set(`user:uid:${session.uid}`, JSON.stringify(user));
 
     logger.info('POST', '2FA 已禁用', { uid: session.uid });
+    void logAudit('2fa_disabled', 'auth', '双因素认证已禁用', session.uid);
 
     return NextResponse.json({
       success: true,

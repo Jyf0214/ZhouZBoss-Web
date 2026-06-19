@@ -7,6 +7,7 @@ import { ensureAdminUser } from '@/lib/db-init';
 import { createApiLogger } from '@/lib/api-logger';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { isLoginLocked, recordLoginFailure, clearLoginAttempts } from '@/lib/login-attempts';
+import { logAudit } from '@/lib/audit';
 
 const logger = createApiLogger('/api/auth/login');
 
@@ -108,6 +109,7 @@ export async function POST(req: NextRequest) {
 
     if (!passwordMatch) {
       recordLoginFailure(login);
+      void logAudit('login_failed', 'auth', '登录失败', login);
       logger.warn('POST', '账号或密码错误', { login });
       return NextResponse.json({ error: '账号或密码错误' }, { status: 401 });
     }
@@ -137,6 +139,7 @@ export async function POST(req: NextRequest) {
     });
 
     logger.info('POST', '登录成功', { uid: user.uid });
+    void logAudit('login', 'auth', '登录成功', user.uid);
     return NextResponse.json({
       success: true,
       user: {
