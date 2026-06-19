@@ -35,11 +35,11 @@ export const GET = catchAllHandler<{ path: string[] }>(
     const meta = await readFolderMeta(path)
     if (meta) return NextResponse.json(meta)
 
-    // 元数据不存在时自动创建默认记录(public=true,便于页面默认可访问)
+    // 元数据不存在时自动创建默认记录(public=false,新建文件夹默认私有)
     const now = new Date()
-    await writeFolderMeta({ path, public: true, description: null, createdAt: now, updatedAt: now })
+    await writeFolderMeta({ path, public: false, description: null, createdAt: now, updatedAt: now })
     const created = await readFolderMeta(path)
-    return NextResponse.json(created ?? { path, public: true, description: null, createdAt: now, updatedAt: now })
+    return NextResponse.json(created ?? { path, public: false, description: null, createdAt: now, updatedAt: now })
   }
 )
 
