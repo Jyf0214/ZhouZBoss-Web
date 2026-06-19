@@ -120,18 +120,14 @@ function parseAuthorizeResponse(data: Record<string, unknown>): B2AuthResult {
 }
 
 /**
- * 从 B2 apiUrl 推断 S3 endpoint
+ * 获取 B2 S3 兼容 API endpoint
  *
- * B2 S3 兼容 API 的 endpoint 格式: https://s3.{region}.backblazeb2.com
- *
- * 注意: B2 apiUrl 中的数字（如 api003）是负载均衡器编号，不是 region！
- * 不能用 api003 → us-west-003 这种映射。
- *
- * 安全策略: 回退到 https://s3.backblazeb2.com（B2 默认 S3 端点）。
- * 若 B2_S3_ENDPOINT 环境变量已配置，则优先使用。
+ * B2 鉴权响应中的 apiUrl（如 https://api003.backblazeb2.com）即为 S3 endpoint。
+ * B2 Native API 和 S3 兼容 API 共用同一 host，SDK 会自动加 S3 路径前缀。
+ * 优先使用环境变量 B2_S3_ENDPOINT 覆盖。
  */
-function inferS3Endpoint(_apiUrl: string): string {
-  return 'https://s3.backblazeb2.com'
+function getS3Endpoint(apiUrl: string): string {
+  return apiUrl
 }
 
 /**
@@ -149,7 +145,7 @@ async function getS3Client(): Promise<S3Client> {
 
   if (!effectiveEndpoint) {
     const auth = await b2Authorize()
-    effectiveEndpoint = inferS3Endpoint(auth.apiUrl)
+    effectiveEndpoint = getS3Endpoint(auth.apiUrl)
   }
 
   const config: S3ClientConfig = {
