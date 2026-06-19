@@ -22,6 +22,8 @@
     "build": "NEXT_TELEMETRY_DISABLED=1 npm run check && npm run test && npm run db:generate && ALLOW_DB_PUSH=1 npm run db:init:seed && node scripts/generate-search-index.mjs && node scripts/generate-version.mjs && next build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "analyze": "ANALYZE=true next build",
+    "bundle-check": "node scripts/check-bundle-size.mjs",
     "start": "next start",
     "clean": "next clean",
     "prepare": "husky"
@@ -62,6 +64,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
+    "@next/bundle-analyzer": "^16.2.9",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/diff": "^7.0.2",
     "@types/js-yaml": "^4.0.9",

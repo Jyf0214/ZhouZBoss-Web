@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "description": "Bundle 体积阈值配置, 用于 CI 守卫检测包体积膨胀",
+  "thresholds": {
+    "clientGzipTotal": 524288,
+    "warningClientGzipTotal": 460800
+  },
+  "comments": {
+    "clientGzipTotal": "客户端 gzip 总体积硬上限 (字节), 超出则 CI 失败, 默认 512KB",
+    "warningClientGzipTotal": "客户端 gzip 总体积警告线 (字节), 超出则输出警告但不阻断 CI, 默认 450KB"
+  }
+}

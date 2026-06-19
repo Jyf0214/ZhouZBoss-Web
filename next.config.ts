@@ -1,4 +1,5 @@
 import type {NextConfig} from 'next';
+import createBundleAnalyzer from '@next/bundle-analyzer';
 
 // 所有 AppConfig 相关类型统一定义在 lib/config-schema.ts,
 // 这里仅做 re-export 以保持对旧 import 路径 (@/next.config) 的向后兼容。
@@ -135,4 +136,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// 通过 ANALYZE=true 环境变量启用 bundle 分析, 生成 .next/analyze/ 下的体积报告
+const withBundleAnalyzer = createBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+export default withBundleAnalyzer(nextConfig);
