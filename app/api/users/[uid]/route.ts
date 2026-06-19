@@ -7,7 +7,7 @@ import { apiHandler, getParam } from '@/lib/api-handler';
 
 const logger = createApiLogger('/api/users/[uid]');
 
-export const GET = apiHandler('GET', { label: '获取用户信息', requireAuth: true }, async (req, context) => {
+export const GET = apiHandler('GET', { label: '获取用户信息', requireAdmin: true }, async (req, context) => {
   const uid = await getParam(context, 'uid');
   logger.info('GET', '获取用户信息', { uid });
   const db = getDb();

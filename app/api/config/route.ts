@@ -95,7 +95,10 @@ export async function GET() {
   logger.info('GET', '配置读取成功', { source: remoteConfigStatus || 'local' });
   // 更新内存缓存
   configCache = { data: response, timestamp: Date.now() };
-  return NextResponse.json(response, {
+
+  // 剥离内部/管理字段，仅返回前端需要的配置
+  const { _remoteConfig, _remoteConfigStatus, _remoteConfigError, _githubRepo, ...publicConfig } = response;
+  return NextResponse.json(publicConfig, {
     headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
   });
 }

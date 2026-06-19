@@ -76,6 +76,14 @@ export const GET = apiHandler('GET', { label: '获取用户列表', requireAuth:
   const username = searchParams.get('username');
   const uid = searchParams.get('uid');
 
+  // 用户名/UID 查询同样需要管理员权限，防止任意登录用户探测其他用户信息
+  if (username || uid) {
+    if (session.role !== 'sudo' && session.role !== 'admin') {
+      logger.warn('GET', '禁止查询用户信息', { role: session.role, username, uid });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+
   if (username) {
     const userData = await getUserByUsernameSearch(db, username);
     if (!userData) {
