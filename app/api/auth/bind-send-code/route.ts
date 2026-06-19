@@ -74,15 +74,15 @@ export async function POST(req: NextRequest) {
             </div>
           `,
         });
-	} catch (mailErr) {
-		logger.error('POST', 'SMTP 发送失败', { error: mailErr instanceof Error ? mailErr.message : String(mailErr) });
-		const message = mailErr instanceof Error ? mailErr.message : String(mailErr);
-		return NextResponse.json({ error: `验证码发送失败: ${message}` }, { status: 500 });
-	}
-	} else {
-		logger.error('POST', '邮件服务未配置');
-		return NextResponse.json({ error: '邮件服务未配置，无法发送验证码' }, { status: 500 });
-	}
+      } catch (mailErr) {
+        logger.error('POST', 'SMTP 发送失败', { error: mailErr instanceof Error ? mailErr.message : String(mailErr) });
+        const message = mailErr instanceof Error ? mailErr.message : String(mailErr);
+        return NextResponse.json({ error: `验证码发送失败: ${message}` }, { status: 500 });
+      }
+    } else {
+      logger.error('POST', '邮件服务未配置');
+      return NextResponse.json({ error: '邮件服务未配置，无法发送验证码' }, { status: 500 });
+    }
 
     logger.info('POST', '验证码发送成功', { email });
     return NextResponse.json({ success: true });
