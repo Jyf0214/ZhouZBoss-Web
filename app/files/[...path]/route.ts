@@ -20,7 +20,25 @@ import { getSession } from '@/lib/auth'
 import { getStorageProvider, isStorageConfigured, type StorageProvider } from '@/lib/storage/storage-provider'
 import { checkAccess } from '@/lib/storage/acl'
 import { isValidPath, joinPath } from '@/lib/storage/path'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import type { FileStat, ResponseDataDetailed } from 'webdav'
+
+/** 文件下载频率限制:每 IP 每分钟最多 60 次请求(含公开/私有) */
+const DOWNLOAD_RATE_LIMIT = 60
+const DOWNLOAD_RATE_WINDOW_MS = 60_000
+
+/** 检查文件下载频率限制,超限时返回 429 响应;通过则返回 null */
+function checkDownloadRateLimit(req: NextRequest): NextResponse | null {
+  const ip = getClientIp(req)
+  const { allowed, retryAfterMs } = rateLimit(`${ip}:file-download`, DOWNLOAD_RATE_LIMIT, DOWNLOAD_RATE_WINDOW_MS)
+  if (!allowed) {
+    return NextResponse.json(
+      { error: '请求过于频繁,请稍后再试' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) } }
+    )
+  }
+  return null
+}
 
 interface RouteParams { path: string[] }
 interface DownloadResult { ok: boolean; body: Buffer; method: string; error?: string }
@@ -176,12 +194,29 @@ async function b2Download(provider: StorageProvider, relativePath: string): Prom
   return Buffer.alloc(0)
 }
 
-/** B2 后端下载 + 响应封装，包含 X-B2-Download-Mode 标记头 */
+/** B2 后端下载 + 响应封装 */
 async function b2FileResponse(provider: StorageProvider, stat: FileStat, relativePath: string): Promise<NextResponse> {
   const body = await b2Download(provider, relativePath)
-  const resp = fileResponse(body, stat)
-  resp.headers.set('X-B2-Download-Mode', process.env.B2_DOWNLOAD_URL ? 'cdn' : 'direct')
-  return resp
+  return fileResponse(body, stat)
+}
+
+/** WebDAV 后端下载:优先本地缓存,回退远程下载 */
+async function webdavFileResponse(stat: FileStat, relativePath: string): Promise<NextResponse> {
+  const webdavBase = process.env.WEBDAV_URL!.replace(/\/+$/, '')
+  const auth = `Basic ${Buffer.from(`${process.env.WEBDAV_USER}:${process.env.WEBDAV_PASS}`).toString('base64')}`
+
+  // 优先:构建时同步到本地 ./pages/ 的文件(sync-pages.mjs 产出)
+  const localBuf = await readLocalPagesFile(relativePath)
+  if (localBuf) return fileResponse(localBuf, stat)
+
+  // 兜底:WebDAV 远程下载(http2 → https)
+  const result = await downloadFile(webdavBase, relativePath, auth)
+  if (!result.ok) {
+    console.error(`[files] 下载失败 path="${relativePath}" method=${result.method} error=${result.error}`)
+    return NextResponse.json({ error: '文件下载失败' }, { status: 502 })
+  }
+  console.warn(`[files] 下载成功 path="${relativePath}" size=${result.body.length} method=${result.method}`)
+  return fileResponse(result.body, stat)
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<RouteParams> }) {
@@ -189,13 +224,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<Route
   try {
     const { path: segments } = await params
     relativePath = joinPath(...segments)
-    const start = performance.now()
     if (!relativePath || !isValidPath(relativePath)) {
       return NextResponse.json({ error: '路径非法' }, { status: 400 })
     }
     if (!isStorageConfigured()) {
       return NextResponse.json({ error: '存储后端未配置', code: 'NOT_CONFIGURED' }, { status: 503 })
     }
+    // 文件下载频率限制:防止暴力枚举路径和带宽滥用
+    const rateLimitResponse = checkDownloadRateLimit(_req)
+    if (rateLimitResponse) return rateLimitResponse
     const session = await getSession()
     const access = await checkAccess(relativePath, !!session)
     if (!access.allowed) return accessDenied('reason' in access ? access.reason : undefined)
@@ -219,24 +256,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<Route
     if (provider.backend === 'backblaze') {
       return b2FileResponse(provider, stat, relativePath)
     }
-    const webdavBase = process.env.WEBDAV_URL!.replace(/\/+$/, '')
-    const auth = `Basic ${Buffer.from(`${process.env.WEBDAV_USER}:${process.env.WEBDAV_PASS}`).toString('base64')}`
-
-    // 优先:构建时同步到本地 ./pages/ 的文件(sync-pages.mjs 产出)
-    const localBuf = await readLocalPagesFile(relativePath)
-    if (localBuf) return fileResponse(localBuf, stat)
-
-    // 兜底:WebDAV 远程下载(http2 → https)
-    const result = await downloadFile(webdavBase, relativePath, auth)
-    if (!result.ok) {
-      console.error(`[files] 下载失败 path="${relativePath}" method=${result.method} error=${result.error}`)
-      return NextResponse.json({ error: `下载失败: ${result.error}` }, { status: 502 })
-    }
-    console.warn(`[files] 下载成功 path="${relativePath}" size=${result.body.length} method=${result.method} 耗时=${Math.round(performance.now() - start)}ms`)
-    return fileResponse(result.body, stat)
+    return webdavFileResponse(stat, relativePath)
   } catch (err) {
     const msg = err instanceof Error ? err.message : JSON.stringify(err)
     console.error(`[files] 未捕获异常 path="${relativePath || '?'}" error="${msg}"`)
-    return NextResponse.json({ error: `内部错误: ${msg}` }, { status: 500 })
+    // 不向客户端暴露内部错误详情(存储路径、后端类型、连接信息等)
+    return NextResponse.json({ error: '文件下载失败' }, { status: 500 })
   }
 }
