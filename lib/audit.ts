@@ -7,20 +7,25 @@ import { prisma } from '@/lib/db';
 /** 记录审计日志 */
 export async function logAudit(
   action: string,
-  resource: string,
-  resourceId: string | null,
-  operatorUid: string,
-  details?: Record<string, unknown>,
+  target: string,
+  detail: string | null,
+  userId: string,
+  _extra?: Record<string, unknown>,
 ): Promise<void> {
   try {
-    const detailsJson = JSON.stringify(details ?? {});
-    await prisma.$executeRawUnsafe(
-      'INSERT INTO audit_logs (action, resource, resource_id, operator_uid, details, created_at) VALUES ($1, $2, $3, $4, $5, NOW())',
-      action, resource, resourceId, operatorUid, detailsJson,
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const prismaAny = prisma as any;
+    await prismaAny.auditLog.create({
+      data: {
+        action,
+        target,
+        detail: detail ?? null,
+        userId,
+      },
+    });
   } catch {
     // 审计日志写入失败不应阻断业务流程
-    console.error('[audit] 写入审计日志失败', { action, resource, resourceId, operatorUid });
+    console.error('[audit] 写入审计日志失败', { action, target, detail, userId });
   }
 }
 
