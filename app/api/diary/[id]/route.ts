@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { createApiLogger } from '@/lib/api-logger';
 import { apiHandler, getParam } from '@/lib/api-handler';
 import { encryptContent, decryptContent } from '@/lib/diary-crypto';
+import { saveDiaryVersion } from '@/lib/diary-version';
 
 const logger = createApiLogger('/api/diary/[id]');
 
@@ -15,12 +16,12 @@ export const GET = apiHandler('GET', { label: '获取日记', requireAdmin: true
 
   const decrypted = await decryptContent(diary.content);
 
-  return NextResponse.json({ diary: { ...diary, content: decrypted } });
+  return NextResponse.json({ diary: { ...diary, content: decrypted, scheduledAt: diary.scheduledAt?.toISOString() ?? null } });
 });
 
 export const PUT = apiHandler('PUT', { label: '更新日记', requireAdmin: true }, async (req, context) => {
   const id = await getParam(context, 'id');
-  const { title, content, tags, date, group, references } = await req.json();
+  const { title, content, tags, date, group, references, scheduledAt } = await req.json();
   if (!title || !content) {
     return NextResponse.json({ error: '标题和内容不能为空' }, { status: 400 });
   }
@@ -30,7 +31,13 @@ export const PUT = apiHandler('PUT', { label: '更新日记', requireAdmin: true
     return NextResponse.json({ error: '日记不存在' }, { status: 404 });
   }
 
+  // 保存编辑前的版本快照（加密前明文）
+  await saveDiaryVersion(id, content, title, tags ?? []);
+
   const encrypted = await encryptContent(content);
+
+  // 设置了定时发布时间 → 状态为 draft，否则为 published
+  const isScheduled = scheduledAt && new Date(scheduledAt) > new Date();
 
   const diary = await prisma.diary.update({
     where: { id },
@@ -41,10 +48,12 @@ export const PUT = apiHandler('PUT', { label: '更新日记', requireAdmin: true
       group: group ?? '默认',
       references: references ?? [],
       date: date ? new Date(date) : undefined,
+      status: isScheduled ? 'draft' : 'published',
+      scheduledAt: isScheduled ? new Date(scheduledAt) : null,
     },
   });
 
-  logger.info('PUT', '更新日记成功', { id, title });
+  logger.info('PUT', '更新日记成功', { id, title, scheduled: isScheduled });
   return NextResponse.json({ diary });
 });
 

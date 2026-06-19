@@ -18,3 +18,4 @@ export { Textarea, type TextareaProps, type TextareaSize, type TextareaRounded, 
 export { Select, type SelectProps, type SelectSize, type SelectRounded, type SelectRing } from './Select';
 export { default as Tag } from './Tag';
 export { FilterPill, type FilterPillProps } from './FilterPill';
+export { Skeleton, type SkeletonProps } from './Skeleton';

@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Tag, Eye, X, Loader2, Edit3, Trash2, Pin } from 'lucide-react';
+import { Calendar, Tag, Eye, X, Loader2, Edit3, Trash2, Pin, History } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { Button } from '@/components/ui/Button';
 import { formatShortDate, renderReferenceLinks } from './diary-utils';
@@ -17,6 +17,7 @@ export function DiaryCard({
   onTogglePin,
   onEdit,
   onDelete,
+  onVersionHistory,
 }: {
   diary: DiaryEntry;
   viewingId: string | null;
@@ -28,6 +29,7 @@ export function DiaryCard({
   onTogglePin: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onVersionHistory?: (id: string) => void;
 }) {
   const isViewing = viewingId === diary.id;
   return (
@@ -97,6 +99,18 @@ export function DiaryCard({
               aria-label="删除"
               icon={<Trash2 size={14} />}
             />
+            {onVersionHistory && (
+              <Button
+                variant="ghost"
+                size="sm"
+                iconOnly
+                rounded="sm"
+                onClick={() => onVersionHistory(diary.id)}
+                title="版本历史"
+                className="text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
+                icon={<History size={14} />}
+              />
+            )}
             <div className="p-1.5 sm:p-2 text-zinc-400" title={isViewing ? '收起' : '展开'}>
               {isViewing ? <X size={14} className="sm:size-4" /> : <Eye size={14} className="sm:size-4" />}
             </div>

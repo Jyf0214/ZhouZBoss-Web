@@ -3,8 +3,19 @@ import { prisma } from '@/lib/db';
 import { createApiLogger } from '@/lib/api-logger';
 import { apiHandler } from '@/lib/api-handler';
 import { encryptContent } from '@/lib/diary-crypto';
+import { saveDiaryVersion } from '@/lib/diary-version';
 
 const logger = createApiLogger('/api/diary');
+
+/** 构建排除定时未发布日记的过滤条件 */
+function scheduledFilter() {
+  return {
+    OR: [
+      { scheduledAt: null },
+      { scheduledAt: { lte: new Date() } },
+    ],
+  };
+}
 
 export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin: true }, async (req) => {
   const { searchParams } = new URL(req.url);
@@ -13,7 +24,7 @@ export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin
   const endDate = searchParams.get('endDate')?.trim();
   const group = searchParams.get('group')?.trim();
 
-  const ands: Record<string, unknown>[] = [];
+  const ands: Record<string, unknown>[] = [scheduledFilter()];
 
   if (search) {
     ands.push({
@@ -34,7 +45,7 @@ export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin
     ands.push({ group });
   }
 
-  const where = ands.length > 0 ? { AND: ands } : {};
+  const where = { AND: ands };
 
   const diaries = await prisma.diary.findMany({
     where,
@@ -50,6 +61,8 @@ export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin
       references: true,
       date: true,
       pinned: true,
+      status: true,
+      scheduledAt: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -66,12 +79,15 @@ export const GET = apiHandler('GET', { label: '获取日记列表', requireAdmin
 });
 
 export const POST = apiHandler('POST', { label: '创建日记', requireAdmin: true }, async (req) => {
-  const { title, content, tags, date, group, references } = await req.json();
+  const { title, content, tags, date, group, references, scheduledAt } = await req.json();
   if (!title || !content) {
     return NextResponse.json({ error: '标题和内容不能为空' }, { status: 400 });
   }
 
   const encrypted = await encryptContent(content);
+
+  // 设置了定时发布时间 → 状态为 draft，否则为 published
+  const isScheduled = scheduledAt && new Date(scheduledAt) > new Date();
 
   const diary = await prisma.diary.create({
     data: {
@@ -81,9 +97,14 @@ export const POST = apiHandler('POST', { label: '创建日记', requireAdmin: tr
       group: group ?? '默认',
       references: references ?? [],
       date: date ? new Date(date) : undefined,
+      status: isScheduled ? 'draft' : 'published',
+      scheduledAt: isScheduled ? new Date(scheduledAt) : null,
     },
   });
 
-  logger.info('POST', '创建日记成功', { id: diary.id, title });
+  // 保存初始版本快照（加密前明文）
+  await saveDiaryVersion(diary.id, content, title, tags ?? []);
+
+  logger.info('POST', '创建日记成功', { id: diary.id, title, scheduled: isScheduled });
   return NextResponse.json({ diary }, { status: 201 });
 });

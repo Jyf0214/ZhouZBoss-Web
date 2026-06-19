@@ -1,48 +1,31 @@
-'use client';
+import { PostCardSkeleton } from '@/components/HomePostGrid/PostCardSkeleton';
 
-import { useEffect, useState } from 'react';
-import { GlobalLoading } from '@/components/Loading';
-
+/**
+ * 首页路由加载态骨架屏 — 在文章数据加载前显示 4 个骨架卡片
+ */
 export default function Loading() {
-  const [loadingConfig, setLoadingConfig] = useState<{
-    page?: { type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd'; color: string; position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' };
-    navigation?: { type: 'spinner' | 'text' | 'dots' | 'glow' | 'waves' | 'antd'; color: string };
-    slogans?: string[];
-  } | undefined>(undefined);
-
-  useEffect(() => {
-    const cached = sessionStorage.getItem('loading-config');
-    if (cached) {
-      try { setLoadingConfig(JSON.parse(cached)); return; } catch { /* ignore */ }
-    }
-    fetch('/api/config')
-      .then(res => {
-        if (!res.ok) {
-          console.warn('加载配置获取失败:', res.status);
-          return null;
-        }
-        return res.json();
-      })
-      .then(data => {
-        const lc = data?.appearance?.loading;
-        if (lc) {
-          const config = {
-            page: lc.page ? { type: lc.page.type, color: lc.page.color, position: lc.page.position } : undefined,
-            navigation: lc.navigation ? { type: lc.navigation.type, color: lc.navigation.color } : undefined,
-            slogans: Array.isArray(lc.slogans) ? lc.slogans : undefined,
-          };
-          setLoadingConfig(config);
-          try { sessionStorage.setItem('loading-config', JSON.stringify(config)); } catch { /* ignore */ }
-        }
-      })
-      .catch(() => {
-        console.warn('加载配置请求异常，使用默认加载状态');
-      });
-  }, []);
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-900">
-      <GlobalLoading forNavigation loadingConfig={loadingConfig} slogans={loadingConfig?.slogans} />
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12 md:py-20">
+        {/* Hero 区域占位 */}
+        <div className="mb-12 text-center">
+          <div className="h-10 w-64 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-4" />
+          <div className="h-10 w-48 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+        </div>
+
+        {/* 标题 + 分类栏占位 */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="h-8 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+          <div className="h-5 w-20 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+        </div>
+
+        {/* 4 个骨架卡片 — 匹配 PostCard 网格布局 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <PostCardSkeleton key={i} />
+          ))}
+        </div>
+      </main>
     </div>
   );
 }

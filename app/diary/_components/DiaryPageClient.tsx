@@ -12,11 +12,13 @@ import { DiaryFilters, GroupTabs } from './DiaryFilters';
 import { DiaryCard } from './DiaryCard';
 import { DiarySettingsPanel } from './DiarySettingsPanel';
 import { SecurityInfoModal } from './SecurityInfoModal';
+import { VersionHistoryModal } from './VersionHistoryModal';
 
 export function DiaryPageClient() {
   const s = useDiaryState();
   const [showSettings, setShowSettings] = useState(false);
   const [showSecurityInfo, setShowSecurityInfo] = useState(false);
+  const [versionHistoryDiaryId, setVersionHistoryDiaryId] = useState<string | null>(null);
 
   if (s.authLoading || (s.loading && s.diaries.length === 0 && !s.isAuthorized)) {
     return <GlobalLoading />;
@@ -127,6 +129,7 @@ export function DiaryPageClient() {
                 onTogglePin={s.handleTogglePin}
                 onEdit={(id) => s.router.push(`/diary/${id}/edit`)}
                 onDelete={s.handleDelete}
+                onVersionHistory={(id) => setVersionHistoryDiaryId(id)}
               />
             ))}
           </div>
@@ -134,6 +137,13 @@ export function DiaryPageClient() {
       </PageContainer>
 
       {showSecurityInfo && <SecurityInfoModal onClose={() => setShowSecurityInfo(false)} />}
+      {versionHistoryDiaryId && (
+        <VersionHistoryModal
+          open
+          diaryId={versionHistoryDiaryId}
+          onClose={() => setVersionHistoryDiaryId(null)}
+        />
+      )}
     </div>
   );
 }

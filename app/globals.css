@@ -101,3 +101,42 @@ article header h1 {
   75% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-4px); }
 }
+
+/* 代码块增强 */
+pre {
+  position: relative;
+}
+.code-lang-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+  background: rgba(255,255,255,0.1);
+  color: rgb(161 161 170);
+  text-transform: uppercase;
+  user-select: none;
+}
+.code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 4.5rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+pre:hover .code-copy-btn {
+  opacity: 1;
+}
+
+/* 全局焦点可见性样式 */
+*:focus-visible {
+  outline: 2px solid rgb(113 113 122);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 跳过链接动画 */
+.skip-link:focus {
+  transform: translateY(0);
+}
