@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { Copy } from 'lucide-react';
 import type { CodeProps, HighlightConfig, HighlighterInstance } from './types';
 import { createHeading } from './HeadingAnchor';
@@ -27,7 +27,7 @@ export function buildComponents(
   highlighter: HighlighterInstance | null,
 ): Record<string, ComponentType<CodeProps>> {
   return {
-    pre({ children }: { children: React.ReactNode }) {
+    pre({ children }: { children: ReactNode }) {
       // 直接透传子元素，避免与 CodeBlock 内部 div 产生多余嵌套
       return <>{children}</>;
     },

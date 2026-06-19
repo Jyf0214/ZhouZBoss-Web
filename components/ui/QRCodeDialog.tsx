@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Modal } from 'antd';
 import { Copy, Check, ExternalLink, QrCode } from 'lucide-react';
 
