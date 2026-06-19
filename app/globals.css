@@ -131,9 +131,39 @@ pre:hover .code-copy-btn {
 
 /* 全局焦点可见性样式 */
 *:focus-visible {
-  outline: 2px solid rgb(113 113 122);
+  outline: 2.5px solid rgb(82 82 91);
   outline-offset: 2px;
   border-radius: 4px;
+  transition: outline-width 0.1s ease;
+}
+
+/* 交互元素焦点增强：按钮、链接等可点击元素 */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[role="switch"]:focus-visible {
+  outline: 2.5px solid rgb(82 82 91);
+  outline-offset: 2px;
+  border-radius: 4px;
+  ring: 2px solid rgb(82 82 91);
+}
+
+/* 暗色模式下提高焦点对比度 */
+.dark *:focus-visible {
+  outline-color: rgb(212 212 216);
+}
+.dark button:focus-visible,
+.dark a:focus-visible,
+.dark input:focus-visible,
+.dark select:focus-visible,
+.dark textarea:focus-visible {
+  outline-color: rgb(212 212 216);
+  ring-color: rgb(212 212 216);
 }
 
 /* 跳过链接动画 */

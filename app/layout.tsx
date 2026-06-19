@@ -22,7 +22,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         {/* 跳过导航链接：键盘用户可直接跳到正文 */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-zinc-900 focus:outline-none"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:px-5 focus:py-3 focus:rounded-xl focus:shadow-2xl focus:text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 focus:font-semibold focus:text-sm focus:transition-all focus:duration-200"
         >
           跳到正文内容
         </a>
@@ -30,7 +30,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           <AuthProvider>
             <WebVitalsTracker />
             <Navbar navConfig={config.nav} siteTitle={config.site.title} />
-            <div id="main-content" tabIndex={-1}>
+            <div id="main-content" role="main" tabIndex={-1}>
               <RouteTransition>{children}</RouteTransition>
             </div>
           </AuthProvider>

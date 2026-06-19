@@ -19,7 +19,7 @@ export interface FooterLinkGroupsProps {
 export function FooterLinkGroups({ groups }: FooterLinkGroupsProps) {
   if (!groups.length) return null;
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <nav aria-label="友情链接" className="grid grid-cols-2 md:grid-cols-4 gap-6">
       {groups.map((group) => (
         <div key={group.group}>
           <h3 className="font-semibold text-sm text-zinc-500 dark:text-zinc-400 mb-3">{group.group}</h3>
@@ -40,7 +40,7 @@ export function FooterLinkGroups({ groups }: FooterLinkGroupsProps) {
           </ul>
         </div>
       ))}
-    </div>
+    </nav>
   );
 }
 
@@ -56,7 +56,7 @@ export interface FooterBadgesProps {
 export function FooterBadges({ badges }: FooterBadgesProps) {
   if (!badges.length) return null;
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2">
+    <div className="flex flex-wrap items-center justify-center gap-2" aria-label="技术栈">
       {badges.map((badge) => (
         <a
           key={badge.name}

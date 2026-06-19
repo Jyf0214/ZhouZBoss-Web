@@ -39,8 +39,8 @@ export function TopHeader() {
   const breadcrumb = pathname ? getBreadcrumbLabel(pathname) : '';
 
   return (
-    <header className="h-16 bg-white border-b border-zinc-100 flex items-center px-4 md:px-6 sticky top-0 z-50">
-      <nav className="flex items-center gap-1.5 text-sm text-zinc-400">
+    <header className="h-16 bg-white border-b border-zinc-100 flex items-center px-4 md:px-6 sticky top-0 z-50" aria-label="页面顶部栏">
+      <nav aria-label="面包屑导航" className="flex items-center gap-1.5 text-sm text-zinc-400">
         <span className="hover:text-zinc-600 transition-colors">{t('dashboard.title') || '控制台'}</span>
         {breadcrumb && (
           <>

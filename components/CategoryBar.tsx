@@ -37,6 +37,8 @@ export function CategoryBar({ categories, selectedCategory, onSelectCategory }: 
         onWheel={handleWheel}
         className="flex gap-1.5 overflow-x-auto py-1 px-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        role="tablist"
+        aria-label="文章分类"
       >
         <Button
           onClick={() => onSelectCategory(null)}
@@ -44,6 +46,8 @@ export function CategoryBar({ categories, selectedCategory, onSelectCategory }: 
           size="sm"
           rounded="full"
           className={`shrink-0${selectedCategory === null ? ' shadow-sm' : ''}`}
+          role="tab"
+          aria-selected={selectedCategory === null}
         >
           全部
         </Button>
@@ -55,6 +59,8 @@ export function CategoryBar({ categories, selectedCategory, onSelectCategory }: 
             size="sm"
             rounded="full"
             className={`shrink-0${selectedCategory === cat ? ' shadow-sm' : ''}`}
+            role="tab"
+            aria-selected={selectedCategory === cat}
           >
             {cat}
           </Button>

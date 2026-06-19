@@ -35,6 +35,7 @@ export function SearchInput({
         placeholder="搜索文章、日记、标签..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-label="搜索文章、日记、标签"
         className="flex-1 text-base sm:text-lg outline-none border-none bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 leading-relaxed"
       />
       {loading && (

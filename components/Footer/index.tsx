@@ -59,7 +59,7 @@ export default function Footer() {
   const rightSocial = socialEntries.slice(mid);
 
   return (
-    <footer className="relative">
+    <footer className="relative" aria-label="页脚">
       {/* 渐变背景：透明 → bg-zinc-50 */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-50/80 to-zinc-50 dark:via-zinc-800/80 dark:to-zinc-800 pointer-events-none" />
 

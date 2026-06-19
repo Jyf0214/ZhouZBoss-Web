@@ -23,7 +23,16 @@ export default function LanguageSwitcher() {
 
   return (
     <div className="relative">
-      <Button variant="default" size="sm" block onClick={() => setIsOpen(!isOpen)} className="justify-start bg-transparent">
+      <Button
+        variant="default"
+        size="sm"
+        block
+        onClick={() => setIsOpen(!isOpen)}
+        className="justify-start bg-transparent"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label="切换语言"
+      >
         <Globe size={14} className="text-zinc-500" />
         <span>{currentLang.flag}</span>
         <span>{currentLang.name}</span>
@@ -31,7 +40,7 @@ export default function LanguageSwitcher() {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-[999]" onClick={() => setIsOpen(false)} />
-          <div className="absolute bottom-full left-0 mb-1 bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden z-[1000] min-w-[150px]">
+          <div className="absolute bottom-full left-0 mb-1 bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden z-[1000] min-w-[150px]" role="listbox" aria-label="选择语言">
             {locales.map(l => (
               <Button
                 key={l.code}
@@ -40,6 +49,8 @@ export default function LanguageSwitcher() {
                 size="sm"
                 block
                 className={`justify-start ${locale === l.code ? 'bg-zinc-100' : ''}`}
+                role="option"
+                aria-selected={locale === l.code}
               >
                 <span>{l.flag}</span>
                 <span>{l.name}</span>

@@ -30,14 +30,14 @@ export function Sidebar() {
   if (filteredLinks.length === 0) return null;
 
   return (
-    <aside className="w-72 border-r border-zinc-200/60 bg-gradient-to-b from-zinc-50/80 to-transparent hidden md:block min-h-[calc(100vh-4rem)] backdrop-blur-sm">
+    <aside aria-label="侧边栏导航" className="w-72 border-r border-zinc-200/60 bg-gradient-to-b from-zinc-50/80 to-transparent hidden md:block min-h-[calc(100vh-4rem)] backdrop-blur-sm">
       <div className="p-6">
         <div className="py-2">
           <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
             {t('sidebar.originiumKernel')}
           </span>
         </div>
-        <nav className="space-y-1 mt-4">
+        <nav aria-label="管理菜单" className="space-y-1 mt-4">
           {filteredLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href || (pathname ?? '').startsWith(`${link.href}/`);
