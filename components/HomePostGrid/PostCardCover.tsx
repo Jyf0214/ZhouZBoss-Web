@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
+import { LazyImage } from '@/components/ui/LazyImage';
 import type { PostItem, CoverConfig } from './types';
 
 function getCoverPositionClass(position: string | undefined): string {
@@ -12,12 +12,11 @@ function getCoverPositionClass(position: string | undefined): string {
 function PostCardImage({ post, defaultCover }: { post: PostItem; defaultCover?: string }) {
   if (post.cover || defaultCover) {
     return (
-      <Image
+      <LazyImage
         src={post.cover ?? defaultCover!}
         alt={post.title}
         fill
-        className="object-cover group-hover:scale-110 transition-transform duration-700"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        className="group-hover:scale-110 transition-transform duration-700"
       />
     );
   }

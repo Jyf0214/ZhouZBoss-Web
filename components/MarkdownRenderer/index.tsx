@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import { useMarkdownConfig } from './use-markdown-config';
 import { buildComponents } from './renderer-config';
 import { Lightbox } from '@/components/ui/Lightbox';
+import { LazyImage } from '@/components/ui/LazyImage';
 import type { MarkdownRendererProps } from './types';
 
 interface LightboxState {
@@ -26,7 +27,7 @@ export function MarkdownRenderer({ content, highlight }: MarkdownRendererProps) 
 
   const components = buildComponents(cfg, highlighter);
 
-  // 覆盖 img 组件，收集图片并处理点击
+  // 覆盖 img 组件，收集图片并处理点击，使用 LazyImage 懒加载
   const imgComponent = (props: Record<string, unknown>) => {
     const src = typeof props.src === 'string' ? props.src : '';
     const alt = typeof props.alt === 'string' ? props.alt : '';
@@ -34,15 +35,14 @@ export function MarkdownRenderer({ content, highlight }: MarkdownRendererProps) 
     imagesRef.current.push(src);
 
     return (
-      <img
-        src={src}
-        alt={alt}
+      <div
         className="cursor-pointer hover:opacity-80 transition-opacity"
         onClick={() => {
           setLightbox({ open: true, images: imagesRef.current, index });
         }}
-        loading="lazy"
-      />
+      >
+        <LazyImage src={src} alt={alt} />
+      </div>
     );
   };
 
