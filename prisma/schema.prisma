@@ -21,6 +21,8 @@ model User {
   status        String    @default("active")
   clerkId       String?   @unique @map("clerk_id")
   clerkLinkedAt DateTime? @map("clerk_linked_at")
+  twoFactorSecret  String?   @map("two_factor_secret")
+  twoFactorEnabled Boolean   @default(false) @map("two_factor_enabled")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -100,4 +102,33 @@ model ApiKey {
 
   @@map("api_keys")
   @@index([uid])
+}
+
+// 临时分享链接表(存储池文件/文件夹的有时效分享)
+model ShareLink {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique          // 随机 token(crypto.randomUUID)
+  path      String                    // 文件/文件夹路径
+  password  String?                   // 可选密码(明文,与项目现有风格一致)
+  expiresAt DateTime                  // 过期时间
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("share_links")
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// 审计日志表(不可篡改操作记录)
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String   // 操作类型: config.update, user.delete, storage.upload 等
+  target    String   // 操作对象: "config" / "user:123" / "storage:pages/hello.html"
+  detail    String?  // 操作详情(JSON 字符串)
+  userId    String   @map("user_id") // 操作者
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+  @@index([action])
+  @@index([userId])
+  @@index([createdAt])
 }

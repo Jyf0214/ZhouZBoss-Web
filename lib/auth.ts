@@ -75,6 +75,62 @@ export async function createSession(payload: SessionPayload) {
   return session;
 }
 
+/** 2FA 临时令牌载荷 */
+export interface TempTokenPayload {
+  uid: string;
+  purpose: '2fa_pending';
+}
+
+/**
+ * 创建 2FA 临时令牌（5 分钟有效期）
+ * 登录时密码验证通过但 2FA 未完成时返回给前端
+ */
+export async function createTempToken(uid: string): Promise<string> {
+  const payload: TempTokenPayload = { uid, purpose: '2fa_pending' };
+  const expires = new Date(Date.now() + 5 * 60 * 1000); // 5 分钟
+  const token = await new SignJWT({ ...payload })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('5m')
+    .sign(getSecretEncoder());
+
+  // 将临时令牌存入 cookie，便于 2FA 验证时提取
+  (await cookies()).set('temp_2fa', token, {
+    expires,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+  });
+
+  return token;
+}
+
+/**
+ * 验证并解析 2FA 临时令牌
+ * 返回令牌载荷或 null（无效/过期）
+ */
+export async function verifyTempToken(token: string): Promise<TempTokenPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, getSecretEncoder(), {
+      algorithms: ['HS256'],
+    });
+    if (payload.purpose !== '2fa_pending' || !payload.uid) {
+      return null;
+    }
+    return { uid: payload.uid as string, purpose: '2fa_pending' };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 清除 2FA 临时令牌 cookie
+ */
+export async function clearTempToken() {
+  (await cookies()).delete('temp_2fa');
+}
+
 /**
  * 哈希 API 密钥(与密码哈希分离,使用 HMAC-SHA256)
  */

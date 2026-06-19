@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { createSession } from '@/lib/auth';
+import { createSession, createTempToken } from '@/lib/auth';
 import { getUserAvatarAsync } from '@/lib/config';
 import { verifyPassword, hashPassword } from '@/lib/hash';
 import { ensureAdminUser } from '@/lib/db-init';
@@ -102,6 +102,16 @@ export async function POST(req: NextRequest) {
     }
 
     await upgradePasswordHashIfNeeded(user, password, db);
+
+    // 检查是否启用了 2FA
+    if (user.twoFactorEnabled) {
+      const tempToken = await createTempToken(user.uid);
+      logger.info('POST', '密码验证通过，需要 2FA 验证', { uid: user.uid });
+      return NextResponse.json({
+        requires2FA: true,
+        tempToken,
+      });
+    }
 
     const avatar = await getUserAvatarAsync(user.uid, user.role === 'admin' || user.role === 'sudo');
 

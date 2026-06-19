@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Input, Form, message } from 'antd';
 import { Button } from '@/components/ui/Button';
 import { ChevronRight, Key, Lock, Mail } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, TwoFactorRequiredError } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { ClerkAuthProvider } from '@/components/ClerkAuthProvider';
 import { GlobalLoading } from '@/components/Loading';
@@ -46,8 +46,13 @@ function LoginForm() {
     try {
       await login(email, values.password);
       router.push(callbackUrl);
-    } catch {
-      // useAuth 内部已处理错误提示
+    } catch (err) {
+      // 2FA 需求：跳转到 2FA 验证页面
+      if (err instanceof TwoFactorRequiredError) {
+        router.push(`/login/2fa?tempToken=${encodeURIComponent(err.tempToken)}&callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        return;
+      }
+      // useAuth 内部已处理其他错误提示
     } finally {
       setLoading(false);
     }

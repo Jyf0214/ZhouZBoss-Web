@@ -4,6 +4,14 @@ import { type ReactNode, useState, useEffect, createContext, useContext, useCall
 import { message } from 'antd';
 import { useI18n } from './use-i18n';
 
+/** 2FA 验证需求错误 — 携带临时令牌供调用方跳转到 2FA 页面 */
+export class TwoFactorRequiredError extends Error {
+  constructor(public readonly tempToken: string) {
+    super('2FA verification required');
+    this.name = 'TwoFactorRequiredError';
+  }
+}
+
 export type UserRole = 'user' | 'admin' | 'sudo';
 
 export interface User {
@@ -93,6 +101,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await res.json();
+
+      // 2FA 需求：密码正确但需要 TOTP 验证
+      if (data.requires2FA && data.tempToken) {
+        message.info('需要双因素认证验证');
+        // 返回特殊标记让调用方跳转到 2FA 页面
+        throw new TwoFactorRequiredError(data.tempToken);
+      }
+
       if (res.ok && data.success) {
         setUser({ ...data.user, displayName: data.user.name });
         message.success(t('auth.loginSuccess'));
@@ -101,6 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error ?? '操作失败');
       }
     } catch (err) {
+      // TwoFactorRequiredError 需要向上抛出，由调用方处理跳转
+      if (err instanceof TwoFactorRequiredError) {
+        throw err;
+      }
       console.error('登录错误:', err);
       throw err;
     } finally {
