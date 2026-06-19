@@ -45,7 +45,7 @@ export async function GET() {
       groupName: idx.groupName,
     })),
   }, {
-    // 帖子列表缓存：CDN 缓存 120s，过期后后台重验证 300s
-    headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' },
+    // 帖子列表缓存：CDN 缓存 60s，过期后后台重验证 300s
+    headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
   });
 }

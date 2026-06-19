@@ -34,5 +34,7 @@ function readVersion(): VersionInfo {
 export const dynamic = 'force-dynamic';
 
 export function GET() {
-  return NextResponse.json(readVersion());
+  return NextResponse.json(readVersion(), {
+    headers: { 'Cache-Control': 'public, s-maxage=3600, immutable' },
+  });
 }

@@ -1,6 +1,38 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSession, requireSudo } from '@/lib/auth';
 
+/* ---------- API 响应性能指标 ---------- */
+
+/** 单条指标记录 */
+export interface MetricEntry {
+  route: string;
+  method: string;
+  statusCode: number;
+  latencyMs: number;
+  timestamp: number;
+}
+
+/** 滑窗最大容量 */
+const MAX_METRICS = 1000;
+
+/** 模块级共享存储，所有 apiHandler 调用共享同一实例 */
+const metricsBuffer: MetricEntry[] = [];
+
+/** 追加一条指标，超过容量时丢弃最旧记录 */
+function recordMetric(entry: MetricEntry) {
+  if (metricsBuffer.length >= MAX_METRICS) {
+    metricsBuffer.shift();
+  }
+  metricsBuffer.push(entry);
+}
+
+/** 获取只读副本（供 metrics 端点读取） */
+export function getMetricsSnapshot(): readonly MetricEntry[] {
+  return metricsBuffer;
+}
+
+/* ---------- apiHandler 本体 ---------- */
+
 export interface ApiHandlerOptions {
   label: string;
   requireAuth?: boolean;
@@ -54,15 +86,20 @@ export function apiHandler<
       return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
     }
 
+    const start = performance.now();
+    let statusCode = 500;
+
     try {
       // 权限验证
       if (options.requireAuth || options.requireAdmin) {
         const session = await getSession();
         if (!session) {
+          statusCode = 401;
           console.warn(`[API] ${method} ${pathname}${querySummary(req)} → 401 未登录`);
           return NextResponse.json({ error: '未登录' }, { status: 401 });
         }
         if (options.requireAdmin && session.role !== 'admin' && session.role !== 'sudo') {
+          statusCode = 403;
           console.warn(`[API] ${method} ${pathname}${querySummary(req)} → 403 用户 ${session.uid} 无管理员权限`);
           return NextResponse.json({ error: '无权限访问' }, { status: 403 });
         }
@@ -70,18 +107,32 @@ export function apiHandler<
       if (options.requireSudo) {
         const result = await requireSudo();
         if (result instanceof NextResponse) {
+          statusCode = result.status;
           console.warn(`[API] ${method} ${pathname}${querySummary(req)} → ${result.status} sudo 验证失败`);
           return result;
         }
       }
-      return await handler(req, ctx);
+
+      const response = await handler(req, ctx);
+      statusCode = response.status;
+      return response;
     } catch (error) {
+      statusCode = 500;
       const err = error instanceof Error ? error : new Error(String(error));
       console.error(`[API] ${method} ${pathname}${querySummary(req)} → 500 ${options.label} 失败`, {
         message: err.message,
         stack: err.stack,
       });
       return NextResponse.json({ error: `${options.label} 失败` }, { status: 500 });
+    } finally {
+      const latencyMs = performance.now() - start;
+      recordMetric({
+        route: pathname,
+        method,
+        statusCode,
+        latencyMs: Math.round(latencyMs * 100) / 100,
+        timestamp: Date.now(),
+      });
     }
   };
 }

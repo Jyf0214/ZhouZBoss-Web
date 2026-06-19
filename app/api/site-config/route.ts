@@ -23,6 +23,6 @@ export function GET() {
         },
       },
     },
-    { headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' } },
+    { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } },
   );
 }
