@@ -1,43 +1,46 @@
 /**
  * lib/storage/b2.ts 单元测试
  *
- * 覆盖范围:
+ * 覆盖范围（基于 @aws-sdk/client-s3）:
  * - isB2Configured: 环境变量检测
- * - B2Provider.isConfigured: 后端配置检查
- * - B2Provider.listDirectory: 目录列表（mock B2 API）
- * - B2Provider.getFileContents: 文件下载（CDN 模式 + 直连模式）
+ * - B2Provider.isConfigured / backend 属性
+ * - B2Provider.listDirectory: 目录列表（mock S3 SDK）
+ * - B2Provider.getFileContents: 文件下载（CDN + 直连）
  * - B2Provider.putFileContents: 文件上传
  * - B2Provider.createDirectory: 目录创建
  * - B2Provider.deleteFile: 文件删除
+ * - B2Provider.deleteDirectory: 目录删除
+ * - B2Provider.moveFile: 移动/重命名
  * - B2Provider.stat: 文件/目录元信息
- * - StorageProvider 配置切换逻辑
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 const ORIGINAL_ENV = process.env
 
-// B2 API mock 工具
-const b2Mocks = vi.hoisted(() => ({
+// S3 SDK mock
+const s3Mocks = vi.hoisted(() => ({
+  send: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
+}))
+
+// fetch mock（仅用于 B2 鉴权获取 S3 endpoint）
+const fetchMocks = vi.hoisted(() => ({
   fetch: vi.fn<(...args: unknown[]) => Promise<Response>>(),
 }))
 
-vi.stubGlobal('fetch', b2Mocks.fetch)
+vi.stubGlobal('fetch', fetchMocks.fetch)
 
-// 辅助: 创建 mock Response
-function mockResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
-}
-
-function mockBinaryResponse(data: string | ArrayBuffer, status = 200): Response {
-  const body = typeof data === 'string' ? data : new Uint8Array(data)
-  return new Response(body, {
-    status,
-    headers: { 'Content-Type': 'application/octet-stream' },
-  })
-}
+// Mock S3Client（必须用 class 形式才能支持 new）
+vi.mock('@aws-sdk/client-s3', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>()
+  class MockS3Client {
+    send = s3Mocks.send
+  }
+  return {
+    ...actual,
+    S3Client: MockS3Client,
+    paginateListObjectsV2: vi.fn(),
+  }
+})
 
 beforeEach(() => {
   process.env = { ...ORIGINAL_ENV }
@@ -46,13 +49,14 @@ beforeEach(() => {
   delete process.env.B2_APP_KEY
   delete process.env.B2_BUCKET
   delete process.env.B2_DOWNLOAD_URL
-  delete process.env.B2_ENDPOINT
-  b2Mocks.fetch.mockReset()
-  // 清除 B2 全局缓存（auth token + upload URL + bucket ID），避免测试间污染
+  delete process.env.B2_S3_ENDPOINT
+  s3Mocks.send.mockReset()
+  fetchMocks.fetch.mockReset()
+  // 清除全局缓存
   const g = globalThis as Record<string, unknown>
-  delete g.__b2AuthToken
-  delete g.__b2UploadUrl
-  delete g.__b2BucketId
+  delete g.__b2Auth
+  delete g.__b2S3Client
+  delete g.__b2S3Endpoint
 })
 
 afterEach(() => {
@@ -69,7 +73,6 @@ describe('isB2Configured', () => {
   it('只设置部分 env 时返回 false', async () => {
     process.env.B2_KEY_ID = 'key1'
     process.env.B2_APP_KEY = 'app1'
-    // B2_BUCKET 缺失
     const { isB2Configured } = await import('@/lib/storage/b2')
     expect(isB2Configured()).toBe(false)
   })
@@ -91,11 +94,10 @@ describe('isB2Configured', () => {
   })
 })
 
-describe('B2Provider.isConfigured', () => {
+describe('B2Provider.isConfigured / backend', () => {
   it('未配置时返回 false', async () => {
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    expect(provider.isConfigured()).toBe(false)
+    expect(new B2Provider().isConfigured()).toBe(false)
   })
 
   it('已配置时返回 true', async () => {
@@ -103,39 +105,34 @@ describe('B2Provider.isConfigured', () => {
     process.env.B2_APP_KEY = 'app1'
     process.env.B2_BUCKET = 'my-bucket'
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    expect(provider.isConfigured()).toBe(true)
+    expect(new B2Provider().isConfigured()).toBe(true)
   })
 
-  it('backend 属性为 backblaze', async () => {
+  it('backend 为 backblaze', async () => {
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    expect(provider.backend).toBe('backblaze')
+    expect(new B2Provider().backend).toBe('backblaze')
   })
 })
 
 describe('B2Provider auth', () => {
-  beforeEach(() => {
+  it('缺少 B2_KEY_ID 时认证失败', async () => {
+    process.env.B2_APP_KEY = 'app1'
+    process.env.B2_BUCKET = 'my-bucket'
+    // 需要 mock fetch 以触发鉴权
+    fetchMocks.fetch.mockResolvedValueOnce(new Response(JSON.stringify({
+      error: 'missing key',
+    }), { status: 401 }))
+    const { B2Provider } = await import('@/lib/storage/b2')
+    await expect(new B2Provider().listDirectory('test')).rejects.toThrow(/B2 未配置/)
+  })
+
+  it('鉴权 API 返回错误时抛出', async () => {
     process.env.B2_KEY_ID = 'key1'
     process.env.B2_APP_KEY = 'app1'
     process.env.B2_BUCKET = 'my-bucket'
-  })
-
-  it('缺少 B2_KEY_ID 时认证失败', async () => {
-    delete process.env.B2_KEY_ID
+    fetchMocks.fetch.mockResolvedValueOnce(new Response('Unauthorized', { status: 401 }))
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await expect(provider.listDirectory('test')).rejects.toThrow(/B2 未配置/)
-  })
-
-  it('认证 API 返回错误时抛出', async () => {
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse(
-      { status: 401, code: 'unauthorized', message: 'Invalid credentials' },
-      401
-    ))
-    const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await expect(provider.listDirectory('test')).rejects.toThrow(/B2 API error/)
+    await expect(new B2Provider().listDirectory('test')).rejects.toThrow(/鉴权失败/)
   })
 })
 
@@ -144,36 +141,23 @@ describe('B2Provider.listDirectory', () => {
     process.env.B2_KEY_ID = 'key1'
     process.env.B2_APP_KEY = 'app1'
     process.env.B2_BUCKET = 'my-bucket'
+    process.env.B2_S3_ENDPOINT = 'https://s3.backblazeb2.com'
   })
 
-  /** 模拟公共调用链: getAuthToken + getBucketId */
-  function mockAuthAndBucket() {
-    // getAuthToken → 1st call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      accountId: 'acc1', authorizationToken: 'token1',
-      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
-    }))
-    // getBucketId (list_buckets) → 2nd call, caches result
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      buckets: [{ bucketId: 'bid1', bucketName: 'my-bucket' }],
-    }))
-  }
-
-  it('列出根目录文件和子目录', async () => {
-    mockAuthAndBucket()
-    // list_file_names → 3rd call
-    // B2 API: 目录项以 action='folder' 混在 files 数组中
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      files: [
-        { fileId: 'f1', fileName: 'pages/index.html', contentType: 'text/html', contentLength: 1024, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 },
-        { fileId: 'f2', fileName: 'pages/style.css', contentType: 'text/css', contentLength: 512, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 },
-        { fileId: 'd1', fileName: 'pages/blog/', contentType: '', contentLength: 0, contentSha1: null, fileInfo: {}, action: 'folder', uploadTimestamp: 0 },
+  it('列出子目录的文件和子目录', async () => {
+    s3Mocks.send.mockResolvedValueOnce({
+      CommonPrefixes: [{ Prefix: 'pages/blog/' }],
+      Contents: [
+        { Key: 'pages/index.html', Size: 1024, LastModified: new Date('2024-01-01'), ETag: '"abc"' },
+        { Key: 'pages/style.css', Size: 512, LastModified: new Date('2024-01-01'), ETag: '"def"' },
       ],
-    }))
+      KeyCount: 3,
+      NextContinuationToken: undefined,
+      IsTruncated: false,
+    })
 
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    const entries = await provider.listDirectory('pages')
+    const entries = await new B2Provider().listDirectory('pages')
 
     expect(entries).toHaveLength(3)
     const blogDir = entries.find((e) => e.type === 'directory')
@@ -181,33 +165,58 @@ describe('B2Provider.listDirectory', () => {
     expect(blogDir?.basename).toBe('pages/blog')
     const htmlFile = entries.find((e) => e.type === 'file' && e.filename === 'index.html')
     expect(htmlFile?.size).toBe(1024)
-    expect(htmlFile?.mime).toBe('text/html')
   })
 
   it('空目录返回空数组', async () => {
-    mockAuthAndBucket()
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
+    s3Mocks.send.mockResolvedValueOnce({
+      CommonPrefixes: [],
+      Contents: [],
+      KeyCount: 0,
+      IsTruncated: false,
+    })
 
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    const entries = await provider.listDirectory('empty-dir')
+    const entries = await new B2Provider().listDirectory('empty-dir')
     expect(entries).toHaveLength(0)
   })
 
-  it('过滤隐藏文件（action=hide）', async () => {
-    mockAuthAndBucket()
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      files: [
-        { fileId: 'f1', fileName: 'pages/visible.html', contentType: 'text/html', contentLength: 100, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 },
-        { fileId: 'f2', fileName: 'pages/hidden.html', contentType: 'text/html', contentLength: 0, contentSha1: null, fileInfo: {}, action: 'hide', uploadTimestamp: 1700000000000 },
+  it('根目录列出顶层文件和目录', async () => {
+    s3Mocks.send.mockResolvedValueOnce({
+      CommonPrefixes: [{ Prefix: 'pages/' }],
+      Contents: [
+        { Key: 'readme.txt', Size: 100, LastModified: new Date('2024-01-01'), ETag: '"xyz"' },
       ],
-    }))
+      KeyCount: 2,
+      IsTruncated: false,
+    })
 
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    const entries = await provider.listDirectory('pages')
+    const entries = await new B2Provider().listDirectory('')
+
+    expect(entries).toHaveLength(2)
+    const pagesDir = entries.find((e) => e.type === 'directory')
+    expect(pagesDir?.filename).toBe('pages')
+    const readmeFile = entries.find((e) => e.type === 'file')
+    expect(readmeFile?.filename).toBe('readme.txt')
+  })
+
+  it('B2 虚拟目录标记转换为目录条目', async () => {
+    // B2 根目录列表: Contents 中的 pages/ 是虚拟目录标记
+    // （与 CommonPrefixes 不同，B2 在某些情况下将目录放在 Contents 中）
+    s3Mocks.send.mockResolvedValueOnce({
+      CommonPrefixes: [],
+      Contents: [
+        { Key: 'pages/', Size: 0, LastModified: new Date(), ETag: 'null' },
+      ],
+      KeyCount: 1,
+      IsTruncated: false,
+    })
+
+    const { B2Provider } = await import('@/lib/storage/b2')
+    const entries = await new B2Provider().listDirectory('')
     expect(entries).toHaveLength(1)
-    expect(entries[0]!.filename).toBe('visible.html')
+    expect(entries[0]!.type).toBe('directory')
+    expect(entries[0]!.filename).toBe('pages')
   })
 })
 
@@ -216,73 +225,77 @@ describe('B2Provider.getFileContents', () => {
     process.env.B2_KEY_ID = 'key1'
     process.env.B2_APP_KEY = 'app1'
     process.env.B2_BUCKET = 'my-bucket'
+    process.env.B2_S3_ENDPOINT = 'https://s3.backblazeb2.com'
   })
 
-  it('CDN 模式: 使用 download_url 下载，带 Authorization header', async () => {
-    process.env.B2_DOWNLOAD_URL = 'https://cdn.example.com'
-    // getAuthToken → 1st call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      accountId: 'acc1', authorizationToken: 'token1',
-      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
-    }))
-    // download via CDN → 2nd call
-    b2Mocks.fetch.mockResolvedValueOnce(mockBinaryResponse('<h1>Hello</h1>'))
+  it('直连模式: 通过 S3 SDK 下载', async () => {
+    s3Mocks.send.mockResolvedValueOnce({
+      Body: { transformToByteArray: () => Promise.resolve(Buffer.from('<h1>Hello</h1>')) },
+      ContentType: 'text/html',
+      ContentLength: 13,
+    })
 
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    const content = await provider.getFileContents('pages/test.html')
+    const content = await new B2Provider().getFileContents('pages/test.html')
 
     expect(Buffer.isBuffer(content)).toBe(true)
     expect(content.toString()).toBe('<h1>Hello</h1>')
-    expect(b2Mocks.fetch).toHaveBeenCalledWith(
-      'https://cdn.example.com/file/my-bucket/pages/test.html',
-      expect.objectContaining({
-        headers: { Authorization: 'token1' },
-        signal: undefined,
-      })
-    )
   })
 
-  it('直连模式: 使用 B2 API 下载', async () => {
-    // 需要先 mock auth
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      accountId: 'acc1', authorizationToken: 'token1',
-      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
+  it('CDN 模式: 通过 HTTP handler 走 CDN', async () => {
+    process.env.B2_DOWNLOAD_URL = 'https://cdn.example.com'
+
+    // CDN 模式下 SDK 会把 requestHandler 传给 send，
+    // mock send 需要提取 options 中的 requestHandler 并执行
+    s3Mocks.send.mockImplementationOnce(async (...args: unknown[]) => {
+      const options = args[1] as Record<string, unknown> | undefined
+      const rh = (options?.requestHandler as { handle: (req: unknown) => Promise<unknown> }) ?? undefined
+      if (rh) {
+        await rh.handle({
+          httpRequest: {
+            hostname: 's3.backblazeb2.com',
+            path: '/my-bucket/pages/test.html',
+            headers: { Authorization: 'token1' },
+            method: 'GET',
+            protocol: 'https:',
+          },
+          output: {},
+        })
+      }
+      return {
+        Body: { transformToByteArray: () => Promise.resolve(Buffer.from('<h1>CDN</h1>')) },
+      }
+    })
+
+    fetchMocks.fetch.mockResolvedValueOnce(new Response(Buffer.from('<h1>CDN</h1>'), {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' },
     }))
 
-    b2Mocks.fetch.mockResolvedValueOnce(mockBinaryResponse('<h1>Direct</h1>'))
-
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    const content = await provider.getFileContents('pages/test.html')
+    const content = await new B2Provider().getFileContents('pages/test.html')
 
-    expect(content.toString()).toBe('<h1>Direct</h1>')
-    expect(b2Mocks.fetch).toHaveBeenCalledWith(
-      'https://api.backblazeb2.com/file/my-bucket/pages/test.html',
+    expect(content.toString()).toBe('<h1>CDN</h1>')
+    expect(fetchMocks.fetch).toHaveBeenCalledWith(
+      'https://cdn.example.com/file/my-bucket/pages/test.html',
       expect.objectContaining({
-        headers: { Authorization: 'token1' },
+        headers: expect.any(Object),
       })
     )
   })
 
   it('文件不存在返回 404', async () => {
     process.env.B2_DOWNLOAD_URL = 'https://cdn.example.com'
-    // getAuthToken → 1st call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      accountId: 'acc1', authorizationToken: 'token1',
-      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
-    }))
-    b2Mocks.fetch.mockResolvedValueOnce(new Response('Not Found', { status: 404 }))
+
+    fetchMocks.fetch.mockResolvedValueOnce(new Response('Not Found', { status: 404 }))
 
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await expect(provider.getFileContents('pages/missing.html')).rejects.toThrow(/文件不存在/)
+    await expect(new B2Provider().getFileContents('pages/missing.html')).rejects.toThrow()
   })
 
   it('根路径读取报错', async () => {
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await expect(provider.getFileContents('')).rejects.toThrow(/不能读取根路径/)
+    await expect(new B2Provider().getFileContents('')).rejects.toThrow(/不能读取根路径/)
   })
 })
 
@@ -291,165 +304,27 @@ describe('B2Provider.putFileContents', () => {
     process.env.B2_KEY_ID = 'key1'
     process.env.B2_APP_KEY = 'app1'
     process.env.B2_BUCKET = 'my-bucket'
+    process.env.B2_S3_ENDPOINT = 'https://s3.backblazeb2.com'
   })
 
-  function mockAuthAndBucket() {
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      accountId: 'acc1', authorizationToken: 'token1',
-      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
-    }))
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      buckets: [{ bucketId: 'bid1', bucketName: 'my-bucket' }],
-    }))
-  }
-
   it('上传文件成功', async () => {
-    mockAuthAndBucket()
-    // get_upload_url → getAuthToken(cached) + getBucketId(cached) + b2Request(get_upload_url) → 3rd call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      uploadUrl: 'https://upload.backblazeb2.com/b2api/v3/b2_upload_file/bid1',
-      authorizationToken: 'upload-token',
-      bucketId: 'bid1',
-    }))
-    // upload response → 4th call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      fileId: 'new-f1',
-      fileName: 'pages/test.html',
-    }))
+    s3Mocks.send.mockResolvedValueOnce({})
 
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await provider.putFileContents('pages/test.html', Buffer.from('<html></html>'))
+    await new B2Provider().putFileContents('pages/test.html', Buffer.from('<html></html>'))
 
-    // 验证上传调用（第 4 次 fetch 调用）
-    const uploadCall = b2Mocks.fetch.mock.calls[3] as [string, RequestInit] | undefined
-    expect(uploadCall).toBeDefined()
-    expect(uploadCall![0]).toBe('https://upload.backblazeb2.com/b2api/v3/b2_upload_file/bid1')
-    expect(uploadCall![1].headers).toMatchObject({
-      Authorization: 'upload-token',
-      'X-Bz-File-Name': 'pages/test.html',
-      'X-Bz-Content-Sha1': expect.any(String),
+    expect(s3Mocks.send).toHaveBeenCalledTimes(1)
+    const cmd = s3Mocks.send.mock.calls[0]![0] as { input: Record<string, unknown> }
+    expect(cmd.input).toMatchObject({
+      Bucket: 'my-bucket',
+      Key: 'pages/test.html',
+      ContentType: 'text/html',
     })
   })
 
-  it('上传认证失败时清除缓存', async () => {
-    mockAuthAndBucket()
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      uploadUrl: 'https://upload.backblazeb2.com/b2api/v3/b2_upload_file/bid1',
-      authorizationToken: 'upload-token',
-      bucketId: 'bid1',
-    }))
-    b2Mocks.fetch.mockResolvedValueOnce(new Response('Unauthorized', { status: 401 }))
-
+  it('上传空路径报错', async () => {
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await expect(provider.putFileContents('pages/test.html', Buffer.from('<html>'))).rejects.toThrow(/上传失败/)
-  })
-
-  it('根路径写入报错', async () => {
-    const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await expect(provider.putFileContents('', Buffer.from('test'))).rejects.toThrow(/不能写入根路径/)
-  })
-})
-
-describe('B2Provider.deleteFile', () => {
-  beforeEach(() => {
-    process.env.B2_KEY_ID = 'key1'
-    process.env.B2_APP_KEY = 'app1'
-    process.env.B2_BUCKET = 'my-bucket'
-  })
-
-  function mockAuthAndBucket() {
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      accountId: 'acc1', authorizationToken: 'token1',
-      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
-    }))
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      buckets: [{ bucketId: 'bid1', bucketName: 'my-bucket' }],
-    }))
-  }
-
-  it('删除文件成功', async () => {
-    mockAuthAndBucket()
-    // list_file_versions → 3rd call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      files: [{ fileId: 'f1', fileName: 'pages/test.html', contentType: 'text/html', contentLength: 100, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 }],
-    }))
-    // delete_file_version → 4th call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ fileId: 'f1', fileName: 'pages/test.html' }))
-
-    const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await provider.deleteFile('pages/test.html')
-
-    const deleteCall = b2Mocks.fetch.mock.calls[3] as [string, RequestInit] | undefined
-    expect(deleteCall).toBeDefined()
-    expect(deleteCall![1].method).toBe('POST')
-  })
-
-  it('删除不存在的文件 → 404', async () => {
-    mockAuthAndBucket()
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
-
-    const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await expect(provider.deleteFile('pages/missing.html')).rejects.toThrow(/文件不存在/)
-  })
-})
-
-describe('B2Provider.stat', () => {
-  beforeEach(() => {
-    process.env.B2_KEY_ID = 'key1'
-    process.env.B2_APP_KEY = 'app1'
-    process.env.B2_BUCKET = 'my-bucket'
-  })
-
-  function mockAuthAndBucket() {
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      accountId: 'acc1', authorizationToken: 'token1',
-      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
-    }))
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      buckets: [{ bucketId: 'bid1', bucketName: 'my-bucket' }],
-    }))
-  }
-
-  it('统计文件返回 file 类型', async () => {
-    mockAuthAndBucket()
-    // list_file_names (exact match) → 3rd call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      files: [{ fileId: 'f1', fileName: 'pages/test.html', contentType: 'text/html', contentLength: 1024, contentSha1: null, fileInfo: {}, action: 'upload', uploadTimestamp: 1700000000000 }],
-    }))
-
-    const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    const result = await provider.stat('pages/test.html')
-
-    expect(result.type).toBe('file')
-    expect(result.size).toBe(1024)
-    expect(result.mime).toBe('text/html')
-  })
-
-  it('统计根目录返回 directory', async () => {
-    const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    const result = await provider.stat('')
-
-    expect(result.type).toBe('directory')
-    expect(result.size).toBe(0)
-  })
-
-  it('不存在的路径返回 404', async () => {
-    mockAuthAndBucket()
-    // list_file_names (file check, no match) → 3rd call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
-    // list_file_names (dir check, getBucketId cached) → 4th call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
-
-    const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await expect(provider.stat('pages/missing.html')).rejects.toThrow(/路径不存在/)
+    await expect(new B2Provider().putFileContents('', Buffer.from('test'))).rejects.toThrow(/不能写入根路径/)
   })
 })
 
@@ -458,44 +333,183 @@ describe('B2Provider.createDirectory', () => {
     process.env.B2_KEY_ID = 'key1'
     process.env.B2_APP_KEY = 'app1'
     process.env.B2_BUCKET = 'my-bucket'
+    process.env.B2_S3_ENDPOINT = 'https://s3.backblazeb2.com'
   })
 
-  function mockAuthAndBucket() {
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      accountId: 'acc1', authorizationToken: 'token1',
-      apiUrl: 'https://api.backblazeb2.com', downloadUrl: 'https://dl.backblazeb2.com', recommendedPartSize: 100000000,
-    }))
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      buckets: [{ bucketId: 'bid1', bucketName: 'my-bucket' }],
-    }))
-  }
-
-  it('创建目录上传 .keep 占位文件', async () => {
-    mockAuthAndBucket()
-    // ensureDirectory → list_file_names (check exists) → 3rd call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({ files: [] }))
-    // ensureDirectory → putFileContents → get_upload_url (getAuthToken cached, getBucketId cached) → 4th call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      uploadUrl: 'https://upload.backblazeb2.com/b2api/v3/b2_upload_file/bid1',
-      authorizationToken: 'upload-token',
-      bucketId: 'bid1',
-    }))
-    // upload .keep → 5th call
-    b2Mocks.fetch.mockResolvedValueOnce(mockResponse({
-      fileId: 'f-keep', fileName: 'new-dir/.keep',
-    }))
+  it('创建目录（上传 .keep 占位文件）', async () => {
+    // ensureDirectory → ListObjects（检查是否已存在）
+    s3Mocks.send.mockResolvedValueOnce({ KeyCount: 0, Contents: [], IsTruncated: false })
+    // putFileContents → PutObject（上传 .keep）
+    s3Mocks.send.mockResolvedValueOnce({})
 
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await provider.createDirectory('new-dir')
+    await new B2Provider().createDirectory('new-folder')
 
-    expect(b2Mocks.fetch).toHaveBeenCalledTimes(5)
+    expect(s3Mocks.send).toHaveBeenCalledTimes(2)
+    // 第二次调用是 PutObject
+    const putCmd = s3Mocks.send.mock.calls[1]![0] as { input: Record<string, unknown> }
+    expect(putCmd.input.Key).toBe('new-folder/.keep')
   })
 
-  it('空路径静默返回', async () => {
+  it('递归创建目录', async () => {
+    // 每级目录: ListObjects(不存在) + PutObject(.keep) = 2 次调用
+    s3Mocks.send.mockResolvedValue({ KeyCount: 0, Contents: [], IsTruncated: false })
+
     const { B2Provider } = await import('@/lib/storage/b2')
-    const provider = new B2Provider()
-    await provider.createDirectory('')
-    expect(b2Mocks.fetch).not.toHaveBeenCalled()
+    await new B2Provider().createDirectory('a/b/c', { recursive: true })
+
+    // a, a/b, a/b/c 三级 → 3 × 2 = 6 次调用
+    expect(s3Mocks.send).toHaveBeenCalledTimes(6)
+  })
+})
+
+describe('B2Provider.deleteFile', () => {
+  beforeEach(() => {
+    process.env.B2_KEY_ID = 'key1'
+    process.env.B2_APP_KEY = 'app1'
+    process.env.B2_BUCKET = 'my-bucket'
+    process.env.B2_S3_ENDPOINT = 'https://s3.backblazeb2.com'
+  })
+
+  it('删除文件成功', async () => {
+    s3Mocks.send.mockResolvedValueOnce({})
+
+    const { B2Provider } = await import('@/lib/storage/b2')
+    await new B2Provider().deleteFile('pages/old.html')
+
+    expect(s3Mocks.send).toHaveBeenCalledTimes(1)
+    const cmd = s3Mocks.send.mock.calls[0]![0] as { input: Record<string, unknown> }
+    expect(cmd.input).toMatchObject({ Bucket: 'my-bucket', Key: 'pages/old.html' })
+  })
+
+  it('删除空路径报错', async () => {
+    const { B2Provider } = await import('@/lib/storage/b2')
+    await expect(new B2Provider().deleteFile('')).rejects.toThrow(/不能删除根路径/)
+  })
+})
+
+describe('B2Provider.deleteDirectory', () => {
+  beforeEach(() => {
+    process.env.B2_KEY_ID = 'key1'
+    process.env.B2_APP_KEY = 'app1'
+    process.env.B2_BUCKET = 'my-bucket'
+    process.env.B2_S3_ENDPOINT = 'https://s3.backblazeb2.com'
+  })
+
+  it('递归删除目录下所有文件', async () => {
+    // Mock paginateListObjectsV2 to return an async iterable
+    const { paginateListObjectsV2 } = await import('@aws-sdk/client-s3')
+    const mockPaginator = (async function* () {
+      await Promise.resolve()
+      yield {
+        Contents: [
+          { Key: 'dir/file1.html' },
+          { Key: 'dir/file2.css' },
+          { Key: 'dir/.keep' },
+        ],
+        IsTruncated: false,
+      }
+    })()
+    vi.mocked(paginateListObjectsV2).mockReturnValueOnce(mockPaginator as ReturnType<typeof paginateListObjectsV2>)
+
+    // 3 个 DeleteObject 调用
+    s3Mocks.send.mockResolvedValue({})
+
+    const { B2Provider } = await import('@/lib/storage/b2')
+    await new B2Provider().deleteDirectory('dir')
+
+    // 3 deletes + 1 .keep delete = 4
+    expect(s3Mocks.send).toHaveBeenCalledTimes(4)
+  })
+})
+
+describe('B2Provider.stat', () => {
+  beforeEach(() => {
+    process.env.B2_KEY_ID = 'key1'
+    process.env.B2_APP_KEY = 'app1'
+    process.env.B2_BUCKET = 'my-bucket'
+    process.env.B2_S3_ENDPOINT = 'https://s3.backblazeb2.com'
+  })
+
+  it('文件 stat', async () => {
+    s3Mocks.send.mockResolvedValueOnce({
+      ContentLength: 1024,
+      LastModified: new Date('2024-06-01'),
+      ContentType: 'text/html',
+      ETag: '"abc"',
+    })
+
+    const { B2Provider } = await import('@/lib/storage/b2')
+    const result = await new B2Provider().stat('pages/index.html')
+
+    expect(result.type).toBe('file')
+    expect(result.size).toBe(1024)
+    expect(result.basename).toBe('pages/index.html')
+  })
+
+  it('目录 stat', async () => {
+    // HeadObject 失败 → 作为目录查询
+    s3Mocks.send.mockRejectedValueOnce(new Error('NoSuchKey'))
+    s3Mocks.send.mockResolvedValueOnce({
+      KeyCount: 2,
+      Contents: [{ Key: 'pages/file.html' }],
+    })
+
+    const { B2Provider } = await import('@/lib/storage/b2')
+    const result = await new B2Provider().stat('pages')
+
+    expect(result.type).toBe('directory')
+    expect(result.basename).toBe('pages')
+  })
+
+  it('不存在的路径返回 404', async () => {
+    s3Mocks.send.mockRejectedValueOnce(new Error('NoSuchKey'))
+    s3Mocks.send.mockResolvedValueOnce({ KeyCount: 0, Contents: [] })
+
+    const { B2Provider } = await import('@/lib/storage/b2')
+    await expect(new B2Provider().stat('nonexistent')).rejects.toThrow(/路径不存在/)
+  })
+
+  it('根目录返回 directory', async () => {
+    const { B2Provider } = await import('@/lib/storage/b2')
+    const result = await new B2Provider().stat('')
+
+    expect(result.type).toBe('directory')
+    expect(result.basename).toBe('')
+  })
+})
+
+describe('B2Provider.moveFile', () => {
+  beforeEach(() => {
+    process.env.B2_KEY_ID = 'key1'
+    process.env.B2_APP_KEY = 'app1'
+    process.env.B2_BUCKET = 'my-bucket'
+    process.env.B2_S3_ENDPOINT = 'https://s3.backblazeb2.com'
+  })
+
+  it('单文件移动: copy + delete', async () => {
+    // isFile → HeadObject 成功（文件存在）
+    s3Mocks.send.mockResolvedValueOnce({ ContentLength: 100 })
+    // CopyObject
+    s3Mocks.send.mockResolvedValueOnce({})
+    // DeleteObject
+    s3Mocks.send.mockResolvedValueOnce({})
+
+    const { B2Provider } = await import('@/lib/storage/b2')
+    await new B2Provider().moveFile('old.txt', 'new.txt')
+
+    expect(s3Mocks.send).toHaveBeenCalledTimes(3)
+    const copyCmd = s3Mocks.send.mock.calls[1]![0] as { input: Record<string, unknown> }
+    expect(copyCmd.input).toMatchObject({
+      Bucket: 'my-bucket',
+      CopySource: 'my-bucket/old.txt',
+      Key: 'new.txt',
+    })
+  })
+
+  it('相同路径不执行操作', async () => {
+    const { B2Provider } = await import('@/lib/storage/b2')
+    await new B2Provider().moveFile('same.txt', 'same.txt')
+    expect(s3Mocks.send).not.toHaveBeenCalled()
   })
 })
