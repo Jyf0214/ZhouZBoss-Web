@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'lucide-react';
 import type { CodeProps } from './types';
 import { slugify } from '@/lib/slugify';
@@ -33,6 +33,13 @@ export function createHeading(level: 1 | 2 | 3 | 4 | 5 | 6) {
     const id = slugify(extractTextContent(children));
     const [toastVisible, setToastVisible] = useState(false);
     const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+    // 组件卸载时清理定时器，避免对已卸载组件调用 setState
+    useEffect(() => {
+      return () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+    }, []);
 
     const handleCopyAnchor = useCallback((e: React.MouseEvent) => {
       e.preventDefault();
