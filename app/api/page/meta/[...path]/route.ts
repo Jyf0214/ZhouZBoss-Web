@@ -46,7 +46,7 @@ function parseMetaBody(body: unknown): { meta: PageMeta } | { error: string } {
   return { meta };
 }
 
-export const GET = apiHandler('GET', { label: 'page-meta.get' }, async (_req, ctx) => {
+export const GET = apiHandler<{ path: string[] }>('GET', { label: 'page-meta.get' }, async (_req, ctx) => {
   if (!isStorageConfigured()) {
     return NextResponse.json({ error: '存储后端未配置', code: 'NOT_CONFIGURED' }, { status: 503 });
   }
@@ -56,7 +56,7 @@ export const GET = apiHandler('GET', { label: 'page-meta.get' }, async (_req, ct
   return NextResponse.json({ meta: meta ?? null });
 })
 
-export const PUT = apiHandler('PUT', { label: 'page-meta.put', requireSudo: true }, async (req, ctx) => {
+export const PUT = apiHandler<{ path: string[] }>('PUT', { label: 'page-meta.put', requireSudo: true }, async (req, ctx) => {
   if (!isStorageConfigured()) {
     return NextResponse.json({ error: '存储后端未配置', code: 'NOT_CONFIGURED' }, { status: 503 });
   }
@@ -74,7 +74,7 @@ export const PUT = apiHandler('PUT', { label: 'page-meta.put', requireSudo: true
   return NextResponse.json({ ok: true, meta: saved });
 })
 
-export const DELETE = apiHandler('DELETE', { label: 'page-meta.delete', requireSudo: true }, async (_req, ctx) => {
+export const DELETE = apiHandler<{ path: string[] }>('DELETE', { label: 'page-meta.delete', requireSudo: true }, async (_req, ctx) => {
   if (!isStorageConfigured()) {
     return NextResponse.json({ error: '存储后端未配置', code: 'NOT_CONFIGURED' }, { status: 503 });
   }
