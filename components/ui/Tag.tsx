@@ -1,4 +1,4 @@
-import { type ReactNode, type KeyboardEvent, memo } from 'react';
+import { type ReactNode, type CSSProperties, type KeyboardEvent, memo } from 'react';
 import { cn } from '@/lib/ui';
 
 type TagVariant = 'light' | 'dark' | 'outline' | 'emerald' | 'amber' | 'danger' | 'success' | 'warning';
@@ -27,13 +27,14 @@ export interface TagProps {
   variant?: TagVariant;
   size?: TagSize;
   className?: string;
+  style?: CSSProperties;
   onClick?: () => void;
 }
 
 /**
  * 自定义标签组件 — 支持 light/emerald/amber/danger 等变体
  */
-export const Tag = memo<TagProps>(({ children, variant = 'light', size = 'md', className, onClick }) => {
+export const Tag = memo<TagProps>(({ children, variant = 'light', size = 'md', className, style, onClick }) => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -51,14 +52,14 @@ export const Tag = memo<TagProps>(({ children, variant = 'light', size = 'md', c
 
   if (onClick) {
     return (
-      <button type="button" className={classes} onClick={onClick} onKeyDown={handleKeyDown}>
+      <button type="button" className={classes} style={style} onClick={onClick} onKeyDown={handleKeyDown}>
         {children}
       </button>
     );
   }
 
   return (
-    <span className={classes}>
+    <span className={classes} style={style}>
       {children}
     </span>
   );
