@@ -55,6 +55,55 @@ function validateUploadExtension(relPath: string): NextResponse | null {
   return null
 }
 
+/** 快速拒绝 Content-Length 超限请求 */
+function rejectIfOversized(contentLengthHeader: string | null): NextResponse | null {
+  if (contentLengthHeader === null) return null
+  const declared = Number(contentLengthHeader)
+  if (Number.isFinite(declared) && declared > MAX_UPLOAD_SIZE) {
+    return payloadTooLargeResponse(declared)
+  }
+  return null
+}
+
+/** 流式读取请求体为 Buffer，带实时大小限制 */
+async function readBodyWithSizeLimit(
+  body: ReadableStream<Uint8Array>,
+  target: string,
+): Promise<{ buffer: Buffer; bytesReceived: number } | NextResponse> {
+  let bytesReceived = 0
+  let sizeExceeded = false
+  const sizeGuard = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      bytesReceived += chunk.byteLength
+      if (bytesReceived > MAX_UPLOAD_SIZE) {
+        sizeExceeded = true
+        controller.error(new Error('payload-too-large'))
+        return
+      }
+      controller.enqueue(chunk)
+    },
+  })
+  const guarded = body.pipeThrough(sizeGuard)
+
+  try {
+    const reader = guarded.getReader()
+    const chunks: Uint8Array[] = []
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      chunks.push(value)
+    }
+    return { buffer: Buffer.concat(chunks), bytesReceived }
+  } catch (err) {
+    if (sizeExceeded) {
+      console.warn(`[storage.upload] target="${target}" 超限 size=${bytesReceived} bytes`)
+      return payloadTooLargeResponse(bytesReceived)
+    }
+    console.error(`[storage.upload] target="${target}" 读取失败`, err)
+    return storageErrorResponse(err, '上传文件')
+  }
+}
+
 export const POST = catchAllHandler<{ path: string[] }>(
   'POST',
   { label: 'storage.upload', requireAdmin: true },
@@ -65,62 +114,22 @@ export const POST = catchAllHandler<{ path: string[] }>(
     const rel = resolveStoragePath(parts)
     if (!isValidStoragePath(rel) || rel === '') return invalidPathResponse()
 
-    // 禁止上传危险文件类型（可执行文件、可注入脚本的 SVG 等）
     const blocked = validateUploadExtension(rel)
     if (blocked) return blocked
 
     const target = buildWebDavTarget(parts)
 
-    // Content-Length 快速拒绝(避免对超大请求也分配流处理管线)
-    const contentLengthHeader = req.headers.get('content-length')
-    if (contentLengthHeader !== null) {
-      const declared = Number(contentLengthHeader)
-      if (Number.isFinite(declared) && declared > MAX_UPLOAD_SIZE) {
-        return payloadTooLargeResponse(declared)
-      }
-    }
+    const rejected = rejectIfOversized(req.headers.get('content-length'))
+    if (rejected) return rejected
 
     if (!req.body) {
       return NextResponse.json({ error: '请求体为空' }, { status: 400 })
     }
 
-    // 实时累计字节数,超限时立即终止
-    let bytesReceived = 0
-    let sizeExceeded = false
-    const sizeGuard = new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, controller) {
-        bytesReceived += chunk.byteLength
-        if (bytesReceived > MAX_UPLOAD_SIZE) {
-          sizeExceeded = true
-          controller.error(new Error('payload-too-large'))
-          return
-        }
-        controller.enqueue(chunk)
-      },
-    })
-    const guarded = req.body.pipeThrough(sizeGuard)
+    const result = await readBodyWithSizeLimit(req.body, target)
+    if (result instanceof NextResponse) return result
+    const { buffer, bytesReceived } = result
 
-    // 收集完整 body 为 Buffer
-    let buffer: Buffer
-    try {
-      const reader = guarded.getReader()
-      const chunks: Uint8Array[] = []
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        chunks.push(value)
-      }
-      buffer = Buffer.concat(chunks)
-    } catch (err) {
-      if (sizeExceeded) {
-        console.warn(`[storage.upload] target="${target}" 超限 size=${bytesReceived} bytes`)
-        return payloadTooLargeResponse(bytesReceived)
-      }
-      console.error(`[storage.upload] target="${target}" 读取失败`, err)
-      return storageErrorResponse(err, '上传文件')
-    }
-
-    // 通过 StorageProvider 写入
     try {
       const provider = await getStorageProvider()
       await provider.putFileContents(target, buffer, { headers: { overwrite: 'true' } })
