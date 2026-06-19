@@ -2,11 +2,10 @@ name: "Qwen Scheduled Bug Hunter"
 
 on:
   schedule:
-    # 每周日凌晨 00:00 (UTC) 定时启动自动深度巡检
+    # 每周日凌晨 00:00 (UTC) 定时自动拉起深层巡检
     - cron: '0 0 * * 0'
   workflow_dispatch: # 支持项目合作者手动一键触发
 
-# 限制并发，防止多次重复运行
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -93,7 +92,7 @@ jobs:
           }
           EOF
 
-      # 执行基于 Qwen 原生 Subagents 并行协同与持久化清单销项的自愈巡检
+      # 执行基于 Qwen 原生 Subagents 并行协同、持久化清单销项、时间约束防线的自愈巡检
       - name: Run Scheduled Inspection & Parallel Healing
         env:
           UNLIMITED_OPENAI_API_KEY: ${{ secrets.UNLIMITED_OPENAI_API_KEY }}
@@ -162,12 +161,12 @@ jobs:
           FINAL_PROMPT="$(cat prompt.txt)"
           
           # 弹性恢复指令，同样必须作为参数传递，确保在断点启动时不进入阻塞状态
-          RESUME_PROMPT="由于网络或上下文限制中断，请读取会话历史并继续完成所有步骤。请注意：必须对照 todo_checklist.md 继续调用子任务修复未打勾的项，在本地运行并成功通过单元测试，确认无误后完成代码提交与 PR 处理。最后通过 gh 提交生动活泼的说明回复。"
+          RESUME_PROMPT="由于网络或上下文限制中断，请读取周度巡检历史会话并继续完成所有步骤。请注意：必须对照 todo_checklist.md 继续修复未打勾的项，在本地运行并成功通过单元测试，确认无误后完成代码提交与 PR 处理。最后通过 gh 提交生动活泼的说明回复。"
           
           echo "Starting Qwen Weekly Scheduled Scan..."
           START_TIME=$(date +%s)
           
-          # 3. 首次或恢复启动分流（最大会话步数调大至 150，以包容多 Agent 的庞大交互数）
+          # 3. 首次启动任务（最大会话步数调大至 150）
           if [ "$IS_RESUME" = "true" ]; then
             echo "Executing Scheduled Scan in RESUME mode using --resume..."
             if qwen -y --experimental-lsp --max-session-turns 150 --max-tool-calls -1 --resume "$SESSION_ID" "$FINAL_PROMPT" 2>&1 | tee qwen_output.log; then
@@ -194,7 +193,38 @@ jobs:
             fi
           fi
           
-          # 4. 弹性自愈断点续传循环（自愈重试在位置参数中显式传递恢复提示词，物理阻断交互输入等待）
+          # 4. 【核心防御判定】：首轮若快速通过，强制启动极深度漏洞会诊机制，重置 Goal
+          if [ "$SUCCESS" = "true" ]; then
+            END_TIME=$(date +%s)
+            DURATION=$((END_TIME - START_TIME))
+            echo "第一轮巡检自愈已完成。耗时: ${DURATION} 秒。"
+            
+            # 如果耗时少于 20 分钟 (1200秒)
+            if [ $DURATION -lt 1200 ]; then
+              echo "::warning:: 巡检耗时少于 20 分钟，判定可能存在排查不足！正在启动第二轮【极深度底层漏洞会诊机制】..."
+              
+              DEEPER_GOAL="/goal 已经完成了初步修复，但为了确保没有遗漏，你现在必须执行【第二轮极深度的底层漏洞会诊】。请使用 Explore 并发扫描所有核心目录，寻找更隐蔽的安全漏洞或稳定缺陷，将它们追加到 'todo_checklist.md' 列表中打勾销项。直接把修改推送到现有的巡检分支上以更新 PR，并在原 PR 下面生动追加你的第二轮扫描与修复总结。"
+              
+              # 开启新目标攻坚，将 SUCCESS 还原为 false
+              SUCCESS=false
+              
+              START_TIME=$(date +%s)
+              if qwen -y --experimental-lsp --max-session-turns 150 --max-tool-calls -1 --resume "$SESSION_ID" "$DEEPER_GOAL" 2>&1 | tee qwen_output.log; then
+                SUCCESS=true
+                echo "极深度会诊任务全部圆满绿过！"
+              else
+                END_TIME=$(date +%s)
+                DEEP_DURATION=$((END_TIME - START_TIME))
+                echo "::warning:: 极深度会诊运行异常中断。耗时: ${DEEP_DURATION} 秒。"
+                if [ $DEEP_DURATION -ge 1200 ] || grep -q -E "524|terminated|closed" qwen_output.log; then
+                  TRIGGER_COMPRESSION=true
+                fi
+                # SUCCESS 保持为 false，将在下方的 while 循环中由 --resume 恢复机制接管，继续跑完
+              fi
+            fi
+          fi
+          
+          # 5. 弹性自愈断点续传循环（在自愈尝试期间，每次也都传递 $RESUME_PROMPT 指令防止 Headless 阻塞）
           while [ "$SUCCESS" = false ] && [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
             ATTEMPT=$((ATTEMPT + 1))
             echo "=========================================="
@@ -215,7 +245,7 @@ jobs:
               fi
             fi
             
-            # 弹性无阻塞恢复
+            # 弹性无阻塞恢复（加载上一次未完结的新极深度目标）
             START_TIME=$(date +%s)
             if qwen -y --experimental-lsp --max-session-turns 150 --max-tool-calls -1 --resume "$SESSION_ID" "$RESUME_PROMPT" 2>&1 | tee qwen_output.log; then
               SUCCESS=true
