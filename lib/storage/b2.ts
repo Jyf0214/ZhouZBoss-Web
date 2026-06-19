@@ -43,6 +43,7 @@ interface B2AuthResult {
   accountId: string
   apiUrl: string
   downloadUrl: string
+  s3ApiUrl: string  // S3 兼容 API 端点，从 storageApi.s3ApiUrl 获取
 }
 
 /**
@@ -110,24 +111,32 @@ function parseAuthorizeResponse(data: Record<string, unknown>): B2AuthResult {
   if (!apiUrl) {
     throw new Error(`B2 鉴权响应缺少 apiUrl, 字段: ${Object.keys(data).join(', ')}`)
   }
+  // s3ApiUrl: B2 官方文档指定的 S3 兼容 API 端点
+  // 格式: https://s3.<region>.backblazeb2.com
+  const s3ApiUrl = String(storageApi?.s3ApiUrl ?? '')
   return {
     accountId: String(data.accountId ?? ''),
     apiUrl,
     downloadUrl: String(
       process.env.B2_DOWNLOAD_URL ?? data.downloadUrl ?? storageApi?.downloadUrl ?? ''
     ),
+    s3ApiUrl,
   }
 }
 
 /**
  * 获取 B2 S3 兼容 API endpoint
  *
- * B2 鉴权响应中的 apiUrl（如 https://api003.backblazeb2.com）即为 S3 endpoint。
- * B2 Native API 和 S3 兼容 API 共用同一 host，SDK 会自动加 S3 路径前缀。
- * 优先使用环境变量 B2_S3_ENDPOINT 覆盖。
+ * 优先级:
+ * 1. 环境变量 B2_S3_ENDPOINT（手动覆盖）
+ * 2. 鉴权响应 storageApi.s3ApiUrl（B2 官方推荐方式）
+ * 3. 回退到 apiUrl（兼容旧版鉴权响应无 s3ApiUrl 的情况）
  */
-function getS3Endpoint(apiUrl: string): string {
-  return apiUrl
+function getS3Endpoint(auth: B2AuthResult): string {
+  if (process.env.B2_S3_ENDPOINT) return process.env.B2_S3_ENDPOINT
+  if (auth.s3ApiUrl) return auth.s3ApiUrl
+  // 兼容旧版鉴权响应: apiUrl 可能也能作为 S3 endpoint
+  return auth.apiUrl
 }
 
 /**
@@ -140,12 +149,11 @@ function getS3Endpoint(apiUrl: string): string {
 async function getS3Client(): Promise<S3Client> {
   if (globalForB2.__b2S3Client) return globalForB2.__b2S3Client
 
-  const endpoint = process.env.B2_S3_ENDPOINT
-  let effectiveEndpoint = endpoint
+  let effectiveEndpoint = process.env.B2_S3_ENDPOINT
 
   if (!effectiveEndpoint) {
     const auth = await b2Authorize()
-    effectiveEndpoint = getS3Endpoint(auth.apiUrl)
+    effectiveEndpoint = getS3Endpoint(auth)
   }
 
   const config: S3ClientConfig = {
