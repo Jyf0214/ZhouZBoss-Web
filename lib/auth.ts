@@ -11,26 +11,26 @@ import { SESSION_EXPIRY_MS, SESSION_EXPIRY } from '@/lib/constants';
 /**
  * 获取用于 JWT 签名的密钥。AUTH_SECRET 必须至少 32 个字符。
  * 生产环境强制要求配置 AUTH_SECRET 且长度 ≥ 32，缺失或过短会直接抛出错误。
- * 开发环境下若缺失或过短，会输出警告并退回到随机临时密钥。
+ * 开发环境下若缺失或过短，会输出警告并退回到进程级缓存的随机临时密钥。
  */
+let _devSecret: string | null = null;
 export function getSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (!secret || secret.length < 32) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('AUTH_SECRET 环境变量未配置或长度小于 32，生产环境必须设置至少 32 字符的密钥');
     }
-    console.warn('[auth] AUTH_SECRET 未配置或长度不足 32 字符，使用随机临时密钥（仅开发环境，会话重启后失效）');
-    return crypto.randomBytes(32).toString('hex');
+    if (!_devSecret) {
+      _devSecret = crypto.randomBytes(32).toString('hex');
+      console.warn('[auth] AUTH_SECRET 未配置或长度不足 32 字符，使用随机临时密钥（仅开发环境，会话重启后失效）');
+    }
+    return _devSecret;
   }
   return secret;
 }
 
 let _secret: Uint8Array | null = null;
 function getSecretEncoder(): Uint8Array {
-  // 开发环境下每次重新生成，避免热重载后使用过期的随机密钥
-  if (process.env.NODE_ENV !== 'production') {
-    return new TextEncoder().encode(getSecret());
-  }
   _secret ??= new TextEncoder().encode(getSecret());
   return _secret;
 }

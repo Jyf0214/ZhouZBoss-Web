@@ -45,6 +45,7 @@ describe('getSecret', () => {
   const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
 
   beforeEach(() => {
+    vi.resetModules();
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
 
@@ -87,13 +88,35 @@ describe('getSecret', () => {
     expect(s).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it('开发环境 + 缺失 AUTH_SECRET → 每次返回不同随机值', async () => {
+  it('开发环境 + 缺失 AUTH_SECRET → 每次返回相同的缓存随机值', async () => {
     delete process.env.AUTH_SECRET;
     setEnv('NODE_ENV', 'development');
     const { getSecret } = await import('@/lib/auth');
     const a = getSecret();
     const b = getSecret();
-    expect(a).not.toBe(b);
+    expect(a).toBe(b);
+  });
+
+  it('开发环境 + 缺失 AUTH_SECRET → createSession/getSession 往返成功', async () => {
+    delete process.env.AUTH_SECRET;
+    setEnv('NODE_ENV', 'development');
+    const { createSession, getSession } = await import('@/lib/auth');
+
+    let captured: string | undefined;
+    mockCookieStore.set.mockImplementation((_name: string, value: string) => {
+      captured = value;
+    });
+    mockCookieStore.get.mockImplementation((name: string) => {
+      if (name === 'session' && captured) return { value: captured };
+      return undefined;
+    });
+
+    const payload = { uid: 'UID-DEV', email: 'dev@test.com', role: 'admin' as const };
+    await createSession(payload);
+    const got = await getSession();
+    expect(got).not.toBeNull();
+    expect(got?.uid).toBe(payload.uid);
+    expect(got?.role).toBe(payload.role);
   });
 
   it('AUTH_SECRET 长度 = 32 → 原样返回', async () => {
