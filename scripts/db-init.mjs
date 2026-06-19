@@ -17,7 +17,7 @@
  * 2026-06-19 决策：
  *   Vercel 构建环境数据库连接慢，prisma db push 可能超时。
  *   但 Schema 不一致会导致运行时崩溃，所以必须中止。
- *   timeout 设为 120000ms 给 Vercel 足够时间。
+ *   timeout 30s，失败必须 exit(1) 中止构建。
  *   若 Vercel 持续超时，应在 Vercel 侧优化数据库连接，而非放宽构建护栏。
  */
 // 屏蔽 Prisma 广告
@@ -62,17 +62,21 @@ async function main() {
       console.log('[数据库初始化] 开始 Schema 推送...')
 
       try {
-        // ⚠️ timeout 必须 >= 120000: Vercel 构建环境数据库连接慢，30s 不够会 ETIMEDOUT
+        console.log('[数据库初始化] 执行: npx prisma db push (timeout=30s)')
         execSync('npx prisma db push', {
           stdio: 'pipe',
           env: { ...process.env },
-          timeout: 120000
+          timeout: 30000
         })
         console.log('[数据库初始化] ✓ Schema 推送成功')
       } catch (dbError) {
-        // ⚠️⚠️⚠️ 必须中止构建：Schema 不一致会导致运行时崩溃
         console.error('[数据库初始化] ✗ Schema 推送失败，构建中止')
-        console.error(dbError.message?.split('\n').slice(0, 5).join('\n'))
+        console.error('[数据库初始化] 错误类型:', dbError.constructor?.name ?? 'unknown')
+        console.error('[数据库初始化] 错误信息:', dbError.message?.split('\n').slice(0, 10).join('\n'))
+        if (dbError.status) console.error('[数据库初始化] 状态码:', dbError.status)
+        if (dbError.stderr) console.error('[数据库初始化] stderr:', String(dbError.stderr).split('\n').slice(0, 10).join('\n'))
+        if (dbError.signal) console.error('[数据库初始化] 信号:', dbError.signal)
+        console.error('[数据库初始化] DATABASE_URL 存在:', !!process.env.DATABASE_URL)
         process.exit(1)
       }
     } else {
