@@ -17,7 +17,7 @@ export default function NewDiaryPage() {
   const { user, isSudo, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const existingDraftId = searchParams.get('draft');
+  const existingDraftId = searchParams?.get('draft');
   const [draftId] = React.useState(existingDraftId ?? genId);
 
   React.useEffect(() => {
