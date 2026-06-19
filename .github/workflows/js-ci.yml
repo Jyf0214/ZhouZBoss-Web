@@ -1,0 +1,63 @@
+name: "JS/TS Continuous Integration"
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+# 避免重复的 CI 在同个 PR 上堆积运行（如果提交了新代码，会自动终止上一次未完成的检查，节省资源）
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci-verification:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          # 开启内置的 npm 依赖缓存，当 package-lock.json 未改变时，跳过重复下载，大幅加快构建速度
+          cache: 'npm' 
+
+      - name: Install Dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "package-lock.json found. Running clean install..."
+            npm ci
+          else
+            echo "No package-lock.json found. Running generic install..."
+            npm install
+          fi
+
+      - name: Syntax & Lint Check (语法与风格校验)
+        run: |
+          # 如果 package.json 中配置了 lint 命令，则强制运行。
+          # 使用 --if-present 保证在项目尚未配置 lint 时不会意外报错中断。
+          npm run lint --if-present
+
+      - name: Type Check (TypeScript 类型安全排查)
+        run: |
+          # 动态判定：如果项目中存在 tsconfig.json，则通过 tsc --noEmit 进行严格的无产物类型检查。
+          if [ -f tsconfig.json ]; then
+            echo "TypeScript configuration found. Running strict type checks..."
+            npx tsc --noEmit
+          else
+            echo "No tsconfig.json found. Skipping TypeScript check."
+          fi
+
+      - name: Build Check (构建与编译校验)
+        run: |
+          # 验证代码打包是否会因为配置或语法错误导致中断，确保产物能正常交付
+          npm run build --if-present
+
+      - name: Run Tests (单元测试验证)
+        run: |
+          # 运行项目里已有的测试用例
+          npm run test --if-present
