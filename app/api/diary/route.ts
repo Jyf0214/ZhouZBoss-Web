@@ -102,8 +102,8 @@ export const POST = apiHandler('POST', { label: '创建日记', requireAdmin: tr
     },
   });
 
-  // 保存初始版本快照（加密前明文）
-  await saveDiaryVersion(diary.id, content, title, tags ?? []);
+  // 保存初始版本快照（加密后存储）
+  await saveDiaryVersion(diary.id, encrypted, title, tags ?? []);
 
   logger.info('POST', '创建日记成功', { id: diary.id, title, scheduled: isScheduled });
   return NextResponse.json({ diary }, { status: 201 });
