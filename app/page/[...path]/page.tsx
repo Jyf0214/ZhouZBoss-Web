@@ -17,6 +17,7 @@
  */
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { buildPageRelativePath, resolvePageFilePath, extractTitle } from '@/lib/page-source/shared';
 import { isStorageConfigured } from '@/lib/storage/storage-provider';
 import { fetchPageHtml } from '@/lib/page-source/webdav';
@@ -27,7 +28,7 @@ import { PasswordPrompt } from '../_components/PasswordPrompt';
 
 interface PageProps {
   params: Promise<{ path: string[] }>;
-  searchParams: Promise<{ pwd?: string }>;
+  searchParams: Promise<{ pwd?: string; auth?: string }>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -54,7 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CustomPage({ params, searchParams }: PageProps) {
   const { path } = await params;
-  const { pwd } = await searchParams;
+  const { pwd, auth } = await searchParams;
 
   if (!isStorageConfigured()) {
     return <NotConfiguredView />;
@@ -71,8 +72,12 @@ export default async function CustomPage({ params, searchParams }: PageProps) {
     notFound();
   }
 
+  // 优先从 cookie 读取密码，向后兼容 URL query 参数中的 pwd
+  const cookieStore = await cookies();
+  const cookieName = `pwd_${Buffer.from(filePath).toString('base64url').slice(0, 32)}`;
+  const cookiePwd = cookieStore.get(cookieName)?.value ?? null;
   const queryPwd = typeof pwd === 'string' && pwd.length > 0 ? pwd : null;
-  const access = await checkPageAccess(filePath, queryPwd);
+  const access = await checkPageAccess(filePath, cookiePwd ?? queryPwd);
 
   if (access.allowed) {
     const title = extractTitle(html) ?? 'Custom Page';
@@ -89,11 +94,14 @@ export default async function CustomPage({ params, searchParams }: PageProps) {
     );
   }
 
-  if (isPasswordReason(access.reason)) {
+  // auth=fail 表示前端密码验证失败后重定向过来的，展示错误提示
+  const isAuthFail = auth === 'fail';
+
+  if (isPasswordReason(access.reason) || isAuthFail) {
     return (
       <PasswordPrompt
         path={path.join('/')}
-        wrongPassword={access.reason === 'wrong-password'}
+        wrongPassword={access.reason === 'wrong-password' || isAuthFail}
       />
     );
   }

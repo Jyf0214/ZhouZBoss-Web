@@ -28,11 +28,27 @@ export function PasswordPrompt({
   const [value, setValue] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) return;
-    router.push(`/page/${path}?pwd=${encodeURIComponent(trimmed)}`);
+
+    try {
+      const res = await fetch('/api/page-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path, password: trimmed }),
+      });
+      if (res.ok) {
+        // 密码验证成功，通过 cookie 传递，重新加载页面
+        router.push(`/page/${path}`);
+      } else {
+        // 密码错误，通过 URL 参数传递错误标记（不含密码）
+        router.push(`/page/${path}?auth=fail`);
+      }
+    } catch {
+      router.push(`/page/${path}?auth=fail`);
+    }
   };
 
   return (
