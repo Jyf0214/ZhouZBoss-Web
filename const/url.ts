@@ -55,13 +55,7 @@ function resolveSiteUrl(): string {
 
   // next build 阶段如果没有任何 URL 环境变量,返回占位 URL 让 build 走通
   // 运行时仍会抛错,所以生产部署不受影响(运维必须在 Vercel 设置 APP_URL)
-  if (isBuilding) {
-    console.warn(
-      '[url] next build 阶段未设置任何 URL 环境变量,使用占位 https://example.com 让 build 走通。' +
-      '运行时仍会要求 APP_URL(或 Vercel 注入的 VERCEL_PROJECT_PRODUCTION_URL / VERCEL_URL)。',
-    );
-    return 'https://example.com';
-  }
+  if (isBuilding) return 'https://example.com';
 
   throw new Error(
     '生产环境必须设置 APP_URL(优先)或 NEXT_PUBLIC_SITE_URL(已弃用)或 VERCEL_PROJECT_PRODUCTION_URL / VERCEL_URL 之一',
