@@ -12,8 +12,8 @@ export default function LanguageSwitcher() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const locales = [
-    { code: 'zh-CN' as const, name: '简体中文', flag: '🇨🇳' },
-    { code: 'en' as const, name: 'English', flag: '🇺🇸' },
+    { code: 'zh-CN' as const, name: '中文' },
+    { code: 'en' as const, name: 'EN' },
   ];
 
   const handleSwitch = (code: 'zh-CN' | 'en') => {
@@ -43,8 +43,7 @@ export default function LanguageSwitcher() {
     <div ref={wrapperRef} className="relative">
       <Button variant="default" size="sm" onClick={() => setIsOpen(!isOpen)} className="justify-start bg-transparent" autoLoading={false}>
         <Globe size={14} className="text-zinc-500" />
-        <span>{currentLang.flag}</span>
-        <span>{currentLang.name}</span>
+        <span className="text-xs font-medium">{currentLang.name}</span>
       </Button>
       {isOpen && (
         <div
@@ -65,7 +64,6 @@ export default function LanguageSwitcher() {
               className={`justify-start ${locale === l.code ? 'bg-zinc-100' : ''}`}
               autoLoading={false}
             >
-              <span>{l.flag}</span>
               <span>{l.name}</span>
             </Button>
           ))}
