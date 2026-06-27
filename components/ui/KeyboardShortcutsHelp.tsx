@@ -55,7 +55,7 @@ export function KeyboardShortcutsHelp({ open, onClose, visibleKeys }: KeyboardSh
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-label="键盘快捷键"
@@ -68,7 +68,7 @@ export function KeyboardShortcutsHelp({ open, onClose, visibleKeys }: KeyboardSh
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-sm mx-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden"
+            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 max-h-[85vh] overflow-y-auto bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 标题栏 */}
