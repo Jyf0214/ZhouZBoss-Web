@@ -217,10 +217,14 @@ export function useStorageState(): UseStorageState {
         message.error(`文件 "${oversize.name}" 超过 50MB 限制`);
         return;
       }
+      let successCount = 0;
+      let failCount = 0;
       for (const file of files) {
         try {
           await uploadFile(currentPath, file);
+          successCount++;
         } catch (err) {
+          failCount++;
           if (err instanceof ApiError) {
             if (err.isNotConfigured) {
               setConfigured(false);
@@ -229,11 +233,15 @@ export function useStorageState(): UseStorageState {
             }
             message.error(err.message);
           } else {
-            message.error('上传失败');
+            message.error(`上传失败: ${file.name}`);
           }
         }
       }
-      message.success('上传成功');
+      if (failCount === 0) {
+        message.success(`上传成功 (${successCount} 个文件)`);
+      } else if (successCount > 0) {
+        message.warning(`部分上传成功 (${successCount} 成功, ${failCount} 失败)`);
+      }
       await loadEntries(currentPath);
       // 重新拉一次 folders(可能因上传自动创建了文件夹元数据)
       try {
