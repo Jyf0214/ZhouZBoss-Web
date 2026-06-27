@@ -13,10 +13,9 @@ import { ScrollText, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 interface AuditLog {
   id?: number;
   action: string;
-  resource: string;
-  resourceId: string | null;
-  operatorUid: string;
-  details: string;
+  target: string;
+  detail: string | null;
+  userId: string;
   createdAt: string;
 }
 
@@ -41,7 +40,7 @@ export default function AuditPage() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  const fetchLogs = useCallback(async (targetPage: number, action?: string, operatorUid?: string) => {
+  const fetchLogs = useCallback(async (targetPage: number, action?: string, userId?: string) => {
     setLoading(true);
     setError(null);
     try {
@@ -49,7 +48,7 @@ export default function AuditPage() {
       params.set('page', String(targetPage));
       params.set('pageSize', String(pageSize));
       if (action) params.set('action', action);
-      if (operatorUid) params.set('operatorUid', operatorUid);
+      if (userId) params.set('userId', userId);
 
       const res = await fetch(`/api/admin/audit?${params.toString()}`);
       if (!res.ok) {
@@ -145,14 +144,13 @@ export default function AuditPage() {
                     <th className="text-left px-5 py-3 font-medium text-zinc-500">操作者</th>
                     <th className="text-left px-5 py-3 font-medium text-zinc-500">操作类型</th>
                     <th className="text-left px-5 py-3 font-medium text-zinc-500">操作对象</th>
-                    <th className="text-left px-5 py-3 font-medium text-zinc-500">对象 ID</th>
                     <th className="text-left px-5 py-3 font-medium text-zinc-500">详情</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.logs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-12 text-zinc-400">
+                      <td colSpan={5} className="text-center py-12 text-zinc-400">
                         <ScrollText size={32} className="mx-auto mb-2 opacity-30" />
                         暂无审计日志
                       </td>
@@ -163,16 +161,15 @@ export default function AuditPage() {
                         <td className="px-5 py-3 text-zinc-600 whitespace-nowrap">
                           {log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN') : '-'}
                         </td>
-                        <td className="px-5 py-3 text-zinc-700 font-medium">{log.operatorUid ?? '-'}</td>
+                        <td className="px-5 py-3 text-zinc-700 font-medium">{log.userId ?? '-'}</td>
                         <td className="px-5 py-3">
                           <span className="inline-block px-2 py-0.5 text-xs font-medium bg-zinc-100 text-zinc-600 rounded-md">
                             {log.action}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-zinc-600">{log.resource ?? '-'}</td>
-                        <td className="px-5 py-3 text-zinc-500 font-mono text-xs">{log.resourceId ?? '-'}</td>
-                        <td className="px-5 py-3 text-zinc-500 max-w-xs truncate" title={log.details}>
-                          {log.details ?? '-'}
+                        <td className="px-5 py-3 text-zinc-600">{log.target ?? '-'}</td>
+                        <td className="px-5 py-3 text-zinc-500 max-w-xs truncate" title={log.detail ?? ''}>
+                          {log.detail ?? '-'}
                         </td>
                       </tr>
                     ))

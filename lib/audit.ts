@@ -32,16 +32,16 @@ export async function logAudit(
 /** 查询审计日志 */
 export async function queryAuditLogs(options: {
   action?: string;
-  resource?: string;
-  operatorUid?: string;
+  target?: string;
+  userId?: string;
   limit?: number;
   offset?: number;
 }): Promise<{ items: unknown[]; total: number }> {
-  const { action, resource, operatorUid, limit = 50, offset = 0 } = options;
+  const { action, target, userId, limit = 50, offset = 0 } = options;
   const where: Record<string, unknown> = {};
   if (action) where.action = action;
-  if (resource) where.resource = resource;
-  if (operatorUid) where.operatorUid = operatorUid;
+  if (target) where.target = target;
+  if (userId) where.userId = userId;
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

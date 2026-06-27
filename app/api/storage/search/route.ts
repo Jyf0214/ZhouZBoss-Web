@@ -217,7 +217,7 @@ export const GET = apiHandler(
     } catch (err) {
       console.error('[storage.search] 搜索失败', err)
       return NextResponse.json(
-        { error: '搜索失败', details: (err as Error).message },
+        { error: '搜索失败' },
         { status: 500 },
       )
     }

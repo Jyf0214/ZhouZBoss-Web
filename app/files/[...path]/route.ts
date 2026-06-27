@@ -219,6 +219,25 @@ async function webdavFileResponse(stat: FileStat, relativePath: string): Promise
   return fileResponse(result.body, stat)
 }
 
+/** 调试信息响应:仅限 sudo + 开发环境 */
+function debugInfoResponse(
+  req: NextRequest,
+  session: Awaited<ReturnType<typeof getSession>> | null,
+  relativePath: string,
+  stat: FileStat,
+  backend: string,
+): NextResponse | null {
+  if (new URL(req.url).searchParams.get('_debug') !== '1') return null
+  if (session?.role !== 'sudo' || process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: '调试信息不可用' }, { status: 403 })
+  }
+  return NextResponse.json({
+    relativePath,
+    stat: { type: stat.type, size: stat.size, mime: stat.mime, lastmod: stat.lastmod },
+    backend,
+  })
+}
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<RouteParams> }) {
   let relativePath = ''
   try {
@@ -245,13 +264,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<Route
       throw statErr
     }
     if (stat.type === 'directory') return NextResponse.json({ error: '资源不存在' }, { status: 404 })
-    if (new URL(_req.url).searchParams.get('_debug') === '1') {
-      return NextResponse.json({
-        relativePath,
-        stat: { type: stat.type, size: stat.size, mime: stat.mime, lastmod: stat.lastmod },
-        backend: provider.backend,
-      })
-    }
+    const debugResp = debugInfoResponse(_req, session, relativePath, stat, provider.backend)
+    if (debugResp) return debugResp
     // B2 后端: 通过 provider.getFileContents 直接下载，跳过 WebDAV 特定逻辑
     if (provider.backend === 'backblaze') {
       return b2FileResponse(provider, stat, relativePath)
