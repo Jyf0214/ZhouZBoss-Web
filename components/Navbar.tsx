@@ -211,7 +211,7 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
               aria-label="搜索"
               title="搜索 (/)"
             />
-            {/* 快捷键帮助按钮 */}
+            {/* 快捷键帮助按钮——手机端隐藏，节省空间 */}
             <Button
               onClick={() => setShortcutsOpen(true)}
               variant="ghost"
@@ -221,6 +221,7 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
               icon={<Keyboard size={18} />}
               aria-label="快捷键帮助"
               title="快捷键 (?)"
+              className="hidden sm:inline-flex"
             />
             <NavClock travelling={navConfig?.travelling} clock={navConfig?.clock} time={time} />
             <NavAuthSection user={user} allowRegistration={allowRegistration} clerkAvailable={clerkAvailable} t={t} />
