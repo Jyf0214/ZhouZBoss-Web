@@ -44,6 +44,7 @@ function SudoActions({ showRaw, rawContent, onToggleRaw }: {
         variant="ghost"
         onClick={onToggleRaw}
         className="hover:text-zinc-900"
+        autoLoading={false}
       >
         {showRaw ? <Eye size={18} /> : <Code size={18} />}
         <span className="font-bold">{showRaw ? '预览渲染' : '查看原始文件'}</span>

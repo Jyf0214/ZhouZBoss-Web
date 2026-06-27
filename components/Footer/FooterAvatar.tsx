@@ -31,6 +31,7 @@ export function FooterAvatar({ avatarUrl, hasSiblings = false }: FooterAvatarPro
       rounded="full"
       className={hasSiblings ? 'mx-6' : ''}
       title="回到顶部"
+      autoLoading={false}
       onClick={handleScrollTop}
     >
       {avatarUrl ? (

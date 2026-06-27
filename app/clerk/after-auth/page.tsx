@@ -77,6 +77,7 @@ export default function ClerkAfterAuthPage() {
               size="lg"
               block
               rounded="md"
+              autoLoading={false}
               onClick={() => router.push('/clerk/bind')}
             >
               绑定已有账户
@@ -86,6 +87,7 @@ export default function ClerkAfterAuthPage() {
               size="lg"
               block
               rounded="md"
+              autoLoading={false}
               onClick={() => router.push('/dashboard')}
             >
               跳过，直接进入

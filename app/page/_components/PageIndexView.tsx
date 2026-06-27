@@ -103,6 +103,7 @@ export function PageIndexView({ notConfigured, pages, emptyDirs, orphans: _orpha
                   icon={<RotateCw size={14} className={refreshing ? 'animate-spin' : ''} />}
                   onClick={handleRefresh}
                   disabled={refreshing}
+                  autoLoading={false}
                 >
                   {t('common.refresh')}
                 </Button>
@@ -111,6 +112,7 @@ export function PageIndexView({ notConfigured, pages, emptyDirs, orphans: _orpha
                   size="sm"
                   icon={<Plus size={16} />}
                   onClick={() => setShowCreateDialog(true)}
+                  autoLoading={false}
                 >
                   新建页面
                 </Button>

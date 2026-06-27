@@ -60,7 +60,7 @@ export default function NotFound() {
             )}
           >
             <Link href="/">
-              <Button variant="primary" size="lg">
+              <Button variant="primary" size="lg" autoLoading={false}>
                 <Home size={16} />
                 返回首页
               </Button>
@@ -68,6 +68,7 @@ export default function NotFound() {
             <Button
               variant="secondary"
               size="lg"
+              autoLoading={false}
               onClick={() => window.history.back()}
             >
               <ArrowLeft size={16} />

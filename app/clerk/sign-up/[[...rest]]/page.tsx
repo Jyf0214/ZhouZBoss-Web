@@ -44,7 +44,7 @@ export default function ClerkSignUpPage() {
             <p className="text-zinc-500 mb-1">{t('config.registrationClosed')}</p>
             <p className="text-zinc-400 text-sm mb-4">{t('config.registrationClosedHint')}</p>
             <Link href="/login">
-              <Button variant="primary">{t('auth.login')}</Button>
+              <Button variant="primary" autoLoading={false}>{t('auth.login')}</Button>
             </Link>
           </div>
         </main>

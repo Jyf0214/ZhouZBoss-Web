@@ -32,7 +32,7 @@ export function ClerkLoginSection({ variant = 'full' }: { variant?: 'full' | 'co
     return createElement(
       SignInButtonComp,
       { mode: 'modal', fallbackRedirectUrl: '/clerk/after-auth' },
-      <Button size="lg" variant="default" rounded="md" className="px-4">
+      <Button size="lg" variant="default" rounded="md" className="px-4" autoLoading={false}>
         <span className="flex items-center gap-1.5">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9.5 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="#6C47FF"/>
@@ -60,6 +60,7 @@ export function ClerkLoginSection({ variant = 'full' }: { variant?: 'full' | 'co
           rounded="md"
           className="h-12 hover:bg-zinc-50"
           style={{ fontSize: 14, fontWeight: 500 }}
+          autoLoading={false}
         >
           <span className="flex items-center gap-2">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">

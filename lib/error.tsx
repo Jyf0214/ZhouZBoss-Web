@@ -20,6 +20,7 @@ export function showError(msg: string, duration = 4) {
           size="sm"
           rounded="sm"
           className="ml-3"
+          autoLoading={false}
           onClick={(e) => {
             e.stopPropagation();
             navigator.clipboard.writeText(msg).then(() => {

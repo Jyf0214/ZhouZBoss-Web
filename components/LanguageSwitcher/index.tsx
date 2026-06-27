@@ -23,7 +23,7 @@ export default function LanguageSwitcher() {
 
   return (
     <div className="relative">
-      <Button variant="default" size="sm" block onClick={() => setIsOpen(!isOpen)} className="justify-start bg-transparent">
+      <Button variant="default" size="sm" block onClick={() => setIsOpen(!isOpen)} className="justify-start bg-transparent" autoLoading={false}>
         <Globe size={14} className="text-zinc-500" />
         <span>{currentLang.flag}</span>
         <span>{currentLang.name}</span>
@@ -40,6 +40,7 @@ export default function LanguageSwitcher() {
                 size="sm"
                 block
                 className={`justify-start ${locale === l.code ? 'bg-zinc-100' : ''}`}
+                autoLoading={false}
               >
                 <span>{l.flag}</span>
                 <span>{l.name}</span>

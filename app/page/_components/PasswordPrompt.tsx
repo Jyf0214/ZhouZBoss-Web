@@ -79,7 +79,7 @@ export function PasswordPrompt({
             </button>
           </div>
 
-          <Button type="submit" variant="primary" size="lg" block disabled={!value.trim()}>
+          <Button type="submit" variant="primary" size="lg" block disabled={!value.trim()} autoLoading={false}>
             {t('page.passwordSubmit')}
           </Button>
         </form>

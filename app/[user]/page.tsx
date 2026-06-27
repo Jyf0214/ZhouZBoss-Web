@@ -76,7 +76,7 @@ function UserProfileContent() {
         <h1 className="text-4xl font-display font-black text-zinc-900 mb-4">{t('error.404')}</h1>
         <p className="text-zinc-500 mb-8">{t('error.notFound')}</p>
         <Link href="/">
-          <Button variant="primary" size="lg">{t('common.back')}</Button>
+          <Button variant="primary" size="lg" autoLoading={false}>{t('common.back')}</Button>
         </Link>
       </div>
     </div>

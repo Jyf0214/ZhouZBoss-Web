@@ -84,7 +84,7 @@ function NotFoundView() {
         <h1 className="text-4xl font-display font-black text-zinc-900 mb-4">404</h1>
         <p className="text-zinc-500 mb-8">Article not found in this kernel.</p>
         <Link href="/">
-          <Button variant="primary" size="lg">Back Home</Button>
+          <Button variant="primary" size="lg" autoLoading={false}>Back Home</Button>
         </Link>
       </div>
     </div>

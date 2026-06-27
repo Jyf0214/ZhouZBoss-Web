@@ -244,6 +244,7 @@ export default function ClerkBindPage() {
                   disabled={countdown > 0}
                   onClick={handleSendCode}
                   rounded="md"
+                  autoLoading={false}
                 >
                   {countdown > 0 ? `${countdown}s 后重新发送` : '重新发送验证码'}
                 </Button>

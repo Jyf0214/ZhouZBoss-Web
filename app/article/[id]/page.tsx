@@ -78,7 +78,7 @@ export default function ArticlePage() {
         <h1 className="text-3xl font-display font-bold text-zinc-900 mb-4">{t('error.notFound')}</h1>
         <p className="text-zinc-500 mb-8 max-w-md">{t('error.networkError')}</p>
         <Link href="/">
-          <Button variant="primary" size="lg">{t('common.back')}</Button>
+          <Button variant="primary" size="lg" autoLoading={false}>{t('common.back')}</Button>
         </Link>
       </div>
     </div>
