@@ -90,7 +90,7 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
       <div className="border-t border-zinc-100 pt-4">
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-medium">导航菜单</label>
-          <Button size="sm" icon={<Plus size={14} />} onClick={addGroup}>
+          <Button size="sm" icon={<Plus size={14} />} onClick={addGroup} autoLoading={false}>
             添加分组
           </Button>
         </div>
@@ -118,6 +118,7 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
                 iconOnly
                 icon={<Trash2 size={16} />}
                 onClick={() => removeGroup(gi)}
+                autoLoading={false}
                 title="删除分组"
                 className="mt-6"
               />
@@ -155,12 +156,13 @@ export default function NavConfig({ config, onChange }: NavConfigProps) {
                     iconOnly
                     icon={<Trash2 size={14} />}
                     onClick={() => removeItem(gi, ii)}
+                    autoLoading={false}
                     title="删除菜单项"
                     className="shrink-0"
                   />
                 </div>
               ))}
-              <Button variant="secondary" size="sm" block icon={<Plus size={12} />} onClick={() => addItem(gi)} rounded="sm">
+              <Button variant="secondary" size="sm" block icon={<Plus size={12} />} onClick={() => addItem(gi)} autoLoading={false} rounded="sm">
                 添加菜单项
               </Button>
             </div>

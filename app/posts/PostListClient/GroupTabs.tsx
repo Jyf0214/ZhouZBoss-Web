@@ -23,6 +23,7 @@ export function GroupTabs({
         onClick={() => onSelect(null)}
         variant={activeGroup === null ? 'primary' : 'ghost'}
         size="sm"
+        autoLoading={false}
         className={activeGroup === null ? 'shadow-lg shadow-zinc-900/20' : ''}
       >
         {t('posts.allPosts')}
@@ -35,6 +36,7 @@ export function GroupTabs({
             onClick={() => onSelect(slug)}
             variant={activeGroup === slug ? 'primary' : 'ghost'}
             size="sm"
+            autoLoading={false}
             className={activeGroup === slug ? 'shadow-lg shadow-zinc-900/20' : ''}
             icon={<Hash size={14} className="opacity-50" />}
           >

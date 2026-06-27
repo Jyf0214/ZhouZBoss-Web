@@ -95,6 +95,7 @@ function FaceDetailHeader({ file, isSudo, rawContent, showRaw, setShowRaw }: {
             onClick={() => setShowRaw(!showRaw)}
             variant="ghost"
             size="sm"
+            autoLoading={false}
             icon={showRaw ? <Eye size={18} /> : <Code size={18} />}
           >
             {showRaw ? t('faces.previewRender') : t('faces.viewRaw')}

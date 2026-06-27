@@ -37,6 +37,7 @@ export default function ReadModeShare({
         className="fixed top-24 right-6 z-40 w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg hover:bg-white/20 hover:scale-110 active:scale-95"
         title="分享此页面"
         onClick={() => setModalOpen(true)}
+        autoLoading={false}
       >
         <Share2 size={20} />
       </Button>

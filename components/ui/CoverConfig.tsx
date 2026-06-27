@@ -80,7 +80,7 @@ export default function CoverConfig({ config, onChange }: CoverConfigProps) {
             placeholder="图片 URL"
             className="flex-1 h-9 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
           />
-          <Button size="sm" icon={<Plus size={14} />} onClick={addCover} className="rounded-lg shrink-0">
+          <Button size="sm" icon={<Plus size={14} />} onClick={addCover} autoLoading={false} className="rounded-lg shrink-0">
             添加
           </Button>
         </div>

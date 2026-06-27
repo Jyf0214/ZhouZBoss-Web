@@ -179,6 +179,7 @@ export function StorageSearchPanel({ open, onClose, onResultClick }: StorageSear
           variant="default"
           size="sm"
           onClick={onClose}
+          autoLoading={false}
         >
           关闭
         </Button>

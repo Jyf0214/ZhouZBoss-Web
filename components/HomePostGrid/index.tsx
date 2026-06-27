@@ -71,6 +71,7 @@ export function HomePostGrid({
             <Button
               variant={selectedTag === null ? 'primary' : 'ghost'}
               size="sm"
+              autoLoading={false}
               rounded="full"
               onClick={() => setSelectedTag(null)}
             >
@@ -81,6 +82,7 @@ export function HomePostGrid({
                 key={tag}
                 variant={selectedTag === tag ? 'primary' : 'ghost'}
                 size="sm"
+                autoLoading={false}
                 rounded="full"
                 onClick={() => setSelectedTag(tag)}
               >

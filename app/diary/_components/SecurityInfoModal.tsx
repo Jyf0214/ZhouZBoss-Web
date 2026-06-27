@@ -17,6 +17,7 @@ export function SecurityInfoModal({ onClose }: { onClose: () => void }) {
           variant="ghost"
           size="sm"
           iconOnly
+          autoLoading={false}
           onClick={onClose}
           className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900"
           icon={<X size={20} />}

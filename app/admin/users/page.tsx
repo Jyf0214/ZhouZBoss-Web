@@ -171,17 +171,17 @@ export default function UsersPage() {
                   {editingId === u.uid ? (
                     <>
                       <Button variant="ghost" size="sm" icon={<Check size={14} className="text-emerald-500" />} onClick={() => handleUpdateRole(String(u.uid))} loading={operating === u.uid} />
-                      <Button variant="ghost" size="sm" icon={<X size={14} className="text-zinc-400" />} onClick={() => setEditingId(null)} disabled={operating === u.uid} />
+                      <Button variant="ghost" size="sm" icon={<X size={14} className="text-zinc-400" />} onClick={() => setEditingId(null)} disabled={operating === u.uid} autoLoading={false} />
                     </>
                   ) : (
                     <>
-                      <Button variant="ghost" size="sm" icon={<Edit2 size={14} className="text-blue-500" />} onClick={() => { setEditingId(String(u.uid)); setEditRole(String(u.role)); }} disabled={operating === u.uid} title={t('common.edit')} />
+                      <Button variant="ghost" size="sm" icon={<Edit2 size={14} className="text-blue-500" />} onClick={() => { setEditingId(String(u.uid)); setEditRole(String(u.role)); }} disabled={operating === u.uid} title={t('common.edit')} autoLoading={false} />
                       <Popconfirm
                         title={t('admin.deleteConfirm')}
                         onConfirm={() => handleDelete(String(u.uid))}
                         okButtonProps={{ danger: true, loading: operating === u.uid }}
                       >
-                        <Button variant="danger" size="sm" icon={operating === u.uid ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} disabled={operating === u.uid} title={t('common.delete')} />
+                        <Button variant="danger" size="sm" icon={operating === u.uid ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} disabled={operating === u.uid} title={t('common.delete')} autoLoading={false} />
                       </Popconfirm>
                     </>
                   )}

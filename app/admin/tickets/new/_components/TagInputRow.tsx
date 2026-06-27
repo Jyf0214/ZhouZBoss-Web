@@ -34,7 +34,7 @@ export function TagInputRow({
           placeholder={placeholder}
           className="flex-1"
         />
-        <Button onClick={onSubmit} size="sm">{addButtonLabel}</Button>
+        <Button onClick={onSubmit} size="sm" autoLoading={false}>{addButtonLabel}</Button>
       </div>
       <div className="flex flex-wrap gap-2">
         {items.map(item => (
@@ -47,6 +47,7 @@ export function TagInputRow({
               icon={<Trash2 size={16} />}
               className="text-red-500"
               onClick={() => onRemove(item)}
+              autoLoading={false}
             />
           </Tag>
         ))}

@@ -82,6 +82,7 @@ function TwoFactorForm() {
             <Button
               icon={<ChevronRight size={14} className="rotate-180" />}
               size="lg"
+              autoLoading={false}
               onClick={() => router.replace('/login')}
             >
               返回登录

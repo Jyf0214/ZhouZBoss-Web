@@ -76,7 +76,7 @@ function ResetPasswordForm() {
           footer={
             <div className="flex items-center justify-center gap-2 py-6">
               <Link href="/login">
-                <Button icon={<ArrowLeft size={14} />} size="lg">
+                <Button icon={<ArrowLeft size={14} />} size="lg" autoLoading={false}>
                   {t('auth.backToLogin')}
                 </Button>
               </Link>
@@ -90,7 +90,7 @@ function ResetPasswordForm() {
             <span className="text-base">{t('auth.resetSuccess')}</span>
           </div>
           <Link href="/login">
-            <Button variant="primary" size="lg" block style={{ marginTop: 24 }}>
+            <Button variant="primary" size="lg" block autoLoading={false} style={{ marginTop: 24 }}>
               {t('auth.login')}
             </Button>
           </Link>
@@ -105,7 +105,7 @@ function ResetPasswordForm() {
         footer={
           <div className="flex items-center justify-center gap-2 py-6">
             <Link href="/login">
-              <Button icon={<ArrowLeft size={14} />} size="lg">
+              <Button icon={<ArrowLeft size={14} />} size="lg" autoLoading={false}>
                 {t('auth.backToLogin')}
               </Button>
             </Link>

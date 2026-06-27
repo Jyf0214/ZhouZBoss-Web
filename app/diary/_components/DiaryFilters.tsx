@@ -64,6 +64,7 @@ export function GroupTabs({
         variant={activeGroup === null ? 'primary' : 'ghost'}
         size="sm"
         rounded="full"
+        autoLoading={false}
         onClick={() => onSelect(null)}
       >全部</Button>
       {groups.map((g) => (
@@ -72,6 +73,7 @@ export function GroupTabs({
           variant={activeGroup === g ? 'primary' : 'ghost'}
           size="sm"
           rounded="full"
+          autoLoading={false}
           onClick={() => onSelect(g)}
         >{g}</Button>
       ))}

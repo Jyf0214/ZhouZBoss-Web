@@ -64,12 +64,13 @@ export default function SocialConfig({ config, onChange }: SocialConfigProps) {
             iconOnly
             icon={<Trash2 size={14} />}
             onClick={() => removeEntry(key)}
+            autoLoading={false}
             className="shrink-0"
           />
         </div>
       ))}
 
-      <Button size="sm" icon={<Plus size={14} />} onClick={addEntry}>
+      <Button size="sm" icon={<Plus size={14} />} onClick={addEntry} autoLoading={false}>
         添加社交链接
       </Button>
       <p className="text-xs text-zinc-400">格式: 名称: 链接 || 图标 (图标可选，如 fab fa-github)</p>

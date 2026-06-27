@@ -114,6 +114,7 @@ export default function NewFacePage() {
               <Button
                 variant="default"
                 icon={<ArrowLeft size={16} />}
+                autoLoading={false}
                 className="h-10 px-8 rounded-xl"
               >
                 {t('faces.backToFaces')}
@@ -204,6 +205,7 @@ export default function NewFacePage() {
                 <Button
                   variant="default"
                   icon={<ArrowLeft size={16} />}
+                  autoLoading={false}
                   className="h-10 px-6 rounded-xl"
                 >
                   {t('common.back')}

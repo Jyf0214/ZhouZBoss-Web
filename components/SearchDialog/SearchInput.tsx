@@ -50,6 +50,7 @@ export function SearchInput({
         iconOnly
         onClick={onClose}
         aria-label="关闭搜索"
+        autoLoading={false}
       >
         <X size={18} />
       </Button>

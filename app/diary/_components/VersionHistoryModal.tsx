@@ -115,6 +115,7 @@ export function VersionHistoryModal({ open, diaryId, onClose }: Props) {
           <Button
             variant="ghost"
             size="sm"
+            autoLoading={false}
             icon={<ChevronLeft size={14} />}
             onClick={() => setSelectedVersion(null)}
             className="mb-4"

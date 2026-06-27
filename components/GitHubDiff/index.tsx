@@ -111,7 +111,7 @@ export function GitHubDiffModal({
         </div>
 
         <div className="flex justify-end gap-3 mt-6">
-          <Button onClick={onCancel} disabled={loading} variant="default">
+          <Button onClick={onCancel} disabled={loading} variant="default" autoLoading={false}>
             取消
           </Button>
           <Button

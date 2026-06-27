@@ -55,7 +55,7 @@ export function UserMenu() {
         placement="bottomRight"
         arrow
       >
-        <Button variant="ghost" className="flex items-center gap-2">
+        <Button variant="ghost" autoLoading={false} className="flex items-center gap-2">
           <Avatar name={displayName} avatarUrl={avatarUrl} size={36} />
           <div className="hidden md:block">
             <div className="flex items-center gap-1.5">

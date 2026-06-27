@@ -78,7 +78,7 @@ export function StorageMkdirDialog({
           />
         </label>
         <div className="flex justify-end gap-2 mt-5">
-          <Button variant="ghost" size="sm" onClick={handleClose} disabled={disabled}>
+          <Button variant="ghost" size="sm" onClick={handleClose} disabled={disabled} autoLoading={false}>
             {cancelLabel}
           </Button>
           <Button

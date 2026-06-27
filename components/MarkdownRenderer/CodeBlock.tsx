@@ -49,6 +49,7 @@ function CodeToolbar({
             variant="ghost"
             size="sm"
             iconOnly
+            autoLoading={false}
             icon={copied ? <Check size={14} /> : <Copy size={14} />}
             className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700"
             onClick={onCopy}
@@ -61,6 +62,7 @@ function CodeToolbar({
             variant="ghost"
             size="sm"
             iconOnly
+            autoLoading={false}
             icon={<WrapText size={14} />}
             className={wrap ? 'text-zinc-200 bg-zinc-700' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700'}
             onClick={onToggleWrap}
@@ -73,6 +75,7 @@ function CodeToolbar({
             variant="ghost"
             size="sm"
             iconOnly
+            autoLoading={false}
             icon={collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
             className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700"
             onClick={onToggleCollapse}

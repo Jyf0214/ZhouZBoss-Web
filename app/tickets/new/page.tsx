@@ -107,7 +107,7 @@ export default function NewTicketPage() {
   return (
     <PageContainer maxWidth="3xl">
       <div className="flex items-center gap-3 mb-8">
-        <Button size="sm" icon={<ArrowLeft size={14} />} onClick={() => router.back()} rounded="sm" />
+        <Button size="sm" autoLoading={false} icon={<ArrowLeft size={14} />} onClick={() => router.back()} rounded="sm" />
         <h1 className="text-2xl font-bold text-zinc-900">{selectedTemplate ? t('tickets.fillTicket') : t('tickets.selectTemplate')}</h1>
       </div>
 
@@ -171,7 +171,7 @@ export default function NewTicketPage() {
             </div>
           ))}
           <div className="flex justify-end gap-3">
-            <Button onClick={() => setSelectedTemplate(null)}>{t('common.back')}</Button>
+            <Button autoLoading={false} onClick={() => setSelectedTemplate(null)}>{t('common.back')}</Button>
             <Button variant="primary" onClick={handleSubmit} loading={submitting}>
               {t('tickets.submit')}
             </Button>

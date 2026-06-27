@@ -75,7 +75,7 @@ export function FeedbackForm() {
         <p className="text-sm text-zinc-500 mb-4">
           你的反馈已成功提交，我们会认真查看每一条建议。
         </p>
-        <Button variant="default" size="sm" onClick={resetForm}>
+        <Button variant="default" size="sm" onClick={resetForm} autoLoading={false}>
           继续提交
         </Button>
       </div>

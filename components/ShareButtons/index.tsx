@@ -25,7 +25,7 @@ function Toast({ message, visible }: { message: string; visible: boolean }) {
   return (
     <AnimatePresence>
       {visible && (
-        <Button variant="primary" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] shadow-2xl">
+        <Button variant="primary" autoLoading={false} className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] shadow-2xl">
           <Check size={16} className="text-green-400 shrink-0" />
           {message}
         </Button>

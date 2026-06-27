@@ -161,6 +161,7 @@ function LoginForm() {
           <Button
             icon={<ChevronRight size={14} className="rotate-180" />}
             size="lg"
+            autoLoading={false}
             onClick={handleBackToEmail}
           >
             {t('common.back')}
@@ -206,6 +207,7 @@ function LoginForm() {
           <Button
             icon={<ChevronRight size={14} className="rotate-180" />}
             size="lg"
+            autoLoading={false}
             onClick={handleBackToEmail}
           >
             {t('common.back')}

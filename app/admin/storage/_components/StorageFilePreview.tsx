@@ -147,13 +147,13 @@ export function StorageFilePreview({ open, entry, appUrl, onClose }: Props) {
 
       {/* 操作按钮 */}
       <div className="flex justify-end gap-2 mt-5">
-        <Button variant="ghost" size="sm" icon={<Copy size={14} />} onClick={handleCopy}>
+        <Button variant="ghost" size="sm" icon={<Copy size={14} />} onClick={handleCopy} autoLoading={false}>
           复制 URL
         </Button>
-        <Button variant="default" size="sm" icon={<ExternalLink size={14} />} onClick={() => window.open(publicUrl, '_blank')}>
+        <Button variant="default" size="sm" icon={<ExternalLink size={14} />} onClick={() => window.open(publicUrl, '_blank')} autoLoading={false}>
           新窗口打开
         </Button>
-        <Button variant="primary" size="sm" icon={<Download size={14} />} onClick={handleDownload}>
+        <Button variant="primary" size="sm" icon={<Download size={14} />} onClick={handleDownload} autoLoading={false}>
           下载
         </Button>
       </div>

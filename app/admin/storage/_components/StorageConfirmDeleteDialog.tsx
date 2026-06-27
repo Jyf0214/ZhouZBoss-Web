@@ -59,7 +59,7 @@ export function StorageConfirmDeleteDialog({
         </div>
       </div>
       <div className="flex justify-end gap-2 mt-5">
-        <Button variant="ghost" size="sm" onClick={onCancel} disabled={disabled}>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={disabled} autoLoading={false}>
           {cancelLabel}
         </Button>
         <Button variant="danger" size="sm" onClick={onConfirm} disabled={disabled}>

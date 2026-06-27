@@ -305,6 +305,7 @@ export function StorageAdminShell() {
             onClick={() => setStatsOpen(true)}
             disabled={!state.configured}
             title={!state.configured ? '存储后端未配置' : '存储空间分析'}
+            autoLoading={false}
           >
             存储分析
           </Button>
@@ -402,6 +403,7 @@ export function StorageAdminShell() {
                   onClick={() => state.openDialog('mkdir')}
                   disabled={!state.configured}
                   title={!state.configured ? '存储后端未配置' : labels.newFolder}
+                  autoLoading={false}
                 >
                   {labels.newFolder}
                 </Button>
@@ -412,6 +414,7 @@ export function StorageAdminShell() {
                   onClick={() => state.openDialog('upload')}
                   disabled={!state.configured}
                   title={!state.configured ? '存储后端未配置' : labels.upload}
+                  autoLoading={false}
                 >
                   {labels.upload}
                 </Button>
@@ -422,6 +425,7 @@ export function StorageAdminShell() {
                   onClick={toggleSearch}
                   disabled={!state.configured}
                   title={!state.configured ? '存储后端未配置' : '搜索文件内容'}
+                  autoLoading={false}
                 >
                   搜索
                 </Button>

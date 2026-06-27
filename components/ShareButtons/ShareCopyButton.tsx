@@ -19,6 +19,7 @@ export default function ShareCopyButton({ onClick }: ShareCopyButtonProps) {
       onClick={onClick}
       title="复制链接"
       aria-label="复制链接"
+      autoLoading={false}
     >
       <Link2 size={18} />
     </Button>

@@ -48,6 +48,7 @@ export function DiaryPageClient() {
           <Button
             variant={showSettings ? 'primary' : 'secondary'}
             size="md"
+            autoLoading={false}
             onClick={() => setShowSettings(!showSettings)}
             icon={<Settings size={14} />}
             title="日记设置"
@@ -57,6 +58,7 @@ export function DiaryPageClient() {
           <Button
             variant="secondary"
             size="md"
+            autoLoading={false}
             onClick={() => s.router.push('/diary/drafts')}
             icon={<FileText size={14} />}
           >
@@ -65,6 +67,7 @@ export function DiaryPageClient() {
           <Button
             variant="secondary"
             size="md"
+            autoLoading={false}
             onClick={() => setShowSecurityInfo(true)}
             icon={<ShieldAlert size={14} />}
             className="text-amber-600 hover:bg-amber-50"
@@ -107,6 +110,7 @@ export function DiaryPageClient() {
               <Button
                 variant="primary"
                 size="lg"
+                autoLoading={false}
                 onClick={() => s.router.push('/diary/new')}
                 icon={<Plus size={18} />}
               >

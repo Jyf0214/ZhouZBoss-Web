@@ -206,7 +206,7 @@ export default function ShareModal({
 
             {/* 底部通知 */}
             {toast && (
-              <Button variant="primary" className="absolute bottom-20 left-1/2 -translate-x-1/2 shadow-lg">
+              <Button variant="primary" autoLoading={false} className="absolute bottom-20 left-1/2 -translate-x-1/2 shadow-lg">
                 {toast}
               </Button>
             )}

@@ -14,7 +14,7 @@ export function ActionButtons({ onCancel, onSubmit, saving }: ActionButtonsProps
   const { t } = useI18n();
   return (
     <div className="flex justify-end gap-3">
-      <Button onClick={onCancel} variant="default">{t('tickets.cancel')}</Button>
+      <Button onClick={onCancel} variant="default" autoLoading={false}>{t('tickets.cancel')}</Button>
       <Button variant="primary" onClick={onSubmit} loading={saving}>
         {t('tickets.createTemplate')}
       </Button>

@@ -222,6 +222,7 @@ export function FaceForm({ groups, faceData, isEdit = false }: FaceFormProps) {
             <Button
               variant="default"
               icon={<ArrowLeft size={16} />}
+              autoLoading={false}
               className="h-12 px-6 rounded-xl"
             >
               {t('common.back')}

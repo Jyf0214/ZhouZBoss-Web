@@ -58,7 +58,7 @@ export default function AuthorStatusConfig({ config, onChange }: AuthorStatusCon
             placeholder="例如: 🤖️ 数码科技爱好者"
             className="flex-1 h-9 px-3 border border-zinc-200 rounded-lg text-sm outline-none focus:border-zinc-400"
           />
-          <Button size="sm" icon={<Plus size={14} />} onClick={addSkill} className="rounded-lg shrink-0">
+          <Button size="sm" icon={<Plus size={14} />} onClick={addSkill} autoLoading={false} className="rounded-lg shrink-0">
             添加
           </Button>
         </div>

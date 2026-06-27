@@ -247,7 +247,7 @@ function EnvGroupCard({
 
   return (
     <Card className="rounded-2xl border border-zinc-100 overflow-hidden" bordered={false} styles={{ body: { padding: 0 } }}>
-      <Button variant="ghost" size="sm" block rounded="none" className="justify-between px-6 py-4 hover:bg-zinc-50/50" onClick={onToggle}>
+      <Button variant="ghost" size="sm" block rounded="none" className="justify-between px-6 py-4 hover:bg-zinc-50/50" onClick={onToggle} autoLoading={false}>
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 bg-zinc-100 rounded-lg flex items-center justify-center shrink-0">
             <Icon size={18} className="text-zinc-600" />
@@ -344,6 +344,7 @@ export function HeaderActions({
         rounded="md"
         icon={allCollapsed ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
         onClick={() => onToggleAll(!allCollapsed)}
+        autoLoading={false}
       >
         {allCollapsed ? t('env.ui.expandAll') || '全部展开' : t('env.ui.collapseAll') || '全部折叠'}
       </Button>

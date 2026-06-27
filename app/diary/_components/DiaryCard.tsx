@@ -114,6 +114,7 @@ export function DiaryCard({
               size="sm"
               iconOnly
               rounded="sm"
+              autoLoading={false}
               onClick={() => onEdit(diary.id)}
               title="编辑"
               className="text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
@@ -137,6 +138,7 @@ export function DiaryCard({
                 size="sm"
                 iconOnly
                 rounded="sm"
+                autoLoading={false}
                 onClick={() => onVersionHistory(diary.id)}
                 title="版本历史"
                 className="text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"

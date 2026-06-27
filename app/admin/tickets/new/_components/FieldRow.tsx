@@ -32,6 +32,7 @@ export function FieldRow({ field, index, removable, onUpdate, onRemove }: FieldR
             icon={<Trash2 size={16} />}
             className="text-red-500"
             onClick={() => onRemove(index)}
+            autoLoading={false}
           />
         )}
       </div>

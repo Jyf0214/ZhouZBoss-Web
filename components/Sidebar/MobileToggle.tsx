@@ -10,6 +10,7 @@ export default function MobileToggle({ isOpen, onClick }: MobileToggleProps) {
   return (
     <Button
       variant="primary"
+      autoLoading={false}
       onClick={onClick}
       aria-label={isOpen ? '关闭侧边栏' : '打开侧边栏'}
       aria-expanded={isOpen}

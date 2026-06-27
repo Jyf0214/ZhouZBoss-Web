@@ -31,7 +31,7 @@ export function FormFieldsSection({
           onUpdate={onUpdate}
         />
       ))}
-      <Button onClick={onAdd} icon={<Plus size={14} />} variant="primary" size="sm">
+      <Button onClick={onAdd} icon={<Plus size={14} />} variant="primary" size="sm" autoLoading={false}>
         {t('tickets.addField')}
       </Button>
     </div>

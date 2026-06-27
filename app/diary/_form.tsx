@@ -130,7 +130,7 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
     <div className="min-h-screen flex flex-col bg-zinc-50">
       <div className="border-b border-zinc-100 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <Button onClick={() => router.push('/diary')} variant="ghost" size="sm" icon={<ArrowLeft size={16}/>}>返回</Button>
+          <Button onClick={() => router.push('/diary')} variant="ghost" size="sm" autoLoading={false} icon={<ArrowLeft size={16}/>}>返回</Button>
           <Button onClick={handleSave} loading={saving} variant="primary" size="md">保存</Button>
         </div>
       </div>

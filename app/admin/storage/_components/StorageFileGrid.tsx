@@ -87,6 +87,7 @@ function CreateActionBar({
         icon={<FolderPlus size={14} />}
         onClick={onNewFolder}
         disabled={disabled}
+        autoLoading={false}
       >
         {newFolderLabel}
       </Button>
@@ -96,6 +97,7 @@ function CreateActionBar({
         icon={<Upload size={14} />}
         onClick={onUpload}
         disabled={disabled}
+        autoLoading={false}
       >
         {uploadLabel}
       </Button>

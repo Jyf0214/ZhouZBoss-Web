@@ -26,6 +26,7 @@ export function SearchTags({ onTagClick }: SearchTagsProps) {
             size="sm"
             rounded="full"
             onClick={() => onTagClick(tag)}
+            autoLoading={false}
           >
             {tag}
           </Button>

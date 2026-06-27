@@ -110,7 +110,7 @@ export function StorageMoveDialog({
       </div>
 
       <div className="flex justify-end gap-2 mt-5">
-        <Button variant="ghost" size="sm" onClick={onCancel} disabled={disabled}>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={disabled} autoLoading={false}>
           {cancelLabel}
         </Button>
         <Button

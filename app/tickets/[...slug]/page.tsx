@@ -218,7 +218,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ slug: s
   return (
     <PageContainer maxWidth="3xl">
       <div className="flex items-center gap-3 mb-8">
-        <Button variant="default" size="sm" rounded="sm" icon={<ArrowLeft size={14} />} onClick={() => router.push('/tickets')} />
+        <Button variant="default" size="sm" rounded="sm" autoLoading={false} icon={<ArrowLeft size={14} />} onClick={() => router.push('/tickets')} />
         <h1 className="text-2xl font-bold text-zinc-900">{t('tickets.details')}</h1>
       </div>
 

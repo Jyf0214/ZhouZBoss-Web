@@ -95,7 +95,7 @@ export default function TicketsPage() {
           <h1 className="text-2xl font-bold text-zinc-900">{t('tickets.list')}</h1>
           <p className="text-sm text-zinc-400 mt-1">{t('tickets.viewAndManage')}</p>
         </div>
-        <Button variant="primary" onClick={() => router.push('/tickets/new')} rounded="md">
+        <Button variant="primary" autoLoading={false} onClick={() => router.push('/tickets/new')} rounded="md">
           {t('tickets.createTicket')}
         </Button>
       </div>
@@ -103,7 +103,7 @@ export default function TicketsPage() {
       {/* 状态筛选 */}
       <div className="mb-4 flex gap-2">
         {['all', 'open', 'in-progress', 'closed'].map(status => (
-          <Button key={status} size="sm" variant={statusFilter === status ? 'primary' : 'default'} onClick={() => setStatusFilter(status)} rounded="sm">
+          <Button key={status} size="sm" variant={statusFilter === status ? 'primary' : 'default'} onClick={() => setStatusFilter(status)} autoLoading={false} rounded="sm">
             {getStatusText(status)}
           </Button>
         ))}

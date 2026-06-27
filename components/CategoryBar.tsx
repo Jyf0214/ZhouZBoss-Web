@@ -42,6 +42,7 @@ export function CategoryBar({ categories, selectedCategory, onSelectCategory }: 
           onClick={() => onSelectCategory(null)}
           variant={selectedCategory === null ? 'primary' : 'ghost'}
           size="sm"
+          autoLoading={false}
           rounded="full"
           className={`shrink-0${selectedCategory === null ? ' shadow-sm' : ''}`}
         >
@@ -53,6 +54,7 @@ export function CategoryBar({ categories, selectedCategory, onSelectCategory }: 
             onClick={() => onSelectCategory(cat === selectedCategory ? null : cat)}
             variant={selectedCategory === cat ? 'primary' : 'ghost'}
             size="sm"
+            autoLoading={false}
             rounded="full"
             className={`shrink-0${selectedCategory === cat ? ' shadow-sm' : ''}`}
           >
@@ -67,6 +69,7 @@ export function CategoryBar({ categories, selectedCategory, onSelectCategory }: 
           onClick={scrollRight}
           variant="default"
           size="sm"
+          autoLoading={false}
           iconOnly
           rounded="full"
           icon={<ChevronRight size={16} className="text-zinc-500" />}

@@ -181,7 +181,7 @@ const handleDelete = async (id: string) => {
           <h1 className="text-2xl font-bold text-zinc-900">{t('tickets.management')}</h1>
           <p className="text-sm text-zinc-400 mt-1">{t('tickets.subtitle')}</p>
         </div>
-        <Button variant="primary" rounded="md" icon={<Plus size={14} />} onClick={handleCreate}>
+        <Button variant="primary" rounded="md" icon={<Plus size={14} />} onClick={handleCreate} autoLoading={false}>
           {t('tickets.createTemplate')}
         </Button>
       </div>
@@ -204,13 +204,13 @@ const handleDelete = async (id: string) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" rounded="sm" icon={<Edit2 size={13} />} onClick={() => handleEdit(template)}>{t('tickets.edit')}</Button>
+                  <Button size="sm" rounded="sm" icon={<Edit2 size={13} />} onClick={() => handleEdit(template)} autoLoading={false}>{t('tickets.edit')}</Button>
                   <Popconfirm
                     title={t('tickets.deleteConfirm')}
                     onConfirm={() => handleDelete(template.id)}
                     okButtonProps={{ danger: true, loading: deleting === template.id }}
                   >
-                    <Button size="sm" variant="danger" rounded="sm" icon={deleting === template.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} disabled={deleting === template.id}>{t('tickets.delete')}</Button>
+                    <Button size="sm" variant="danger" rounded="sm" icon={deleting === template.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} disabled={deleting === template.id} autoLoading={false}>{t('tickets.delete')}</Button>
                   </Popconfirm>
                 </div>
               </div>
@@ -220,7 +220,7 @@ const handleDelete = async (id: string) => {
           <div className="py-16 text-center">
             <FileText size={48} className="text-zinc-200 mx-auto mb-4" />
             <p className="text-zinc-400 mb-4">{t('tickets.noTemplates')}</p>
-            <Button variant="primary" rounded="md" icon={<Plus size={14} />} onClick={handleCreate}>
+            <Button variant="primary" rounded="md" icon={<Plus size={14} />} onClick={handleCreate} autoLoading={false}>
               {t('tickets.createFirst')}
             </Button>
           </div>
@@ -262,7 +262,7 @@ const handleDelete = async (id: string) => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-medium">{t('tickets.formFields')}</label>
-              <Button size="sm" rounded="sm" icon={<Plus size={12} />} onClick={addField}>{t('tickets.addField')}</Button>
+              <Button size="sm" rounded="sm" icon={<Plus size={12} />} onClick={addField} autoLoading={false}>{t('tickets.addField')}</Button>
             </div>
             {formData.fields.map((field, index) => (
               <div key={index} className="flex items-center gap-2 mb-2">
@@ -288,7 +288,7 @@ const handleDelete = async (id: string) => {
                   {t('tickets.required')}
                 </label>
                 {formData.fields.length > 1 && (
-                  <Button variant="danger" size="sm" iconOnly icon={<X size={14}/>} onClick={() => removeField(index)} />
+                  <Button variant="danger" size="sm" iconOnly icon={<X size={14}/>} onClick={() => removeField(index)} autoLoading={false} />
                 )}
               </div>
             ))}

@@ -43,7 +43,7 @@ function NavMenuGroupComponent({ config }: { config: NavConfig | null }) {
         <React.Fragment key={gi}>
           {group.item.map((item, ii) => (
             <Link key={`${gi}-${ii}`} href={item.link}>
-              <Button variant="ghost" size="sm" className="text-zinc-500 dark:text-zinc-400">
+              <Button variant="ghost" size="sm" autoLoading={false} className="text-zinc-500 dark:text-zinc-400">
                 {item.icon && <img src={item.icon} alt="" className="w-4 h-4" />}
                 {item.name}
               </Button>
@@ -79,13 +79,13 @@ function NavAuthSection({ user, allowRegistration, clerkAvailable, t }: { user: 
   return (
     <>
       <Link href="/login">
-        <Button variant="ghost" size="md" className="text-zinc-600">
+        <Button variant="ghost" size="md" autoLoading={false} className="text-zinc-600">
           {t('auth.login')}
         </Button>
       </Link>
       {allowRegistration && (
         <Link href="/login">
-          <Button variant="primary" size="lg">
+          <Button variant="primary" size="lg" autoLoading={false}>
             <span className="flex items-center gap-1.5">
               <LoginOutlined />
               <span>{t('auth.register')}</span>
@@ -191,6 +191,7 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
               onClick={cycle}
               variant="ghost"
               size="sm"
+              autoLoading={false}
               iconOnly
               icon={mode === 'light' ? <Sun size={18} /> : mode === 'dark' ? <Moon size={18} /> : <Monitor size={18} />}
               aria-label={mode === 'light' ? '浅色模式' : mode === 'dark' ? '深色模式' : '跟随系统'}
@@ -203,6 +204,7 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
               onClick={() => setSearchOpen(true)}
               variant="ghost"
               size="sm"
+              autoLoading={false}
               iconOnly
               icon={<Search size={18} />}
               aria-label="搜索"
@@ -213,6 +215,7 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
               onClick={() => setShortcutsOpen(true)}
               variant="ghost"
               size="sm"
+              autoLoading={false}
               iconOnly
               icon={<Keyboard size={18} />}
               aria-label="快捷键帮助"
