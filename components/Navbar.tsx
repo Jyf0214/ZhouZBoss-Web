@@ -77,19 +77,17 @@ function NavClock({ travelling, clock, time }: { travelling?: boolean; clock?: b
 function NavAuthSection({ user, allowRegistration, clerkAvailable, t }: { user: unknown; allowRegistration: boolean; clerkAvailable: boolean; t: (key: string) => string }) {
   if (user) return <UserMenu />;
   return (
-    <>
+    <div className="flex items-center gap-1.5 whitespace-nowrap">
       <Link href="/login">
-        <Button variant="ghost" size="md" autoLoading={false} className="text-zinc-600">
+        <Button variant="default" size="sm" autoLoading={false} className="text-zinc-600">
           {t('auth.login')}
         </Button>
       </Link>
       {allowRegistration && (
-        <Link href="/login">
-          <Button variant="primary" size="lg" autoLoading={false}>
-            <span className="flex items-center gap-1.5">
-              <LoginOutlined />
-              <span>{t('auth.register')}</span>
-            </span>
+        <Link href="/login" className="hidden sm:inline-flex">
+          <Button variant="primary" size="sm" autoLoading={false}>
+            <LoginOutlined />
+            <span>{t('auth.register')}</span>
           </Button>
         </Link>
       )}
@@ -98,7 +96,7 @@ function NavAuthSection({ user, allowRegistration, clerkAvailable, t }: { user: 
           <ClerkLoginSection variant="compact" />
         </ClerkAuthProvider>
       )}
-    </>
+    </div>
   );
 }
 
