@@ -313,9 +313,19 @@ async function searchDiaryEntries(query: string): Promise<SearchResult[]> {
     const { prisma } = await import('@/lib/db');
     const diaries = await prisma.diary.findMany({
       where: {
-        OR: [
-          { title: { contains: query } },
-          { tags: { has: query } },
+        AND: [
+          {
+            OR: [
+              { scheduledAt: null },
+              { scheduledAt: { lte: new Date() } },
+            ],
+          },
+          {
+            OR: [
+              { title: { contains: query } },
+              { tags: { has: query } },
+            ],
+          },
         ],
       },
       select: {

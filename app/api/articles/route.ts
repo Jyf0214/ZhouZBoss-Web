@@ -30,9 +30,12 @@ async function getDraftsFromDb() {
   return drafts;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     logger.info('GET', '获取文章列表');
+    // 读取查询参数
+    const authorFilter = req.nextUrl.searchParams.get('author');
+
     // 已发布文章：从 posts/ 文件系统索引读取（由 lib/content.ts 在构建时生成）
     const session = await getSession();
     const isAuthenticated = !!session;
@@ -42,7 +45,7 @@ export async function GET() {
     const publishedFiles = getContentFiles('posts').filter((f) =>
       canAccess('posts', f.slug, isAuthenticated, dbAvailable, config)
     );
-    const published = publishedFiles.map((f) => ({
+    let published = publishedFiles.map((f) => ({
       id: f.slug,
       slug: f.slug,
       title: f.meta.title,
@@ -54,6 +57,11 @@ export async function GET() {
       status: 'published',
     }));
 
+    // 按 author 参数过滤已发布文章
+    if (authorFilter) {
+      published = published.filter((p) => p.author === authorFilter);
+    }
+
   // 草稿：仅已登录用户可查看，非 sudo/admin 只能看到自己的草稿
   let drafts: Awaited<ReturnType<typeof getDraftsFromDb>> = [];
   if (isAuthenticated) {
@@ -61,6 +69,11 @@ export async function GET() {
     drafts = session?.role === 'sudo' || session?.role === 'admin'
       ? allDrafts
       : allDrafts.filter((d) => d.authorId === session?.uid);
+
+    // 按 author 参数过滤草稿（草稿中 authorId 对应 author）
+    if (authorFilter) {
+      drafts = drafts.filter((d) => d.authorId === authorFilter);
+    }
     for (const draft of drafts) {
       if (draft.status === 'draft' && !draft.content) {
         const fileContent = await getDraft(draft.id);

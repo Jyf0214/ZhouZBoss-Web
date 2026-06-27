@@ -56,6 +56,8 @@ export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFo
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   // 用 ref 保存最新 props，避免依赖变化导致定时器不断重置
   const propsRef = useRef({ id, title, content, tags, date, group });
+  // 将 tags 序列化为稳定字符串，避免数组引用变化导致 effect 无限触发
+  const tagsKey = JSON.stringify(tags);
   propsRef.current = { id, title, content, tags, date, group };
 
   // 将回调函数存入 ref，避免 useEffect 依赖重新创建导致无限循环
@@ -90,28 +92,28 @@ export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFo
       });
   }, []);
 
-  // 防抖自动保存：仅当 title/content 真正变化时重置定时器
+  // 防抖自动保存：title/content/tags/date/group 任一变化时重置定时器
   useEffect(() => {
-    if (!title && !content) return;
+    if (!title && !content && !tagsKey && !date && !group) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(doSave, AUTOSAVE_DEBOUNCE_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [title, content, doSave]);
+  }, [title, content, tagsKey, date, group, doSave]);
 
   // 页面/标签页隐藏时立即保存
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.hidden && (title || content)) {
+      if (document.hidden && (title || content || tagsKey || date || group)) {
         if (timerRef.current) clearTimeout(timerRef.current);
         doSave();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [title, content, doSave]);
+  }, [title, content, tagsKey, date, group, doSave]);
 
   useEffect(() => {
     if (lastCheckedIdRef.current === id) return;

@@ -3,6 +3,7 @@
  */
 'use client';
 
+import { useState, useCallback } from 'react';
 import { Modal } from 'antd';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -34,6 +35,16 @@ export function StorageConfirmDeleteDialog({
   onConfirm,
   disabled = false,
 }: Props) {
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.resolve(onConfirm());
+    } finally {
+      setLoading(false);
+    }
+  }, [onConfirm]);
   return (
     <Modal
       open={open}
@@ -59,10 +70,10 @@ export function StorageConfirmDeleteDialog({
         </div>
       </div>
       <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-5">
-        <Button variant="ghost" size="sm" onClick={onCancel} disabled={disabled} autoLoading={false}>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={disabled || loading} autoLoading={false}>
           {cancelLabel}
         </Button>
-        <Button variant="danger" size="sm" onClick={onConfirm} disabled={disabled}>
+        <Button variant="danger" size="sm" onClick={handleConfirm} disabled={disabled || loading} loading={loading}>
           {deleteLabel}
         </Button>
       </div>

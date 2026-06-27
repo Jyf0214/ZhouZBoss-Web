@@ -65,7 +65,8 @@ export function MarkdownRenderer({ content, highlight, wikiLinkMap }: MarkdownRe
       <div
         className="cursor-pointer hover:opacity-80 transition-opacity"
         onClick={() => {
-          setLightbox({ open: true, images: imagesRef.current, index });
+          // 快照而非引用，防止后续 ref 重置影响 lightbox 图片列表
+          setLightbox({ open: true, images: [...imagesRef.current], index });
         }}
       >
         <LazyImage src={src} alt={alt} />

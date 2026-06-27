@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 
 interface TicketTemplate {
-  id: string;
+  slug: string;
   name: string;
   description: string;
   fields: TicketField[];
@@ -99,14 +99,17 @@ export default function TicketsPage() {
     }
     setSaving(true);
     try {
+      const filteredFields = formData.fields.filter(f => f.name);
+      const templateBody = filteredFields.map(f => `${f.name}: {{${f.name}}}`).join('\n');
       const res = await fetch('/api/ticket-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: editingTemplate?.id,
+          id: editingTemplate?.slug,
           name: formData.name,
           description: formData.description,
-          fields: formData.fields.filter(f => f.name),
+          fields: filteredFields,
+          body: templateBody,
         }),
       });
       if (res.ok) {
@@ -128,7 +131,7 @@ export default function TicketsPage() {
 const handleDelete = async (id: string) => {
     setDeleting(id);
     const originalTemplates = [...templates];
-    setTemplates(templates.filter(tmpl => tmpl.id !== id));
+    setTemplates(templates.filter(tmpl => tmpl.slug !== id));
     try {
       const res = await fetch('/api/ticket-templates', {
         method: 'DELETE',
@@ -192,7 +195,7 @@ const handleDelete = async (id: string) => {
         {templates.length > 0 ? (
           <div className="divide-y divide-zinc-50">
             {templates.map((template) => (
-              <div key={template.id} className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50/50 transition-colors">
+              <div key={template.slug} className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
                     <FileText size={18} className="text-blue-500" />
@@ -208,11 +211,11 @@ const handleDelete = async (id: string) => {
                   <Button size="sm" rounded="sm" icon={<Edit2 size={13} />} onClick={() => handleEdit(template)} autoLoading={false}>{t('tickets.edit')}</Button>
                   <Popconfirm
                     title={t('tickets.deleteConfirm')}
-                    onConfirm={() => handleDelete(template.id)}
-                    okButtonProps={{ danger: true, loading: deleting === template.id }}
+                    onConfirm={() => handleDelete(template.slug)}
+                    okButtonProps={{ danger: true, loading: deleting === template.slug }}
                     placement="topRight"
                   >
-                    <Button size="sm" variant="danger" rounded="sm" icon={deleting === template.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} disabled={deleting === template.id} autoLoading={false}>{t('tickets.delete')}</Button>
+                    <Button size="sm" variant="danger" rounded="sm" icon={deleting === template.slug ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} disabled={deleting === template.slug} autoLoading={false}>{t('tickets.delete')}</Button>
                   </Popconfirm>
                 </div>
               </div>

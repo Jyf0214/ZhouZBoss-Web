@@ -75,3 +75,38 @@ export const POST = apiHandler('POST', { label: '创建模板', requireAdmin: tr
   logger.info('POST', '模板创建成功', { slug: `/${slug}` });
   return NextResponse.json({ success: true, slug: `/${slug}` });
 });
+
+// 删除模板（仅 admin/sudo）
+export const DELETE = apiHandler('DELETE', { label: '删除模板', requireAdmin: true }, async (req) => {
+  const body = await req.json();
+  const { id } = body;
+
+  if (!id) {
+    logger.warn('DELETE', '缺少模板 ID');
+    return NextResponse.json({ error: '缺少模板 ID' }, { status: 400 });
+  }
+
+  // id 是 slug（如 '/my-template'），去掉前导 /
+  const slug = id.startsWith('/') ? id.slice(1) : id;
+  const filePath = `tickets/${slug}.md`;
+
+  logger.info('DELETE', '删除模板', { slug, filePath });
+
+  const githubRes = await fetch(`${new URL(req.url).origin}/api/github`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'delete',
+      path: filePath,
+      message: `delete: ticket template ${slug}`,
+    }),
+  });
+
+  if (!githubRes.ok) {
+    const err = await githubRes.json();
+    return NextResponse.json({ error: err.error ?? '删除模板失败' }, { status: 500 });
+  }
+
+  logger.info('DELETE', '模板删除成功', { slug });
+  return NextResponse.json({ success: true });
+});

@@ -55,8 +55,8 @@ export function useSearch({ open, onClose }: UseSearchOptions): UseSearchReturn 
     }
   }, [open]);
 
-  // ── 防抖搜索 ──
-  const performSearch = useCallback(async (q: string) => {
+  // ── 防抖搜索（AbortController 防止旧请求覆盖新结果） ──
+  const performSearch = useCallback(async (q: string, signal?: AbortSignal) => {
     const trimmed = q.trim();
     if (!trimmed) {
       setResults([]);
@@ -71,6 +71,7 @@ export function useSearch({ open, onClose }: UseSearchOptions): UseSearchReturn 
     try {
       const res = await fetch(
         `/api/search?q=${encodeURIComponent(trimmed)}`,
+        { signal },
       );
       if (res.ok) {
         const data: SearchResponse = await res.json();
@@ -82,11 +83,16 @@ export function useSearch({ open, onClose }: UseSearchOptions): UseSearchReturn 
         showError(`搜索请求失败（HTTP ${res.status}）`);
       }
     } catch (err) {
+      // AbortError 说明被新请求取消，静默忽略
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       setResults([]);
       setGroups([]);
       showError(`搜索出错：${err instanceof Error ? err.message : '网络异常'}`);
     } finally {
-      setLoading(false);
+      // 仅当未被中止时才更新 loading 状态
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -95,14 +101,17 @@ export function useSearch({ open, onClose }: UseSearchOptions): UseSearchReturn 
       clearTimeout(debounceRef.current);
     }
 
+    const controller = new AbortController();
+
     debounceRef.current = setTimeout(() => {
-      void performSearch(query);
+      void performSearch(query, controller.signal);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
+      controller.abort();
     };
   }, [query, performSearch]);
 
