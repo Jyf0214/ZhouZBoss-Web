@@ -17,6 +17,7 @@
  */
 import type { Metadata } from 'next';
 import { cache } from 'react';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { buildPageRelativePath, resolvePageFilePath, extractTitle } from '@/lib/page-source/shared';
 import { isStorageConfigured } from '@/lib/storage/storage-provider';
@@ -31,7 +32,7 @@ const cachedFetchPageHtml = cache(fetchPageHtml);
 
 interface PageProps {
   params: Promise<{ path: string[] }>;
-  searchParams: Promise<{ pwd?: string }>;
+  searchParams: Promise<{ pwd?: string; auth?: string }>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CustomPage({ params, searchParams }: PageProps) {
   const { path } = await params;
-  const { pwd } = await searchParams;
+  const { pwd, auth } = await searchParams;
 
   if (!isStorageConfigured()) {
     return <NotConfiguredView />;
@@ -76,7 +77,13 @@ export default async function CustomPage({ params, searchParams }: PageProps) {
   }
 
   const queryPwd = typeof pwd === 'string' && pwd.length > 0 ? pwd : null;
-  const access = await checkPageAccess(filePath, queryPwd);
+
+  // 从 httpOnly cookie 中读取已验证的密码
+  const cookieStore = await cookies();
+  const cookieName = `pwd_${Buffer.from(path.join('/')).toString('base64url').slice(0, 32)}`;
+  const cookiePwd = cookieStore.get(cookieName)?.value ?? null;
+
+  const access = await checkPageAccess(filePath, cookiePwd ?? queryPwd);
 
   if (access.allowed) {
     const title = extractTitle(html) ?? 'Custom Page';
@@ -90,6 +97,16 @@ export default async function CustomPage({ params, searchParams }: PageProps) {
         />
         <UserWidget />
       </div>
+    );
+  }
+
+  // auth=fail 表示用户刚提交了错误密码
+  if (auth === 'fail') {
+    return (
+      <PasswordPrompt
+        path={path.join('/')}
+        wrongPassword
+      />
     );
   }
 

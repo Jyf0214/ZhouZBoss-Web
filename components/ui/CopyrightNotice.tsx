@@ -23,9 +23,8 @@ export interface CopyrightNoticeProps {
 
 function decodeHtml(text: string): string {
   if (typeof document === 'undefined') return text;
-  const el = document.createElement('div');
-  el.innerHTML = text;
-  return el.textContent || el.innerText || '';
+  const doc = new DOMParser().parseFromString(text, 'text/html');
+  return doc.documentElement.textContent || '';
 }
 
 export function CopyrightNotice({

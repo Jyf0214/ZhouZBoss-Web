@@ -9,12 +9,10 @@ import { Button } from '@/components/ui/Button';
 /**
  * 私有页面密码输入框
  *
- * - 用户输入密码后提交,以 query 形式 (?pwd=xxx) 重新跳回原路径
+ * - 用户输入密码后提交,通过 POST 请求 /api/page-password 验证并设置 httpOnly cookie
+ * - 验证成功后无密码地跳转回原路径,密码不再出现在 URL 中
  * - 支持显示/隐藏密码
  * - wrongPassword=true 时,顶部红条 + 错误提示
- *
- * 注意:此组件不直接判定密码正确性,只负责把用户输入回传到 URL,
- * 由服务端 (`app/page/[...path]/page.tsx`) 重新校验。
  */
 export function PasswordPrompt({
   path,
@@ -28,11 +26,25 @@ export function PasswordPrompt({
   const [value, setValue] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) return;
-    router.push(`/page/${path}?pwd=${encodeURIComponent(trimmed)}`);
+
+    try {
+      const res = await fetch('/api/page-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path, password: trimmed }),
+      });
+      if (res.ok) {
+        router.push(`/page/${path}`);
+      } else {
+        router.push(`/page/${path}?auth=fail`);
+      }
+    } catch {
+      router.push(`/page/${path}?auth=fail`);
+    }
   };
 
   return (
