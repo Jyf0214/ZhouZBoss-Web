@@ -134,7 +134,7 @@ export function StorageAdminShell() {
 
   const handleEntryDelete = (entry: WebDavEntry) => {
     if (!state.configured) {
-      showError('存储后端未配置,无法删除');
+      showError(t('storage.deleteNotConfigured'));
       return;
     }
     // 使用 filename（当前目录内的名称）而非 basename（含父路径），

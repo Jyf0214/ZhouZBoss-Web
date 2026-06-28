@@ -261,6 +261,10 @@ export const DELETE = apiHandler('DELETE', { label: '删除文章', requireAuth:
 
   // 数据库无记录 → 文件系统发布的文章 → 从 GitHub 删除
   if (!metaStr) {
+    // 文件系统文章仅管理员可删除，防止普通用户越权
+    if (session.role !== 'admin' && session.role !== 'sudo') {
+      return NextResponse.json({ error: '无权限删除此文章' }, { status: 403 });
+    }
     const { getContentFile } = await import('@/lib/content');
     const slug = id.startsWith('/') ? id : `/${id}`;
     const file = getContentFile('posts', slug);
@@ -314,8 +318,10 @@ export const DELETE = apiHandler('DELETE', { label: '删除文章', requireAuth:
     deletionRequestedAt: new Date().toISOString(),
   };
   await db.set(`article:data:${id}`, JSON.stringify(deletionInfo));
+  // 写入 articles:index 供回收站和清理任务读取
   await db.hdel('articles:drafts', id);
-  await db.hset('articles:drafts', id, JSON.stringify(deletionInfo));
+  await db.hdel('articles:published', id);
+  await db.hset('articles:index', id, JSON.stringify(deletionInfo));
 
   return NextResponse.json({ success: true, message: '已提交删除申请，30天后自动删除' });
 });

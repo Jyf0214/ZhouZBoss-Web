@@ -101,7 +101,10 @@ export function ApiKeyCard() {
     }
   };
 
-  const formatDate = (s: string) => new Date(s).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', year: 'numeric' });
+  const formatDate = (s: string) => {
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
   return (
     <ProCard className="mt-6">

@@ -31,9 +31,6 @@ export const PUT = apiHandler('PUT', { label: '更新日记', requireAdmin: true
     return NextResponse.json({ error: '日记不存在' }, { status: 404 });
   }
 
-  // 保存编辑前的版本快照（加密前明文）
-  await saveDiaryVersion(id, content, title, tags ?? []);
-
   const encrypted = await encryptContent(content);
 
   // 设置了定时发布时间 → 状态为 draft，否则为 published
@@ -52,6 +49,9 @@ export const PUT = apiHandler('PUT', { label: '更新日记', requireAdmin: true
       scheduledAt: isScheduled ? new Date(scheduledAt) : null,
     },
   });
+
+  // 更新成功后再保存版本快照，避免 update 失败时产生幽灵版本
+  await saveDiaryVersion(id, content, title, tags ?? []);
 
   logger.info('PUT', '更新日记成功', { id, title, scheduled: isScheduled });
   return NextResponse.json({ diary });

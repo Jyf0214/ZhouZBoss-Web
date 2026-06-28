@@ -118,6 +118,12 @@ export function apiHandler<
       statusCode = response.status;
       return response;
     } catch (error) {
+      // 格式错误的 JSON 请求体应返回 400 而非 500
+      if (error instanceof SyntaxError && error.message.includes('JSON')) {
+        statusCode = 400;
+        console.warn(`[API] ${method} ${pathname}${querySummary(req)} → 400 请求体格式错误`);
+        return NextResponse.json({ error: '请求体格式错误' }, { status: 400 });
+      }
       statusCode = 500;
       const err = error instanceof Error ? error : new Error(String(error));
       console.error(`[API] ${method} ${pathname}${querySummary(req)} → 500 ${options.label} 失败`, {

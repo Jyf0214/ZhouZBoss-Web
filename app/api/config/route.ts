@@ -329,9 +329,17 @@ export async function POST(req: NextRequest) {
   logger.info('POST', '开始更新配置', { role: session.role });
 
   try {
-    const newConfig = await req.json() as Partial<AppConfig>;
+    const rawConfig = await req.json() as Partial<AppConfig>;
+    // PUT 有 Zod 校验，POST 也必须有，防止非法配置写入
+    const validated = zAppConfig.partial().safeParse(rawConfig);
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: '配置校验失败: ' + validated.error.issues.map(i => i.path.join('.')).join(', ') },
+        { status: 400 }
+      );
+    }
     const currentConfig = loadConfig();
-    const mergedConfig = mergeAppConfig(currentConfig, newConfig);
+    const mergedConfig = mergeAppConfig(currentConfig, validated.data);
 
     // 持久化到 GitHub（如果配置了远程仓库）
     const githubRepo = process.env.GITHUB_REPO;

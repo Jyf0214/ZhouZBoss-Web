@@ -75,6 +75,7 @@ function Timeline({ posts }: { posts: RecentPost[] }) {
     <div className="space-y-0">
       {posts.map((post, i) => {
         const d = new Date(post.date);
+        if (isNaN(d.getTime())) return null;
         const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         return (
           <div key={post.slug + i} className="flex gap-4 py-3">

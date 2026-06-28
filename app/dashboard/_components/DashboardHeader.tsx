@@ -8,7 +8,7 @@ export function DashboardHeader({ user, t }: { user: User | null; t: (key: strin
     <div className="mb-10">
       <div className="flex items-center gap-3 mb-2">
         <h1 className="text-3xl font-black tracking-tight text-zinc-900">
-          {t('dashboard.welcomeBack')}，{user?.name ?? '用户'}
+          {t('dashboard.welcomeBack')}{user?.name ? `，${user.name}` : ''}
         </h1>
       </div>
       <p className="text-zinc-400 text-base">

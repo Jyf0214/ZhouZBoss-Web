@@ -94,7 +94,12 @@ export function FaceForm({ groups, faceData, isEdit = false }: FaceFormProps) {
       }
 
       message.success(isEdit ? t('common.success') : t('common.success'));
-      router.push(`/faces${data.slug ?? faceData?.slug}`);
+      const slug = data.slug;
+      if (slug) {
+        router.push(`/faces${slug}`);
+      } else {
+        router.refresh();
+      }
     } catch (error: unknown) {
       showError(error instanceof Error ? error.message : t('common.error'));
     } finally {

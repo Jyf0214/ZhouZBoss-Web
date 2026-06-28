@@ -13,11 +13,16 @@ import { useState, useEffect, useRef } from 'react';
 export function useActiveHeading(headings: { id: string }[]): string {
   const [activeId, setActiveId] = useState<string>('');
   const prevJsonRef = useRef<string>('');
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     const nextJson = JSON.stringify(headings);
     if (nextJson === prevJsonRef.current) return;
     prevJsonRef.current = nextJson;
+
+    // 清理旧 observer
+    observerRef.current?.disconnect();
+    observerRef.current = null;
 
     if (headings.length === 0) return;
 
@@ -32,15 +37,17 @@ export function useActiveHeading(headings: { id: string }[]): string {
       },
       { rootMargin: '-80px 0px -70% 0px', threshold: 0 },
     );
+    observerRef.current = observer;
 
     for (const h of headings) {
       const el = document.getElementById(h.id);
       if (el) observer.observe(el);
     }
 
-    return () => observer.disconnect();
-    // prevJsonRef.current 是 ref，不影响 React 依赖分析，不需要加入依赖
-     
+    return () => {
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+    };
   }, [headings]);
 
   return activeId;

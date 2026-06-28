@@ -23,7 +23,7 @@ export function PostCardBody({
         </div>
       )}
       <div className="flex flex-wrap gap-1.5 mb-3">
-        {post.tags.slice(0, 3).map((tag) => (
+        {(post.tags ?? []).slice(0, 3).map((tag) => (
           <Tag key={tag} variant="light" size="md">
             {tag}
           </Tag>

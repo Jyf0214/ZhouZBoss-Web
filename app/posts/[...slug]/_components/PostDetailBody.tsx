@@ -22,6 +22,7 @@ import type { WikiLinkMap } from '@/components/MarkdownRenderer/types';
 import type { BacklinkInfo, RegistryEntry } from '@/lib/content-registry';
 import { buildCopyrightConfig, buildShareConfig } from '../_lib/post-page-config';
 import { tPosts } from '../_lib/post-i18n';
+import { useI18n } from '@/hooks/use-i18n';
 
 export function PostDetailBody({
   file,
@@ -55,6 +56,7 @@ export function PostDetailBody({
   outgoingRefs?: RegistryEntry[];
 }) {
   const [qrOpen, setQrOpen] = useState(false);
+  const { t } = useI18n();
 
   return (
     <>
@@ -98,9 +100,9 @@ export function PostDetailBody({
       {showWordCount && (
         <div className="mt-12 px-6 py-4 bg-zinc-50 rounded-xl border border-zinc-100">
           <div className="text-sm text-zinc-500 text-center">
-            <span>本文字数: {wordCount.toLocaleString()} 字</span>
+            <span>{t('posts.wordCountLabel', { count: wordCount.toLocaleString() })}</span>
             <span className="mx-2 text-zinc-300">|</span>
-            <span>预计阅读: {readingTime} 分钟</span>
+            <span>{t('posts.readingTimeLabel', { minutes: readingTime })}</span>
           </div>
         </div>
       )}

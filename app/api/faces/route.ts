@@ -11,13 +11,14 @@ const logger = createApiLogger('/api/faces');
  * 根据认证状态和数据库可用性返回可访问的通讯录条目
  */
 export async function GET() {
-  const config = loadConfig();
-  const session = await getSession();
-  const isAuthenticated = !!session;
-  const dbAvailable = hasDatabase();
-  const allFiles = getContentFiles('faces');
-  const indexes = getContentIndexes('faces');
-  const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
+  try {
+    const config = loadConfig();
+    const session = await getSession();
+    const isAuthenticated = !!session;
+    const dbAvailable = hasDatabase();
+    const allFiles = getContentFiles('faces');
+    const indexes = getContentIndexes('faces');
+    const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
 
   logger.info('GET', '读取通讯录列表');
 
@@ -52,10 +53,14 @@ export async function GET() {
       groupName: idx.groupName,
     })),
     site: config.site,
-  }, {
-    // 通讯录缓存：CDN 缓存 600s，过期后后台重验证 1200s
-    headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },
-  });
+    }, {
+      // 通讯录缓存：CDN 缓存 600s，过期后后台重验证 1200s
+      headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },
+    });
+  } catch (error) {
+    logger.error('GET', '获取通讯录列表失败', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: '获取通讯录列表失败' }, { status: 500 });
+  }
 }
 
 /**

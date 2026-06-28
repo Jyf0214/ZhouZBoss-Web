@@ -10,13 +10,13 @@ import { Settings, Eye, Activity, FileText, Users, Plus, ArrowRight, BarChart3 }
 import { PageContainer } from '@/components/ui/PageContainer';
 
 const adminSections = [
-  { key: 'sidebar.systemConfig', icon: Settings, href: '/admin/config', color: 'bg-zinc-900', desc: '系统配置' },
-  { key: 'sidebar.configPreview', icon: Eye, href: '/admin/config/preview', color: 'bg-blue-500', desc: '配置预览' },
-  { key: 'sidebar.envVariables', icon: Activity, href: '/admin/env', color: 'bg-emerald-500', desc: '环境变量' },
-  { key: 'sidebar.tickets', icon: FileText, href: '/admin/tickets', color: 'bg-amber-500', desc: '工单管理' },
-  { key: 'sidebar.writeArticle', icon: Plus, href: '/admin/tickets/new', color: 'bg-purple-500', desc: '新建工单' },
-  { key: 'sidebar.userManagement', icon: Users, href: '/admin/users', color: 'bg-rose-500', desc: '用户管理' },
-  { key: 'sidebar.contentStats', icon: BarChart3, href: '/admin/stats', color: 'bg-indigo-500', desc: '内容统计' },
+  { key: 'sidebar.systemConfig', icon: Settings, href: '/admin/config', color: 'bg-zinc-900', descKey: 'admin.desc.systemConfig' },
+  { key: 'sidebar.configPreview', icon: Eye, href: '/admin/config/preview', color: 'bg-blue-500', descKey: 'admin.desc.configPreview' },
+  { key: 'sidebar.envVariables', icon: Activity, href: '/admin/env', color: 'bg-emerald-500', descKey: 'admin.desc.envVariables' },
+  { key: 'sidebar.tickets', icon: FileText, href: '/admin/tickets', color: 'bg-amber-500', descKey: 'admin.desc.tickets' },
+  { key: 'sidebar.writeArticle', icon: Plus, href: '/admin/tickets/new', color: 'bg-purple-500', descKey: 'admin.desc.writeArticle' },
+  { key: 'sidebar.userManagement', icon: Users, href: '/admin/users', color: 'bg-rose-500', descKey: 'admin.desc.userManagement' },
+  { key: 'sidebar.contentStats', icon: BarChart3, href: '/admin/stats', color: 'bg-indigo-500', descKey: 'admin.desc.contentStats' },
 ];
 
 export default function AdminPage() {
@@ -52,7 +52,7 @@ export default function AdminPage() {
                         {t(section.key)}
                       </div>
                       <div className="text-xs text-zinc-400 mt-0.5">
-                        {section.desc}
+                        {t(section.descKey)}
                       </div>
                     </div>
                   </div>

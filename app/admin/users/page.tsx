@@ -30,19 +30,19 @@ export default function UsersPage() {
           const data = await res.json();
           setUsers(data);
         } else {
-          showError('用户列表加载失败');
+          showError(t('admin.userListLoadFailed'));
         }
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
         console.error('获取用户列表失败:', error);
-        showError('用户列表加载失败');
+        showError(t('admin.userListLoadFailed'));
       } finally {
         setLoading(false);
       }
     };
     void fetchUsers();
     return () => controller.abort();
-  }, [hasAccess]);
+  }, [hasAccess, t]);
 
   const handleUpdateRole = async (id: string) => {
     const targetUser = users.find(u => u.uid === id);

@@ -61,13 +61,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '关联用户不存在' }, { status: 401 });
   }
 
-  const user = JSON.parse(userRaw) as {
-    uid: string;
-    email: string;
-    role: string;
-    userGroup?: string;
-    twoFactorEnabled?: boolean;
-  };
+  let user: { uid: string; email: string; role: string; userGroup?: string; twoFactorEnabled?: boolean };
+  try {
+    user = JSON.parse(userRaw);
+  } catch {
+    logger.error('POST', '用户数据 JSON 解析失败', { uid: row.uid });
+    return NextResponse.json({ error: '用户数据异常' }, { status: 500 });
+  }
 
   // 更新最后使用时间(异步,不阻塞响应)
   void db.prisma.apiKey.update({ where: { id: row.id }, data: { lastUsed: new Date() } }).catch(() => { /* best-effort */ });

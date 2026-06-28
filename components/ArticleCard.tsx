@@ -73,7 +73,8 @@ function ArticleCover({ article, horizontal, defaultCover }: { article: Article;
   );
 }
 
-function TagBadges({ tags }: { tags: string[] }) {
+function TagBadges({ tags }: { tags?: string[] }) {
+  if (!tags?.length) return null;
   return (
     <div className="flex flex-wrap gap-2 mb-6">
       {tags.slice(0, 3).map((tag) => (

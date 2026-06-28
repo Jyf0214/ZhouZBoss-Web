@@ -105,7 +105,8 @@ export function ArticleHeader({
   const dateOptions: Intl.DateTimeFormatOptions = dateFormat === 'simple'
     ? { month: 'short', day: 'numeric' }
     : { year: 'numeric', month: 'long', day: 'numeric' };
-  const displayDate = dateType === 'none' ? null : new Date(articleData.createdAt).toLocaleDateString('zh-CN', dateOptions);
+  const parsedCreatedAt = new Date(articleData.createdAt);
+  const displayDate = dateType === 'none' || isNaN(parsedCreatedAt.getTime()) ? null : parsedCreatedAt.toLocaleDateString('zh-CN', dateOptions);
 
   return (
     <header className="mb-12">

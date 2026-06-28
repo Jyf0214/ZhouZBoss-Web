@@ -58,7 +58,7 @@ function CardThumbnail({
   return (
     <div className="aspect-square bg-zinc-50 flex items-center justify-center overflow-hidden">
       {showImage ? (
-        <img src={publicUrl} alt={entry.filename} className="w-full h-full object-cover" loading="lazy" />
+        <img src={publicUrl} alt={entry.filename} className="w-full h-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
       ) : (
         <Icon size={entry.isDirectory ? 48 : 40} className={entry.isDirectory ? 'text-amber-500' : 'text-zinc-300'} />
       )}

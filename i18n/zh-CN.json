@@ -329,7 +329,17 @@
     "cannotDeleteFirstAdmin": "不能删除首个管理员用户",
     "deleteConfirm": "确定要删除此用户吗？",
     "deleteUserFailed": "删除用户失败",
-    "noUsers": "暂无用户"
+    "noUsers": "暂无用户",
+    "userListLoadFailed": "用户列表加载失败",
+    "desc": {
+      "systemConfig": "系统配置",
+      "configPreview": "配置预览",
+      "envVariables": "环境变量",
+      "tickets": "工单管理",
+      "writeArticle": "新建工单",
+      "userManagement": "用户管理",
+      "contentStats": "内容统计"
+    }
   },
   "env": {
     "title": "环境变量状态",
@@ -634,7 +644,10 @@
     "viewAll": "查看全部",
     "backToPosts": "返回帖子列表",
     "notFound": "帖子未找到",
-    "privateHint": "此内容需要登录后查看"
+    "privateHint": "此内容需要登录后查看",
+    "wordCountLabel": "本文字数: {count} 字",
+    "readingTimeLabel": "预计阅读: {minutes} 分钟",
+    "shareQR": "分享二维码"
   },
   "faces": {
     "title": "通讯录",
@@ -713,6 +726,7 @@
     "title": "存储池",
     "notConfigured": "存储池未配置",
     "notConfiguredDesc": "请在 .env.local 中设置 STORAGE_TYPE 及相关环境变量（WebDAV 需 WEBDAV_URL/USER/PASS，B2 需 B2_* 系列变量），然后重启服务。",
+    "deleteNotConfigured": "存储后端未配置,无法删除",
     "folders": "文件夹",
     "files": "文件",
     "root": "根目录",

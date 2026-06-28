@@ -183,6 +183,7 @@ export function useStorageState(): UseStorageState {
 
   /** 进入后默认加载 entries(currentPath 变化时触发) */
   useEffect(() => {
+    if (!hasFetched.current) return; // 首次挂载由上面的 loadInitial effect 处理
     void loadEntries(currentPath);
   }, [currentPath, loadEntries]);
 

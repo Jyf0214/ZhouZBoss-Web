@@ -187,10 +187,15 @@ export default function ConfigEditor({
     // 使用 requestAnimationFrame 重试等待 DOM 渲染完成，
     // 比固定 setTimeout(100) 更可靠：表单渲染慢时也能等到元素出现
     let rafId: number;
+    let retries = 0;
+    const MAX_RETRIES = 60; // ~1秒@60fps
     const retrySetup = () => {
       const sectionEls = document.querySelectorAll('[id^="section-"]');
       if (sectionEls.length === 0) {
-        rafId = requestAnimationFrame(retrySetup);
+        if (retries < MAX_RETRIES) {
+          retries++;
+          rafId = requestAnimationFrame(retrySetup);
+        }
         return;
       }
       setupObserver();

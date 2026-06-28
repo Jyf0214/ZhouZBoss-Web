@@ -329,7 +329,17 @@
     "cannotDeleteFirstAdmin": "Cannot delete the first admin user",
     "deleteConfirm": "Are you sure you want to delete this user?",
     "deleteUserFailed": "Failed to delete user",
-    "noUsers": "No users"
+    "noUsers": "No users",
+    "userListLoadFailed": "Failed to load user list",
+    "desc": {
+      "systemConfig": "System Config",
+      "configPreview": "Config Preview",
+      "envVariables": "Env Variables",
+      "tickets": "Ticket Management",
+      "writeArticle": "New Ticket",
+      "userManagement": "User Management",
+      "contentStats": "Content Stats"
+    }
   },
   "env": {
     "title": "Environment Variables Status",
@@ -634,7 +644,10 @@
     "viewAll": "View All",
     "backToPosts": "Back to Posts",
     "notFound": "Post not found",
-    "privateHint": "Login required to view this content"
+    "privateHint": "Login required to view this content",
+    "wordCountLabel": "{count} words",
+    "readingTimeLabel": "{minutes} min read",
+    "shareQR": "Share QR Code"
   },
   "faces": {
     "title": "Faces",
@@ -713,6 +726,7 @@
     "title": "Storage Pool",
     "notConfigured": "Storage Not Configured",
     "notConfiguredDesc": "Please set WEBDAV_URL, WEBDAV_USER and WEBDAV_PASS for WebDAV backends, or set STORAGE_TYPE=b2 with B2_* variables for B2 backend, in .env.local then restart the server.",
+    "deleteNotConfigured": "Storage not configured, cannot delete",
     "folders": "Folders",
     "files": "Files",
     "root": "Root",

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Modal } from 'antd';
 import { Copy, Check, ExternalLink, QrCode } from 'lucide-react';
+import { useI18n } from '@/hooks/use-i18n';
 
 export interface QRCodeDialogProps {
   /** 弹窗是否可见 */
@@ -18,6 +19,7 @@ export interface QRCodeDialogProps {
 export default function QRCodeDialog({ open, url, title, onClose }: QRCodeDialogProps) {
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
+  const { t } = useI18n();
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const failedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -55,7 +57,7 @@ export default function QRCodeDialog({ open, url, title, onClose }: QRCodeDialog
       title={
         <span className="flex items-center gap-2 text-base">
           <QrCode size={18} />
-          分享二维码
+          {t('posts.shareQR')}
         </span>
       }
     >
@@ -64,7 +66,7 @@ export default function QRCodeDialog({ open, url, title, onClose }: QRCodeDialog
         <div className="p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm">
           <img
             src={qrSrc}
-            alt={title ? `${title} 的二维码` : '分享二维码'}
+            alt={title ? `${title} 的二维码` : t('posts.shareQR')}
             className="w-[200px] h-[200px] block"
             loading="lazy"
           />
