@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth';
 import { apiHandler } from '@/lib/api-handler';
 import { createApiLogger } from '@/lib/api-logger';
 import { canAccess, loadConfig, hasDatabase } from '@/lib/config';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/search');
 
@@ -370,7 +371,16 @@ async function searchDiaryEntries(query: string): Promise<SearchResult[]> {
 
 // ─── API Route ──────────────────────────────────────────────────────────────
 
+function checkSearchRateLimit(req: NextRequest): NextResponse | null {
+  const rl = checkRateLimit(req, 'search', 30, 60 * 1000);
+  if (!rl.allowed) return NextResponse.json({ error: '搜索过于频繁' }, { status: 429 });
+  return null;
+}
+
 export const GET = apiHandler('GET', { label: '搜索' }, async (req: NextRequest) => {
+  const rlErr = checkSearchRateLimit(req);
+  if (rlErr) return rlErr;
+
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q')?.trim() ?? '';
   const tag = searchParams.get('tag')?.trim();
@@ -389,12 +399,22 @@ export const GET = apiHandler('GET', { label: '搜索' }, async (req: NextReques
   const dbAvailable = hasDatabase();
   const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
 
+  return executeSearch(searchQuery, tag ?? null, isAuthenticated, dbAvailable, isAdmin);
+});
+
+async function executeSearch(
+  searchQuery: string,
+  tag: string | null,
+  isAuthenticated: boolean,
+  dbAvailable: boolean,
+  isAdmin: boolean,
+): Promise<NextResponse> {
   // 搜索 posts
   const postResults = searchPostsDirectory(
     POSTS_DIR,
     POSTS_DIR,
     searchQuery,
-    { isAuthenticated, dbAvailable, tagFilter: tag },
+    { isAuthenticated, dbAvailable, tagFilter: tag ?? undefined },
   );
 
   // 按相关性排序
@@ -408,8 +428,8 @@ export const GET = apiHandler('GET', { label: '搜索' }, async (req: NextReques
 
   // 搜索日记（仅管理员）
   let topDiary: SearchResult[] = [];
-  if (isAdmin && query) {
-    const diaryResults = await searchDiaryEntries(query);
+  if (isAdmin && searchQuery) {
+    const diaryResults = await searchDiaryEntries(searchQuery);
     diaryResults.sort((a, b) => {
       const scoreA = calcRelevance(a.title, a.description, a.tags, '', searchQuery);
       const scoreB = calcRelevance(b.title, b.description, b.tags, '', searchQuery);
@@ -437,4 +457,4 @@ export const GET = apiHandler('GET', { label: '搜索' }, async (req: NextReques
     results: [...topPosts, ...topDiary],
     groups,
   });
-});
+}

@@ -295,8 +295,10 @@ export async function getSessionWithKeyId(): Promise<{ session: SessionPayload; 
       return null;
     }
     const user = JSON.parse(userRaw) as { uid: string; email: string; role: string; userGroup?: string };
+    const validRoles = ['user', 'admin', 'sudo'] as const;
+    const role = validRoles.includes(user.role as typeof validRoles[number]) ? user.role as SessionPayload['role'] : 'user';
     return {
-      session: { uid: user.uid, email: user.email, role: user.role as SessionPayload['role'], userGroup: user.userGroup },
+      session: { uid: user.uid, email: user.email, role, userGroup: user.userGroup },
       currentKeyId: row.id,
     };
   } catch {

@@ -88,6 +88,10 @@ export const DELETE = apiHandler('DELETE', { label: '删除模板', requireAdmin
 
   // id 是 slug（如 '/my-template'），去掉前导 /
   const slug = id.startsWith('/') ? id.slice(1) : id;
+  // 路径穿越防护
+  if (slug.includes('..') || slug.includes('/') || slug.includes('\\')) {
+    return NextResponse.json({ error: '无效的模板 ID' }, { status: 400 });
+  }
   const filePath = `tickets/${slug}.md`;
 
   logger.info('DELETE', '删除模板', { slug, filePath });

@@ -304,6 +304,7 @@ export const DELETE = apiHandler('DELETE', { label: '删除文章', requireAuth:
     await db.del(`article:data:${id}`);
     await db.hdel('articles:drafts', id);
     await db.hdel('articles:published', id);
+    await db.hdel('articles:index', id);
 
     // 清理草稿文件
     try {

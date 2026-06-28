@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { verifyTotp } from '@/lib/totp';
 import { createApiLogger } from '@/lib/api-logger';
 import { logAudit } from '@/lib/audit';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/auth/2fa/disable');
 
@@ -13,6 +14,14 @@ const logger = createApiLogger('/api/auth/2fa/disable');
  */
 export async function POST(req: NextRequest) {
   try {
+    const rl = checkRateLimit(req, '2fa-disable', 5, 5 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `验证尝试过于频繁，请在 ${Math.ceil(rl.retryAfterMs / 1000)} 秒后重试` },
+        { status: 429 },
+      );
+    }
+
     const session = await requireAdmin();
     if (session instanceof NextResponse) {
       return session;

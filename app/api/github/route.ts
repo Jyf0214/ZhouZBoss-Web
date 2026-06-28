@@ -80,6 +80,11 @@ export const POST = apiHandler('POST', { label: 'GitHub 操作', requireAdmin: t
     return NextResponse.json({ error: '缺少必需参数' }, { status: 400 });
   }
 
+  // 路径穿越防护：拒绝含 .. 或 \ 的路径
+  if (typeof path === 'string' && (path.includes('..') || path.includes('\\') || path.startsWith('/'))) {
+    return NextResponse.json({ error: '无效的文件路径' }, { status: 400 });
+  }
+
   const envResult = validateGithubEnv();
   if (envResult instanceof NextResponse) return envResult;
   const { owner, repo, octokit } = envResult;

@@ -122,13 +122,25 @@ function mergeAppearance(
   base: AppConfig['appearance'],
   overrideAppearance: Partial<AppConfig['appearance']> | undefined,
 ): AppConfig['appearance'] {
-  const background = overrideAppearance?.background
+  if (!overrideAppearance) return base;
+  const background = overrideAppearance.background
     ? { ...base.background, ...overrideAppearance.background }
     : base.background;
+  const baseLoading = base.loading ?? { page: { type: 'spinner' as const }, navigation: { type: 'spinner' as const }, slogans: [] as string[] };
+  const ovLoading = overrideAppearance.loading;
+  const loading = ovLoading
+    ? {
+        page: { ...baseLoading.page, ...ovLoading.page } as typeof baseLoading.page,
+        navigation: { ...baseLoading.navigation, ...ovLoading.navigation } as typeof baseLoading.navigation,
+        slogans: ovLoading.slogans ?? baseLoading.slogans,
+      }
+    : baseLoading;
   return {
+    fontSize: overrideAppearance.fontSize ?? base.fontSize,
     background,
-    customCSS: overrideAppearance?.customCSS ?? base.customCSS,
-    customHead: overrideAppearance?.customHead ?? base.customHead,
+    customCSS: overrideAppearance.customCSS ?? base.customCSS,
+    customHead: overrideAppearance.customHead ?? base.customHead,
+    loading,
   };
 }
 
@@ -317,6 +329,8 @@ function mergeAppConfig(
     share: mergeShare(base.share, override.share),
     mainTone: mergeMainTone(base.mainTone, override.mainTone),
     footer: mergeFooter(base.footer, override.footer),
+    clerk: override.clerk ?? base.clerk,
+    users: override.users ?? base.users,
   };
 }
 
@@ -413,6 +427,10 @@ export async function PUT() {
 
     logger.info('PUT', '从 GitHub 同步配置成功');
     void logAudit('config_update', 'config', '站点配置已从 GitHub 同步更新', session.uid);
+    // 清除缓存，确保下次 GET 返回最新配置
+    configCache = null;
+    const { clearConfigCache } = await import('@/lib/config');
+    clearConfigCache();
     return NextResponse.json({ success: true, config: mergedConfig });
   } catch (error) {
     logger.error('PUT', '从 GitHub 同步配置失败', { error: error instanceof Error ? error.message : '未知错误' });

@@ -68,6 +68,14 @@ export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFo
     onDraftFoundRef.current = onDraftFound;
   }, [onDraftFound]);
 
+  // 组件卸载时取消进行中的请求
+  useEffect(() => {
+    return () => {
+      saveAbortRef.current?.abort();
+      loadAbortRef.current?.abort();
+    };
+  }, []);
+
   const doSave = useCallback(() => {
     const p = propsRef.current;
     // 不保存空内容

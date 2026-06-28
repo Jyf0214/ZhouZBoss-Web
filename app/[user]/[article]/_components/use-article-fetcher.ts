@@ -16,29 +16,34 @@ export function useArticleFetcher(username: string, article: string): ArticleFet
   const [rawContent, setRawContent] = useState('');
 
   useEffect(() => {
+    let cancelled = false;
     const fetchArticle = async () => {
       try {
         const res = await fetch(`/api/u/${username}/${article}`);
         if (res.ok) {
           const data = await res.json();
+          if (cancelled) return;
           const { user, rawContent: raw, ...articleFields } = data;
           setArticleData(articleFields as ArticleData);
           setUserData(user);
           if (raw) {
             setRawContent(raw);
           }
-        } else {
+        } else if (!cancelled) {
           showError('文章加载失败');
         }
       } catch (error) {
-        console.error('Fetch article error:', error);
-        showError('文章加载失败');
+        if (!cancelled) {
+          console.error('Fetch article error:', error);
+          showError('文章加载失败');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     if (username && article) void fetchArticle();
+    return () => { cancelled = true; };
   }, [username, article]);
 
   return { articleData, userData, loading, rawContent };

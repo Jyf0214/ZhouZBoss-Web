@@ -509,11 +509,9 @@ export class B2Provider implements StorageProvider {
     // 批量删除（S3 DeleteObjects 支持最多 1000 个 key）
     for (let i = 0; i < keysToDelete.length; i += 1000) {
       const batch = keysToDelete.slice(i, i + 1000)
-      await Promise.all(
-        batch.map((k) =>
-          client.send(new DeleteObjectCommand({ Bucket: bucket, Key: k }))
-        )
-      )
+      const results = await Promise.allSettled(batch.map((k) => client.send(new DeleteObjectCommand({ Bucket: bucket, Key: k }))))
+      const failures = results.filter(r => r.status === 'rejected')
+      if (failures.length > 0) console.error(`[B2] deleteDirectory 批量删除部分失败: ${failures.length}/${batch.length}`)
     }
 
     // 删除 .keep 占位文件

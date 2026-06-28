@@ -122,6 +122,12 @@ export async function PUT(req: NextRequest) {
     user.password = await hashPassword(password);
 
     await db.set(`user:uid:${uid}`, JSON.stringify(user));
+
+    // 递增会话版本号，使所有旧 JWT 自动失效
+    const currentSv = await db.get(`user:sv:${uid}`);
+    const newSv = (currentSv !== null && currentSv !== undefined ? Number(currentSv) : 0) + 1;
+    await db.set(`user:sv:${uid}`, String(newSv));
+
     await db.del(`reset:${token}`);
 
     // 密码重置后吊销所有 API 密钥，防止泄漏的密钥继续有效

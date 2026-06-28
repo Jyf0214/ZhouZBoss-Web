@@ -44,10 +44,37 @@ async function getUserByUidSearch(
 async function listAllUsers(
   db: ReturnType<typeof getDb>,
 ): Promise<Record<string, unknown>[]> {
+  // 优先使用 Prisma 查询用户表（users:all:list 可能未被维护）
+  if (db.prisma) {
+    try {
+      const rows = await db.prisma.user.findMany({
+        select: { uid: true, name: true, email: true, createdAt: true, role: true, status: true, userGroup: true },
+      });
+      return rows.map(r => ({
+        uid: r.uid,
+        name: r.name,
+        email: r.email,
+        createdAt: r.createdAt,
+        role: r.role,
+        status: r.status,
+        userGroup: r.userGroup,
+      }));
+    } catch {
+      // Prisma 查询失败，降级到 KV
+    }
+  }
+
+  // 降级：从 KV 读取用户列表
   const userListStr = await db.get('users:all:list');
   if (!userListStr) return [];
 
-  const userIds = JSON.parse(userListStr) as string[];
+  let userIds: string[];
+  try {
+    userIds = JSON.parse(userListStr) as string[];
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(userIds)) return [];
 
   // 并行查询所有用户，消除 N+1 串行瓶颈
   const userResults = await Promise.all(

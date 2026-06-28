@@ -115,6 +115,8 @@ export const POST = apiHandler('POST', { label: '恢复文章', requireAdmin: tr
 
   await db.set(`article:data:${id}`, JSON.stringify(restored));
   await db.hset('articles:index', id, JSON.stringify(restored));
+  // 恢复后写入草稿索引，确保文章列表可见
+  await db.hset('articles:drafts', id, JSON.stringify(restored));
 
   logger.info('POST', '文章恢复成功', { id });
   return NextResponse.json({ success: true, message: 'Article restored' });

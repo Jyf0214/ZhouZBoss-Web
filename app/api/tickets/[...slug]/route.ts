@@ -39,7 +39,7 @@ export async function GET(
 
     const filePath = `tickets${slug}.md`;
 
-    const contentRes = await fetch(`/api/github?path=${filePath}`);
+    const contentRes = await fetch(`${req.nextUrl.origin}/api/github?path=${encodeURIComponent(filePath)}`);
     if (!contentRes.ok) {
       logger.warn('GET', '工单不存在', { slug });
       return NextResponse.json({ error: '工单不存在' }, { status: 404 });
@@ -106,7 +106,7 @@ export async function PATCH(
     const filePath = `tickets${slug}.md`;
 
     // 读取现有文件
-    const existingRes = await fetch(`/api/github?path=${filePath}`);
+    const existingRes = await fetch(`${req.nextUrl.origin}/api/github?path=${encodeURIComponent(filePath)}`);
     if (!existingRes.ok) {
       logger.warn('PATCH', '工单不存在', { slug });
       return NextResponse.json({ error: '工单不存在' }, { status: 404 });
@@ -117,7 +117,7 @@ export async function PATCH(
     frontMatter.status = status;
 
     // 提交到 GitHub
-    const patchRes = await fetch('/api/github', {
+    const patchRes = await fetch(`${req.nextUrl.origin}/api/github`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

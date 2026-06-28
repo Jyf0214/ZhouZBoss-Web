@@ -112,7 +112,7 @@ async function runWithLimit(limit, worker) {
     if (active >= limit) return;
     const next = queue.shift();
     if (!next) return;
-    active += 1;
+    // active 由 tryRun 内部递增，此处不递增
     next();
   };
   return new Promise((resolve, reject) => {

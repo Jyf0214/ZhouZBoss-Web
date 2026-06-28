@@ -72,6 +72,11 @@ export function Giscus({ slug }: GiscusProps) {
     script.setAttribute('data-lang', 'zh-CN');
 
     container.appendChild(script);
+
+    return () => {
+      script.remove();
+      container.querySelectorAll('iframe').forEach(f => f.remove());
+    };
   }, [enabled, config.repo, config.repoId, config.category, config.categoryId]);
 
   if (!enabled) {

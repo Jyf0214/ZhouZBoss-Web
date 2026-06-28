@@ -40,11 +40,12 @@ export function useDashboardData(): DashboardData {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async (): Promise<void> => {
       setLoading(true);
       try {
         const articlesRes = await fetch('/api/articles');
-        if (articlesRes.ok) {
+        if (articlesRes.ok && !cancelled) {
           const data: unknown = await articlesRes.json();
           const articles = Array.isArray(data) ? (data as Article[]) : [];
           setStats({
@@ -54,17 +55,20 @@ export function useDashboardData(): DashboardData {
             pendingDeletion: countByStatus(articles, 'pending_deletion'),
           });
           setRecentArticles(articles.slice(0, 5).map(toRecentArticle));
-        } else {
+        } else if (!cancelled) {
           showError('文章数据加载失败');
         }
       } catch (error) {
-        console.error('Failed to fetch stats:', error);
-        showError('仪表盘数据加载失败');
+        if (!cancelled) {
+          console.error('Failed to fetch stats:', error);
+          showError('仪表盘数据加载失败');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     void fetchData();
+    return () => { cancelled = true; };
   }, []);
 
   return { stats, recentArticles, loading };
