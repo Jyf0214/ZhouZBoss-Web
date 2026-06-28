@@ -22,6 +22,8 @@ interface TicketTemplate {
 }
 
 interface TicketField {
+  /** 唯一标识，用于 React key，不持久化 */
+  id: string;
   name: string;
   type: string;
   required: boolean;
@@ -40,7 +42,7 @@ export default function TicketsPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    fields: [{ name: '', type: 'text', required: true }],
+    fields: [{ id: crypto.randomUUID(), name: '', type: 'text', required: true }],
   });
 
   const fetchTemplates = async () => {
@@ -78,7 +80,7 @@ export default function TicketsPage() {
 
   const handleCreate = () => {
     setEditingTemplate(null);
-    setFormData({ name: '', description: '', fields: [{ name: '', type: 'text', required: true }] });
+    setFormData({ name: '', description: '', fields: [{ id: crypto.randomUUID(), name: '', type: 'text', required: true }] });
     setShowModal(true);
   };
 
@@ -87,7 +89,9 @@ export default function TicketsPage() {
     setFormData({
       name: template.name,
       description: template.description,
-      fields: template.fields.length > 0 ? template.fields : [{ name: '', type: 'text', required: true }],
+      fields: template.fields.length > 0
+        ? template.fields.map(f => ({ ...f, id: f.id ?? crypto.randomUUID() }))
+        : [{ id: crypto.randomUUID(), name: '', type: 'text', required: true }],
     });
     setShowModal(true);
   };
@@ -130,8 +134,7 @@ export default function TicketsPage() {
 
 const handleDelete = async (id: string) => {
     setDeleting(id);
-    const originalTemplates = [...templates];
-    setTemplates(templates.filter(tmpl => tmpl.slug !== id));
+    setTemplates(prev => prev.filter(tmpl => tmpl.slug !== id));
     try {
       const res = await fetch('/api/ticket-templates', {
         method: 'DELETE',
@@ -141,19 +144,19 @@ const handleDelete = async (id: string) => {
       if (!res.ok) {
         const data = await res.json();
         showError(`${t('tickets.deleteFailed')}: ${data.error ?? ''}`);
-        setTemplates(originalTemplates);
+        void fetchTemplates();
       }
     } catch (error) {
 		console.error('Failed to delete template:', error);
 		showError(`${t('tickets.deleteFailed')}: ${error instanceof Error ? error.message : ''}`);
-      setTemplates(originalTemplates);
+      void fetchTemplates();
     } finally {
       setDeleting(null);
     }
   };
 
   const addField = () => {
-    setFormData({ ...formData, fields: [...formData.fields, { name: '', type: 'text', required: true }] });
+    setFormData({ ...formData, fields: [...formData.fields, { id: crypto.randomUUID(), name: '', type: 'text', required: true }] });
   };
 
   const removeField = (index: number) => {
@@ -271,7 +274,7 @@ const handleDelete = async (id: string) => {
               <Button size="sm" rounded="sm" icon={<Plus size={12} />} onClick={addField} autoLoading={false}>{t('tickets.addField')}</Button>
             </div>
             {formData.fields.map((field, index) => (
-              <div key={index} className="flex items-center gap-2 mb-2">
+              <div key={field.id} className="flex items-center gap-2 mb-2">
                 <input
                   type="text"
                   value={field.name}

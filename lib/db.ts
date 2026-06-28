@@ -89,7 +89,7 @@ class PrismaDriver implements IDatabase {
 
   async set(key: string, value: string, ttl?: number): Promise<void> {
     if (!this.prisma) return
-    const expiry = ttl ? BigInt(Date.now() + ttl * 1000) : null
+    const expiry = ttl && Number.isFinite(ttl) ? BigInt(Date.now() + ttl * 1000) : null
     await prisma.originiumKV.upsert({
       where: { key },
       update: { value, expiry },

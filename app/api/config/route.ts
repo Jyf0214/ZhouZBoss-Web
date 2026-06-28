@@ -333,7 +333,29 @@ export async function POST(req: NextRequest) {
     const currentConfig = loadConfig();
     const mergedConfig = mergeAppConfig(currentConfig, newConfig);
 
-    logger.info('POST', '配置已合并');
+    // 持久化到 GitHub（如果配置了远程仓库）
+    const githubRepo = process.env.GITHUB_REPO;
+    const githubToken = process.env.GITHUB_TOKEN;
+    if (githubRepo && githubToken) {
+      const yamlContent = yaml.dump(mergedConfig, { lineWidth: -1 });
+      const ghRes = await fetch(`${new URL(req.url).origin}/api/github`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          path: 'config.yaml',
+          content: yamlContent,
+          message: 'chore: update site config',
+        }),
+      });
+      if (!ghRes.ok) {
+        const ghErr = await ghRes.json().catch(() => ({}));
+        logger.error('POST', '配置写入 GitHub 失败', { error: ghErr.error });
+        return NextResponse.json({ error: '配置保存到远程仓库失败: ' + (ghErr.error ?? '') }, { status: 500 });
+      }
+    }
+
+    logger.info('POST', '配置已合并并持久化');
     void logAudit('config_update', 'config', '站点配置已更新', session.uid);
     // 配置已更新，清除缓存使下次 GET 重新拉取
     configCache = null;

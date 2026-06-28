@@ -93,7 +93,11 @@ export const POST = catchAllHandler<{ path: string[] }>(
     }
 
     // 更新数据库元数据
-    await renameFolderMeta(rel, newRel)
+    try {
+      await renameFolderMeta(rel, newRel)
+    } catch (metaErr) {
+      console.error(`[storage.rename] 元数据更新失败 "${rel}" → "${newRel}"`, metaErr)
+    }
 
     console.warn(`[storage.rename] "${rel}" → "${newRel}" 重命名成功`)
 

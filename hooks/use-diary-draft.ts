@@ -52,6 +52,8 @@ export interface UseDiaryDraftOptions {
 export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFound }: UseDiaryDraftOptions) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastCheckedIdRef = useRef<string | null>(null);
+  const saveAbortRef = useRef<AbortController | null>(null);
+  const loadAbortRef = useRef<AbortController | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   // 用 ref 保存最新 props，避免依赖变化导致定时器不断重置
@@ -71,6 +73,11 @@ export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFo
     // 不保存空内容
     if (!p.title && !p.content) return;
 
+    // 取消上一次未完成的保存请求
+    saveAbortRef.current?.abort();
+    const controller = new AbortController();
+    saveAbortRef.current = controller;
+
     setSaveStatus('saving');
     const data: DraftData = { title: p.title, content: p.content, tags: p.tags, date: p.date, group: p.group };
     saveLocalDraft(p.id, data);
@@ -78,6 +85,7 @@ export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFo
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: p.id, title: p.title, content: p.content, tags: p.tags, date: p.date, group: p.group }),
+      signal: controller.signal,
     })
       .then((res) => {
         if (res.ok) {
@@ -87,8 +95,10 @@ export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFo
           setSaveStatus('error');
         }
       })
-      .catch(() => {
-        setSaveStatus('error');
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          setSaveStatus('error');
+        }
       });
   }, []);
 
@@ -125,7 +135,12 @@ export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFo
       return;
     }
 
-    fetch(`/api/diary/draft?id=${encodeURIComponent(id)}`)
+    // 取消上一次加载请求
+    loadAbortRef.current?.abort();
+    const controller = new AbortController();
+    loadAbortRef.current = controller;
+
+    fetch(`/api/diary/draft?id=${encodeURIComponent(id)}`, { signal: controller.signal })
       .then((res) => {
         if (!res.ok) { console.warn('草稿加载失败:', res.status); return null; }
         return res.json();
@@ -135,7 +150,13 @@ export function useDiaryDraft({ id, title, content, tags, date, group, onDraftFo
           onDraftFoundRef.current(json.draft);
         }
       })
-      .catch((err) => console.warn('草稿加载异常:', err));
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.warn('草稿加载异常:', err);
+        }
+      });
+
+    return () => { controller.abort(); };
   }, [id]);
 
   function clearDraft() {

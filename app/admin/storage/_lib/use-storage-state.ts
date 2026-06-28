@@ -217,30 +217,30 @@ export function useStorageState(): UseStorageState {
         message.error(`文件 "${oversize.name}" 超过 50MB 限制`);
         return;
       }
-      let successCount = 0;
-      let failCount = 0;
+      const errors: string[] = [];
       for (const file of files) {
         try {
           await uploadFile(currentPath, file);
-          successCount++;
         } catch (err) {
-          failCount++;
           if (err instanceof ApiError) {
             if (err.isNotConfigured) {
               setConfigured(false);
               message.error('存储后端未配置,上传失败');
               return;
             }
-            message.error(err.message);
+            errors.push(err.message);
           } else {
-            message.error(`上传失败: ${file.name}`);
+            errors.push(err instanceof Error ? err.message : `上传失败: ${file.name}`);
           }
         }
       }
-      if (failCount === 0) {
-        message.success(`上传成功 (${successCount} 个文件)`);
-      } else if (successCount > 0) {
-        message.warning(`部分上传成功 (${successCount} 成功, ${failCount} 失败)`);
+      const success = files.length - errors.length;
+      if (errors.length === 0) {
+        message.success(`上传成功 (${files.length} 个文件)`);
+      } else if (success > 0) {
+        message.warning(`部分上传失败 (成功 ${success}，失败 ${errors.length})`);
+      } else {
+        message.error(`上传失败 (${errors.length} 个文件)`);
       }
       await loadEntries(currentPath);
       // 重新拉一次 folders(可能因上传自动创建了文件夹元数据)

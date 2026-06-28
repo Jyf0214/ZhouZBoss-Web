@@ -35,7 +35,8 @@
     "yes": "是",
     "no": "否",
     "user": "用户",
-    "learnMore": "了解更多"
+    "learnMore": "了解更多",
+    "refresh": "刷新"
   },
   "auth": {
     "login": "登录",
@@ -95,7 +96,7 @@
     "emailSent": "邮件已发送",
     "resendEmail": "重新发送",
     "backToLogin": "返回登录",
-"clerkLogin": "使用 Clerk 登录",
+    "clerkLogin": "使用 Clerk 登录",
     "or": "或",
     "inputVerificationCode": "请输入验证码"
   },
@@ -107,7 +108,10 @@
     "usernameRequired": "请输入用户名",
     "usernameTaken": "该用户名已被使用",
     "emailTaken": "该电子邮箱已被注册",
-    "usernameFormat": "用户名只能包含字母、数字和下划线，3-20个字符"
+    "usernameFormat": "用户名只能包含字母、数字和下划线，3-20个字符",
+    "passwordNeedUppercase": "密码需包含至少一个大写字母",
+    "passwordNeedLowercase": "密码需包含至少一个小写字母",
+    "passwordNeedDigit": "密码需包含至少一个数字"
   },
   "home": {
     "searchPlaceholder": "搜索内容...",
@@ -186,7 +190,8 @@
     "contentStats": "内容统计",
     "auditLogs": "审计日志",
     "switchToUserMenu": "切换到用户面板菜单",
-    "switchToAdminMenu": "返回管理后台菜单"
+    "switchToAdminMenu": "返回管理后台菜单",
+    "apiKeys": "API 密钥"
   },
   "tickets": {
     "add": "添加",
@@ -764,11 +769,9 @@
     "sortByDate": "按日期",
     "preview": "预览",
     "previewTitle": "文件预览",
-    "copyUrl": "复制 URL",
     "openInNewWindow": "新窗口打开",
     "download": "下载",
     "fileName": "文件名",
-    "fileSize": "大小",
     "fileType": "类型",
     "fileModified": "修改时间",
     "filePath": "路径",

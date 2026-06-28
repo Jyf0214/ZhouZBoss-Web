@@ -60,7 +60,7 @@ export default function UsersPage() {
       });
       if (res.ok) {
         message.success(t('common.success') || '更新成功');
-        setUsers(users.map(u => u.uid === id ? { ...u, role: editRole } : u));
+        setUsers(prev => prev.map(u => u.uid === id ? { ...u, role: editRole } : u));
       } else {
         const data = await res.json();
         showError(data.error ?? t('admin.updateRoleFailed'));
@@ -87,7 +87,7 @@ export default function UsersPage() {
       });
       if (res.ok) {
         message.success(t('common.success') || '删除成功');
-        setUsers(users.filter(u => u.uid !== id));
+        setUsers(prev => prev.filter(u => u.uid !== id));
       } else {
         const data = await res.json();
         showError(data.error ?? t('admin.deleteUserFailed'));

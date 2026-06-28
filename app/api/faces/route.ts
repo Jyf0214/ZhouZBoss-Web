@@ -241,7 +241,8 @@ async function handleRenameContact(
   });
 
   if (!ghDeleteResponse.ok) {
-    logger.warn('PATCH', '删除旧文件失败', { oldFilePath: opts.oldFilePath });
+    logger.error('PATCH', '删除旧文件失败，联系人可能出现重复', { oldFilePath: opts.oldFilePath });
+    return NextResponse.json({ error: '重命名失败：旧文件删除异常，联系人可能出现重复' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, slug: `/${opts.group}/${opts.newSlug}` });

@@ -78,7 +78,7 @@ export function MarkdownRenderer({ content, highlight, wikiLinkMap }: MarkdownRe
   imagesRef.current = [];
 
   return (
-    <div className="markdown-content prose prose-zinc max-w-none overflow-hidden
+    <div className="markdown-content prose prose-zinc max-w-none overflow-x-auto
       prose-headings:tracking-tight prose-headings:text-zinc-900
       prose-h1:text-4xl prose-h1:font-black prose-h1:mb-8 prose-h1:mt-16
       prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-6 prose-h2:mt-14 prose-h2:pb-3 prose-h2:border-b prose-h2:border-zinc-100

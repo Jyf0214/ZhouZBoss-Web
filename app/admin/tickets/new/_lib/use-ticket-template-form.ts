@@ -11,12 +11,18 @@ import { toYamlString } from './yaml';
 import type { TicketFieldDef } from './types';
 
 const DEFAULT_FIELD: TicketFieldDef = {
+  id: '',
   name: '',
   label: '',
   type: 'input',
   options: [],
   required: true,
 };
+
+/** 生成新字段（带唯一 id） */
+function createField(): TicketFieldDef {
+  return { ...DEFAULT_FIELD, id: crypto.randomUUID() };
+}
 
 // 单个字段值更新
 type FieldValue = string | boolean | string[];
@@ -33,14 +39,14 @@ export function useTicketTemplateForm() {
   const [assignees, setAssignees] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState('');
   const [assigneeInput, setAssigneeInput] = useState('');
-  const [fields, setFields] = useState<TicketFieldDef[]>([DEFAULT_FIELD]);
+  const [fields, setFields] = useState<TicketFieldDef[]>([createField()]);
   const [body, setBody] = useState('## 描述\n{{description}}\n');
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // 添加新字段
   const addField = useCallback(() => {
-    setFields(prev => [...prev, DEFAULT_FIELD]);
+    setFields(prev => [...prev, createField()]);
   }, []);
 
   // 移除指定索引的字段

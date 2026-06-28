@@ -24,7 +24,10 @@ export default function DiaryForm({ mode: _mode, draftId, initialTitle, initialC
   const [content, setContent] = React.useState(initialContent ?? '');
   const [tags, setTags] = React.useState((initialTags ?? []).join(', '));
   const [diaryGroup, setDiaryGroup] = React.useState(initialGroup ?? '默认');
-  const [diaryDate, setDiaryDate] = React.useState(initialDate ?? new Date().toISOString().slice(0, 10));
+  const [diaryDate, setDiaryDate] = React.useState(initialDate ?? (() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  })());
   const [saving, setSaving] = React.useState(false);
   const [recovered, setRecovered] = React.useState(false);
   const [nowTick, setNowTick] = React.useState(Date.now());

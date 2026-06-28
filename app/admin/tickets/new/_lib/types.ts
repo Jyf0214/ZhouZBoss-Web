@@ -4,6 +4,8 @@ export type FieldType = 'input' | 'textarea' | 'dropdown' | 'checkboxes';
 
 // 单个字段定义
 export interface TicketFieldDef {
+  /** 唯一标识，用于 React key，不持久化 */
+  id: string;
   name: string;
   label: string;
   type: string;

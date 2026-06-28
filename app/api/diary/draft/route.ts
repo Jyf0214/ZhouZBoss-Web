@@ -75,9 +75,18 @@ export const DELETE = apiHandler('DELETE', { label: '删除草稿', requireAdmin
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id') ?? 'new';
 
-  await prisma.originiumKV.delete({
-    where: { key: `diary:draft:${id}` },
-  }).catch(() => undefined);
+  try {
+    await prisma.originiumKV.delete({
+      where: { key: `diary:draft:${id}` },
+    });
+  } catch (err) {
+    // P2025 = 记录不存在，视为成功；其他错误上报
+    if (err && typeof err === 'object' && 'code' in err && err.code === 'P2025') {
+      // 记录已不存在，正常
+    } else {
+      throw err;
+    }
+  }
 
   return NextResponse.json({ success: true });
 });

@@ -140,8 +140,19 @@ function processSearchFile(
     return undefined;
   }
 
-  const raw = fs.readFileSync(filePath, 'utf-8');
-  const { data, content } = matter(raw);
+  let raw: string;
+  try {
+    raw = fs.readFileSync(filePath, 'utf-8');
+  } catch {
+    return undefined;
+  }
+  let data: Record<string, unknown>;
+  let content: string;
+  try {
+    ({ data, content } = matter(raw));
+  } catch {
+    return undefined;
+  }
 
   const title = String(data.title ?? '');
   const description = String(data.description ?? '');

@@ -71,7 +71,12 @@ export const POST = catchAllHandler<{ path: string[] }>(
     }
 
     // 更新数据库元数据(重命名主键 + 级联子路径)
-    await renameFolderMeta(srcRel, destRel)
+    try {
+      await renameFolderMeta(srcRel, destRel)
+    } catch (metaErr) {
+      console.error(`[storage.move] 元数据更新失败 "${srcRel}" → "${destRel}"`, metaErr)
+      // 存储已移动但元数据更新失败：返回警告而非崩溃
+    }
 
     console.warn(`[storage.move] "${srcRel}" → "${destRel}" 移动成功`)
 

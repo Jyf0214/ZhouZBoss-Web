@@ -23,7 +23,7 @@ export function FormFieldsSection({
       <h2 className="text-base font-bold text-zinc-900 mb-4">{t('tickets.formFields')}</h2>
       {fields.map((field, index) => (
         <FieldRow
-          key={index}
+          key={field.id}
           field={field}
           index={index}
           removable={fields.length > 1}
