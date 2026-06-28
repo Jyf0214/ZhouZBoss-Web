@@ -10,6 +10,17 @@ import AuthCard from '@/components/AuthCard';
 import AuthLayout from '@/components/AuthLayout';
 
 /**
+ * 清洗 callbackUrl — 仅允许相对路径，防止开放重定向
+ */
+function sanitizeCallbackUrl(url: string | null): string {
+  if (!url) return '/dashboard';
+  if (!url.startsWith('/') || url.startsWith('//') || url.includes('://')) {
+    return '/dashboard';
+  }
+  return url;
+}
+
+/**
  * 2FA 验证页面 — 在密码验证通过后要求输入 TOTP 验证码
  */
 function TwoFactorForm() {
@@ -19,7 +30,7 @@ function TwoFactorForm() {
   const [form] = Form.useForm();
   const inputRef = useRef<React.ComponentRef<typeof Input>>(null);
 
-  const callbackUrl = searchParams?.get('callbackUrl') ?? '/dashboard';
+  const callbackUrl = sanitizeCallbackUrl(searchParams?.get('callbackUrl'));
   const tempToken = searchParams?.get('tempToken') ?? '';
 
   useEffect(() => {

@@ -15,6 +15,17 @@ import AuthCard from '@/components/AuthCard';
 import AuthLayout from '@/components/AuthLayout';
 
 /**
+ * 清洗 callbackUrl — 仅允许相对路径，防止开放重定向
+ */
+function sanitizeCallbackUrl(url: string | null): string {
+  if (!url) return '/dashboard';
+  if (!url.startsWith('/') || url.startsWith('//') || url.includes('://')) {
+    return '/dashboard';
+  }
+  return url;
+}
+
+/**
  * 登录表单 — 三种方式:账号密码 / API 密钥 / Clerk
  */
 function LoginForm() {
@@ -29,7 +40,7 @@ function LoginForm() {
   const inputRef = useRef<React.ComponentRef<typeof Input>>(null);
   const { t } = useI18n();
 
-  const callbackUrl = searchParams?.get('callbackUrl') ?? '/dashboard';
+  const callbackUrl = sanitizeCallbackUrl(searchParams?.get('callbackUrl'));
   const clerkAvailable = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   useEffect(() => {

@@ -11,6 +11,12 @@ export async function GET(
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await params;
+
+  // 路径遍历防护：拒绝包含 .. 的 slug 段
+  if (slug.some(s => s === '..' || s === '.' || s.includes('\0'))) {
+    return NextResponse.json({ error: '无效路径' }, { status: 400 });
+  }
+
   const fullPath = '/' + slug.join('/');
   logger.info('GET', '读取联系人详情', { fullPath });
   

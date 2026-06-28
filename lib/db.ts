@@ -105,7 +105,8 @@ class PrismaDriver implements IDatabase {
   async exists(key: string): Promise<boolean> {
     if (!this.prisma) return false
     const record = await prisma.originiumKV.findUnique({ where: { key } })
-    return !!record
+    // 检查过期时间，与 get() 保持一致
+    return !!record && (!record.expiry || record.expiry >= BigInt(Date.now()))
   }
 
   async hget(key: string, field: string): Promise<string | null> {

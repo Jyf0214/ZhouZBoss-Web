@@ -25,8 +25,7 @@ export async function ensureAdminUser(): Promise<{ created: boolean; error?: str
 }
 
 async function doInit(): Promise<{ created: boolean; error?: string }> {
-  initAttempted = true;
-
+  // 仅在初始化成功后设置 initAttempted，允许失败重试
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
 

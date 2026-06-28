@@ -49,7 +49,7 @@ export function MermaidBlock({ code }: MermaidBlockProps) {
         if (!mermaidInitialized) {
           mermaid.initialize({
             startOnLoad: false,
-            securityLevel: 'loose',
+            securityLevel: 'strict',
             theme: 'default',
           });
           mermaidInitialized = true;
@@ -64,7 +64,14 @@ export function MermaidBlock({ code }: MermaidBlockProps) {
 
         if (cancelled || !containerRef.current) return;
 
-        containerRef.current.innerHTML = svg;
+        // 过滤 SVG 中的危险元素和事件处理器，防止 XSS
+        const sanitized = svg
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+          .replace(/javascript\s*:/gi, '')
+          .replace(/data\s*:/gi, '');
+
+        containerRef.current.innerHTML = sanitized;
 
         // 确保 SVG 自适应容器宽度
         const svgEl = containerRef.current.querySelector('svg');

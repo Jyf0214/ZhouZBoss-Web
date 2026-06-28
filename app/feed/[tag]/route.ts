@@ -102,7 +102,8 @@ function buildRssItem(post: PublicPost, siteUrl: string): string {
   const description = buildDescription(post.meta, post.content);
   const pubDate = toRfc822(post.meta.date);
   const guid = post.slug;
-  const contentEncoded = `<![CDATA[${post.content}]]>`;
+  // 转义 ]] sequences 防止 CDATA 注入
+  const contentEncoded = `<![CDATA[${post.content.replace(/\]\]>/g, ']]]]><![CDATA[>')}]]>`;
 
   return `    <item>
       <title>${escapeXml(title)}</title>
