@@ -29,10 +29,12 @@ export function getSecret(): string {
   return secret;
 }
 
-let _secret: Uint8Array | null = null;
+/**
+ * 获取 JWT 签名密钥的 Uint8Array 编码。
+ * 不做模块级缓存，确保 AUTH_SECRET 变更后立即生效。
+ */
 function getSecretEncoder(): Uint8Array {
-  _secret ??= new TextEncoder().encode(getSecret());
-  return _secret;
+  return new TextEncoder().encode(getSecret());
 }
 
 export { getSecretEncoder as getSecretEncoder };
@@ -42,6 +44,8 @@ export interface SessionPayload {
   email: string;
   role: 'user' | 'admin' | 'sudo';
   userGroup?: string;
+  /** 会话版本号，密码修改时递增，用于吊销旧 JWT */
+  sv?: number;
 }
 
 /**
@@ -57,8 +61,20 @@ export function generateUID(): string {
  * 创建新的会话 JWT
  */
 export async function createSession(payload: SessionPayload) {
+  // 从 KV 读取当前会话版本号，确保新 JWT 携带最新版本
+  let sv = payload.sv;
+  if (sv === undefined) {
+    try {
+      const { getDb } = await import('@/lib/db');
+      const db = getDb();
+      const currentSv = await db.get(`user:sv:${payload.uid}`);
+      sv = currentSv !== null && currentSv !== undefined ? Number(currentSv) : 0;
+    } catch {
+      sv = 0;
+    }
+  }
   const expires = new Date(Date.now() + SESSION_EXPIRY_MS);
-  const session = await new SignJWT({ ...payload })
+  const session = await new SignJWT({ ...payload, sv })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(SESSION_EXPIRY)
@@ -184,6 +200,16 @@ async function getSessionFromApiKey(): Promise<SessionPayload | null> {
 }
 
 /**
+ * 检查 JWT 会话是否已被吊销（密码修改后 sv 不匹配）
+ */
+async function isSessionRevoked(uid: string, sv: number): Promise<boolean> {
+  const { getDb } = await import('@/lib/db');
+  const db = getDb();
+  const currentSv = await db.get(`user:sv:${uid}`);
+  return currentSv !== null && currentSv !== undefined && Number(currentSv) !== sv;
+}
+
+/**
  * 从 Cookie / API 密钥获取当前会话
  *
  * 优先级:
@@ -198,7 +224,12 @@ export async function getSession(): Promise<SessionPayload | null> {
       const { payload } = await jwtVerify(session, getSecretEncoder(), {
         algorithms: ['HS256'],
       });
-      return payload as unknown as SessionPayload;
+      const typed = payload as unknown as SessionPayload;
+      // 会话版本校验：密码修改后旧 JWT 自动失效
+      if (typed.sv !== undefined && await isSessionRevoked(typed.uid, typed.sv)) {
+        return null;
+      }
+      return typed;
     } catch {
       // Cookie 无效,继续尝试 API 密钥
     }
@@ -221,7 +252,11 @@ export async function getSessionWithKeyId(): Promise<{ session: SessionPayload; 
       const { payload } = await jwtVerify(session, getSecretEncoder(), {
         algorithms: ['HS256'],
       });
-      return { session: payload as unknown as SessionPayload, currentKeyId: null };
+      const typed = payload as unknown as SessionPayload;
+      if (typed.sv !== undefined && await isSessionRevoked(typed.uid, typed.sv)) {
+        return null;
+      }
+      return { session: typed, currentKeyId: null };
     } catch {
       // Cookie 无效,继续尝试 API 密钥
     }

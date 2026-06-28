@@ -97,6 +97,11 @@ export const POST = apiHandler(
     user.password = await hashPassword(newPassword);
     await db.set(`user:uid:${session.uid}`, JSON.stringify(user));
 
+    // 递增会话版本号，使所有旧 JWT 自动失效
+    const currentSv = await db.get(`user:sv:${session.uid}`);
+    const newSv = (currentSv !== null && currentSv !== undefined ? Number(currentSv) : 0) + 1;
+    await db.set(`user:sv:${session.uid}`, String(newSv));
+
     const revokedCount = await revokeOtherApiKeys(db, session.uid);
     if (revokedCount > 0) {
       logger.info('POST', '已吊销其他 API 密钥', { uid: session.uid, count: revokedCount });

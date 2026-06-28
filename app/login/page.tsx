@@ -60,7 +60,8 @@ function LoginForm() {
     } catch (err) {
       // 2FA 需求：跳转到 2FA 验证页面
       if (err instanceof TwoFactorRequiredError) {
-        router.push(`/login/2fa?tempToken=${encodeURIComponent(err.tempToken)}&callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        // tempToken 已通过 httpOnly cookie 传递，无需暴露在 URL 中
+        router.push(`/login/2fa?callbackUrl=${encodeURIComponent(callbackUrl)}`);
         return;
       }
       // useAuth 内部已处理其他错误提示

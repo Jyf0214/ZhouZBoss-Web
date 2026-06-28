@@ -3,31 +3,33 @@
 import { useEffect, useRef } from 'react';
 
 export function HeadInjector({ content }: { content: string }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const nodesRef = useRef<Node[]>([]);
 
   useEffect(() => {
     if (!content) return;
 
-    // 移除旧内容，防止 prop 变化时元素累积
-    if (containerRef.current) {
-      containerRef.current.remove();
-      containerRef.current = null;
+    // 清理上次注入的节点
+    for (const node of nodesRef.current) {
+      node.parentNode?.removeChild(node);
     }
+    nodesRef.current = [];
 
-    // 创建新容器并注入子节点到 head
+    // 创建临时容器解析 HTML，将子节点逐个注入 head
     const container = document.createElement('div');
     container.innerHTML = content;
+    const injected: Node[] = [];
     while (container.firstChild) {
-      document.head.appendChild(container.firstChild);
+      const child = container.firstChild;
+      document.head.appendChild(child);
+      injected.push(child);
     }
-    containerRef.current = container;
+    nodesRef.current = injected;
 
-    // cleanup：卸载或下次 effect 运行前移除已注入的元素
     return () => {
-      if (containerRef.current) {
-        containerRef.current.remove();
-        containerRef.current = null;
+      for (const node of nodesRef.current) {
+        node.parentNode?.removeChild(node);
       }
+      nodesRef.current = [];
     };
   }, [content]);
 

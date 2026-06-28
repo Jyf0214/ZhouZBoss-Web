@@ -14,7 +14,7 @@
  * - 文件名过滤用 `isHtmlPath`(来自 `./shared`);归一化用 `normalizeWebDavContent`
  */
 import type { FileStat } from 'webdav'
-import { isStorageConfigured, getStorageProviderSync } from '@/lib/storage/storage-provider';
+import { isStorageConfigured, getStorageProvider } from '@/lib/storage/storage-provider';
 import { isHtmlPath, normalizeWebDavContent, buildMetaPath, validatePageMeta, type PageMeta } from './shared';
 
 /**
@@ -28,7 +28,7 @@ import { isHtmlPath, normalizeWebDavContent, buildMetaPath, validatePageMeta, ty
 export async function fetchPageHtml(relativePath: string): Promise<string | null> {
   if (!isStorageConfigured()) return null;
   try {
-    const provider = getStorageProviderSync();
+    const provider = await getStorageProvider();
     const raw = await provider.getFileContents(relativePath);
     if (raw === null || raw === undefined) return null;
     const text = normalizeWebDavContent(raw);
@@ -43,7 +43,7 @@ export async function fetchPageHtml(relativePath: string): Promise<string | null
  */
 async function safeList(dir: string): Promise<FileStat[]> {
   try {
-    const provider = getStorageProviderSync();
+    const provider = await getStorageProvider();
     return await provider.listDirectory(dir);
   } catch {
     return [];
@@ -89,7 +89,7 @@ export async function fetchPageMeta(relativePath: string): Promise<PageMeta | nu
   const metaPath = buildMetaPath(relativePath);
   if (!metaPath) return null;
   try {
-    const provider = getStorageProviderSync();
+    const provider = await getStorageProvider();
     const raw = await provider.getFileContents(metaPath);
     if (raw === null || raw === undefined) return null;
     const text = normalizeWebDavContent(raw);
@@ -104,7 +104,7 @@ export async function putPageMeta(relativePath: string, meta: PageMeta): Promise
   const metaPath = buildMetaPath(relativePath);
   if (!metaPath) return { ok: false, error: '无法推导 meta.json 路径' };
   try {
-    const provider = getStorageProviderSync();
+    const provider = await getStorageProvider();
     let existing: PageMeta = {};
     try {
       const raw = await provider.getFileContents(metaPath);
@@ -125,6 +125,6 @@ export async function deletePageMeta(relativePath: string): Promise<{ ok: boolea
   if (!isStorageConfigured()) return { ok: false, error: '存储后端未配置' };
   const metaPath = buildMetaPath(relativePath);
   if (!metaPath) return { ok: false, error: '无法推导 meta.json 路径' };
-  try { await getStorageProviderSync().deleteFile(metaPath); return { ok: true }; }
+  try { await (await getStorageProvider()).deleteFile(metaPath); return { ok: true }; }
   catch (err) { return { ok: false, error: err instanceof Error ? err.message : String(err) }; }
 }

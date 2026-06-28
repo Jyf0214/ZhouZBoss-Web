@@ -31,35 +31,19 @@ function TwoFactorForm() {
   const inputRef = useRef<React.ComponentRef<typeof Input>>(null);
 
   const callbackUrl = sanitizeCallbackUrl(searchParams?.get('callbackUrl'));
-  const tempToken = searchParams?.get('tempToken') ?? '';
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  // 如果没有临时令牌，说明直接访问了此页面，重定向到登录页
-  useEffect(() => {
-    if (!tempToken) {
-      message.error('请先通过密码验证');
-      router.replace('/login');
-    }
-  }, [tempToken, router]);
-
   const handleVerify = useCallback(async (values: { code: string }) => {
-    if (!tempToken) {
-      message.error('临时令牌缺失，请重新登录');
-      return;
-    }
-
     setLoading(true);
     try {
+      // tempToken 通过 httpOnly cookie 自动携带，无需在 body 中传递
       const res = await fetch('/api/auth/2fa/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: values.code,
-          tempToken,
-        }),
+        body: JSON.stringify({ token: values.code }),
       });
 
       const data = await res.json();
@@ -75,7 +59,7 @@ function TwoFactorForm() {
     } finally {
       setLoading(false);
     }
-  }, [tempToken, callbackUrl, router]);
+  }, [callbackUrl, router]);
 
   const inputStyle = {
     padding: '14px 16px',

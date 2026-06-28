@@ -5,6 +5,11 @@ import { createApiLogger } from '@/lib/api-logger';
 
 const logger = createApiLogger('/api/tickets/[...slug]');
 
+/** 校验 slug 各段不含路径穿越字符 */
+function isValidSlug(slugParts: string[]): boolean {
+  return slugParts.every(part => part && !part.includes('..') && !part.includes('\\'));
+}
+
 /**
  * 获取单个工单详情
  */
@@ -13,7 +18,10 @@ export async function GET(
   context: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug: slugParts } = await context.params;
-  const slug = '/' + (slugParts?.join('/') || '');
+  if (!slugParts || !isValidSlug(slugParts)) {
+    return NextResponse.json({ error: '无效的路径' }, { status: 400 });
+  }
+  const slug = '/' + slugParts.join('/');
   const session = await getSession();
   if (!session) {
     logger.warn('GET', '未登录');
@@ -70,7 +78,10 @@ export async function PATCH(
   context: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug: slugParts } = await context.params;
-  const slug = '/' + (slugParts?.join('/') || '');
+  if (!slugParts || !isValidSlug(slugParts)) {
+    return NextResponse.json({ error: '无效的路径' }, { status: 400 });
+  }
+  const slug = '/' + slugParts.join('/');
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
     logger.warn('PATCH', '无权限', { role: session?.role });

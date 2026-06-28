@@ -30,11 +30,12 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 分钟
  * 所有配置统一使用 AppConfig 结构
  */
 export async function GET() {
-  // 检查内存缓存，命中则直接返回
+  // 检查内存缓存，命中则直接返回（剥离内部字段）
   const now = Date.now();
   if (configCache && now - configCache.timestamp < CACHE_TTL) {
     logger.info('GET', '使用缓存配置');
-    return NextResponse.json(configCache.data, {
+    const { _remoteConfig: _rc, _remoteConfigStatus: _rs, _remoteConfigError: _re, _githubRepo: _gr, ...publicCached } = configCache.data;
+    return NextResponse.json(publicCached, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   }

@@ -145,6 +145,10 @@ async function handlePublishArticle(
   db: ReturnType<typeof getDb>,
 ): Promise<NextResponse> {
   const postSlug = (body.slug as string) || (updated.slug as string) || `/${String(updated.authorName)}/${id}`;
+  // 路径穿越防护：拒绝含 .. 或 \ 的 slug
+  if (typeof postSlug !== 'string' || postSlug.includes('..') || postSlug.includes('\\')) {
+    return NextResponse.json({ error: '无效的文章路径' }, { status: 400 });
+  }
   const filePath = `posts${postSlug}.md`;
 
   const ghResponse = await fetch(`${req.nextUrl.origin}/api/github`, {
