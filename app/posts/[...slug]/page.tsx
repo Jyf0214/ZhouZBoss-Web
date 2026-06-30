@@ -71,7 +71,14 @@ export default async function PostDetailPage({ params }: PageProps) {
 
 async function enforceAccess(fullPath: string): Promise<void> {
   if (!isPrivateSlug(fullPath)) return;
-  const session = await getSession();
+  // getSession() 内部调用 cookies()，在 ISR/静态生成上下文中可能抛出 DYNAMIC_SERVER_USAGE，
+  // 需要 try-catch 保护：失败时视为未认证，重定向到登录页
+  let session = null;
+  try {
+    session = await getSession();
+  } catch {
+    // cookies() 不可用（如静态生成阶段），视为未登录
+  }
   if (!session) {
     redirect(`/login?callbackUrl=/posts${fullPath}`);
   }

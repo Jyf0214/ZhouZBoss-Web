@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 
 interface AvatarProps {
   name: string;
@@ -10,11 +9,12 @@ interface AvatarProps {
   fallbackImg?: string;
 }
 
-/** 自定义 loader：直接返回原始 URL，不做域名限制 */
-function avatarLoader({ src }: { src: string }) {
-  return src;
-}
-
+/**
+ * 头像组件 — 使用原生 <img> 渲染，不依赖 next/image 图片管线
+ *
+ * 原因：next/image 在 Next.js 16 中对外部 URL 的 unoptimized 处理存在不确定性，
+ * 原生 <img> 更可靠且无需 remotePatterns 配置。
+ */
 export function Avatar({ name, avatarUrl, size = 32, fallbackImg }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
   const [fallbackError, setFallbackError] = useState(false);
@@ -28,13 +28,11 @@ export function Avatar({ name, avatarUrl, size = 32, fallbackImg }: AvatarProps)
         className="flex items-center justify-center rounded-xl bg-zinc-100 overflow-hidden shrink-0 max-w-full"
         style={{ width: size, height: size }}
       >
-        <Image
+        <img
           src={avatarUrl}
           alt={name}
           width={size}
           height={size}
-          loader={avatarLoader}
-          unoptimized
           className="w-full h-full object-cover"
           onError={() => setImgError(true)}
         />
@@ -48,13 +46,11 @@ export function Avatar({ name, avatarUrl, size = 32, fallbackImg }: AvatarProps)
         className="flex items-center justify-center rounded-xl bg-zinc-100 overflow-hidden shrink-0 max-w-full"
         style={{ width: size, height: size }}
       >
-        <Image
+        <img
           src={fallbackImg}
           alt={name}
           width={size}
           height={size}
-          loader={avatarLoader}
-          unoptimized
           className="w-full h-full object-cover"
           onError={() => setFallbackError(true)}
         />
