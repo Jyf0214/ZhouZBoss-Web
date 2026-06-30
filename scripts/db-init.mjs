@@ -132,15 +132,8 @@ async function main() {
             });
             updatedCount++;
             console.log(`[数据库初始化] ✓ 迁移旧版用户密码: ${user.email || user.username || user.uid}`);
-          } else if (adminPassword) {
-            user.password = newHash;
-            await prisma.originiumKV.update({
-              where: { key: record.key },
-              data: { value: JSON.stringify(user) }
-            });
-            updatedCount++;
-            console.log(`[数据库初始化] ✓ 更新用户密码: ${user.email || user.username || user.uid}`);
           }
+          // 非旧版密码不做处理，由登录流程正常验证
         }
       } catch (e) {
         console.error('用户数据处理失败:', record.key, e.message);

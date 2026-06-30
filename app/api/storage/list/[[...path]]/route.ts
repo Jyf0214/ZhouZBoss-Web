@@ -14,6 +14,7 @@ import {
   storageNotConfigured,
   storageErrorResponse,
 } from '../../_helpers'
+import { isValidPath } from '@/lib/storage/path'
 
 export const GET = catchAllHandler<{ path?: string[] }>(
   'GET',
@@ -23,6 +24,10 @@ export const GET = catchAllHandler<{ path?: string[] }>(
 
     const parts = await getPathParts(context)
     const target = buildWebDavTarget(parts)
+    // 路径穿越防护：拒绝含 .. 的路径段
+    if (target && !isValidPath(target)) {
+      return NextResponse.json({ error: '无效的文件路径' }, { status: 400 })
+    }
     try {
       const provider = await getStorageProvider()
       const stats = await provider.listDirectory(target)

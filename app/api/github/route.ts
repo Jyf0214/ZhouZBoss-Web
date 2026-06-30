@@ -116,6 +116,11 @@ export const GET = apiHandler('GET', { label: '读取 GitHub 文件', requireAdm
     return NextResponse.json({ error: '缺少路径' }, { status: 400 });
   }
 
+  // 路径穿越防护：拒绝含 .. 或 \ 的路径
+  if (path.includes('..') || path.includes('\\') || path.startsWith('/')) {
+    return NextResponse.json({ error: '无效的文件路径' }, { status: 400 });
+  }
+
   logger.info('GET', '读取 GitHub 文件', { path });
   const env = getEnvConfig();
   if (!env.githubRepo || !env.githubToken) {

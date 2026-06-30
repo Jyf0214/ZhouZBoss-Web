@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSession, hashApiKey, validatePasswordStrength } from '@/lib/auth';
+import { getSession, hashApiKey, validatePasswordStrength, createSession } from '@/lib/auth';
 import { getDb, type IDatabase } from '@/lib/db';
 import { verifyPassword, hashPassword } from '@/lib/hash';
 import { apiHandler } from '@/lib/api-handler';
@@ -101,6 +101,14 @@ export const POST = apiHandler(
     const currentSv = await db.get(`user:sv:${session.uid}`);
     const newSv = (currentSv !== null && currentSv !== undefined ? Number(currentSv) : 0) + 1;
     await db.set(`user:sv:${session.uid}`, String(newSv));
+
+    // 刷新当前会话 cookie，使新 sv 立即生效，避免用户被登出
+    await createSession({
+      uid: session.uid,
+      email: session.email,
+      role: session.role,
+      userGroup: session.userGroup,
+    });
 
     const revokedCount = await revokeOtherApiKeys(db, session.uid);
     if (revokedCount > 0) {

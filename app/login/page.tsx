@@ -79,6 +79,11 @@ function LoginForm() {
         body: JSON.stringify({ key: values.key.trim() }),
       });
       const data = await res.json();
+      // 2FA 需求：跳转到 2FA 验证页面（tempToken 已通过 httpOnly cookie 传递）
+      if (data.requires2FA) {
+        router.push(`/login/2fa?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        return;
+      }
       if (res.ok && data.success) {
         message.success('登录成功');
         router.push(callbackUrl);
