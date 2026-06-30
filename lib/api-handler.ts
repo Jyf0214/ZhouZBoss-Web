@@ -42,17 +42,22 @@ export interface ApiHandlerOptions {
   requireDb?: boolean;
 }
 
-interface ApiCtx<P extends Record<string, unknown>> { params: Promise<P> }
+// catch-all 路由 [...id] 返回 string[]，普通路由返回 string
+type ParamValue = string | string[];
+interface ApiCtx<P extends Record<string, ParamValue> = Record<string, ParamValue>> { params: Promise<P> }
 
 /**
  * 解析 context.params 中的指定参数，并确保返回非空字符串
  */
-export async function getParam<P extends Record<string, unknown> = Record<string, string>>(
+export async function getParam<P extends Record<string, ParamValue> = Record<string, ParamValue>>(
   context: ApiCtx<P> | undefined,
   name: keyof P & string,
 ): Promise<string> {
   const params = (await (context?.params ?? Promise.resolve({} as P)));
-  return (params[name] as unknown as string | undefined) ?? '';
+  const val = params[name];
+  // catch-all 路由 [...id] 返回数组，需要拼接回路径字符串
+  if (Array.isArray(val)) return val.join('/');
+  return (val) ?? '';
 }
 
 /**
@@ -116,7 +121,7 @@ async function checkDb(
  * - 错误日志包含完整上下文:端点、查询参数、错误信息
  */
 export function apiHandler<
-  P extends Record<string, unknown> = Record<string, string>,
+  P extends Record<string, ParamValue> = Record<string, ParamValue>,
 >(
   method: string,
   options: ApiHandlerOptions,
