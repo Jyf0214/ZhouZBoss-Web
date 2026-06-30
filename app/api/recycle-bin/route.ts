@@ -169,6 +169,7 @@ export const DELETE = apiHandler('DELETE', { label: '永久删除文章', requir
   await db.del(`article:data:${id}`);
   await db.hdel('articles:index', id);
   await db.hdel('articles:drafts', id);
+  await db.hdel('articles:published', id);
   await db.del(`file:articles/${id}.md`);
 
   logger.info('DELETE', '永久删除成功', { id });

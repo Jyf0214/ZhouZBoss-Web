@@ -67,6 +67,8 @@ async function cleanupExpiredArticle(
   }
   await db.del(`article:data:${id}`);
   await db.hdel('articles:index', id);
+  await db.hdel('articles:published', id);
+  await db.hdel('articles:drafts', id);
   await db.del(`file:articles/${id}.md`);
   return true;
 }

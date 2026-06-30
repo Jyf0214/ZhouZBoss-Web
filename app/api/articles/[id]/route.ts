@@ -193,8 +193,11 @@ async function handleDraftSave(
 ): Promise<NextResponse> {
   const updated: Record<string, unknown> = {
     ...meta,
-    ...body,
     content: body.content !== undefined ? body.content : meta.content,
+    title: typeof body.title === 'string' ? body.title : meta.title,
+    tags: Array.isArray(body.tags) ? body.tags : meta.tags,
+    coverImage: typeof body.coverImage === 'string' ? body.coverImage : meta.coverImage,
+    description: typeof body.description === 'string' ? body.description : meta.description,
     updatedAt: new Date().toISOString(),
   };
 
@@ -230,8 +233,11 @@ export const PATCH = apiHandler('PATCH', { label: '更新文章', requireAuth: t
   if (body.status === 'published') {
     const updated = {
       ...meta,
-      ...body,
       content: body.content !== undefined ? body.content : meta.content,
+      title: typeof body.title === 'string' ? body.title : meta.title,
+      tags: Array.isArray(body.tags) ? body.tags : meta.tags,
+      coverImage: typeof body.coverImage === 'string' ? body.coverImage : meta.coverImage,
+      description: typeof body.description === 'string' ? body.description : meta.description,
       updatedAt: new Date().toISOString(),
     };
     return handlePublishArticle(body, updated, id, req, db);

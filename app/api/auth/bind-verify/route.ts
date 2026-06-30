@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { createSession } from '@/lib/auth';
+import { createSession, createTempToken } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
 import { getClerkAuth, isClerkConfigured } from '@/lib/clerk-dynamic';
 
@@ -114,6 +114,13 @@ export async function POST(req: NextRequest) {
     // 运行时验证 role 值，防止无效角色传递到 session
     const validRoles = ['user', 'admin', 'sudo'] as const;
     const safeRole = validRoles.includes(user.role as typeof validRoles[number]) ? user.role as typeof validRoles[number] : 'user';
+
+    // 检查是否启用了 2FA — 不得绕过双因素认证
+    if (user.twoFactorEnabled) {
+      await createTempToken(user.uid);
+      logger.info('POST', '绑定用户需要 2FA 验证', { uid: user.uid });
+      return NextResponse.json({ requires2FA: true });
+    }
 
     // 创建 JWT session
     await createSession({
