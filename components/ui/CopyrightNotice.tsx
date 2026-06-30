@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/ui';
 
@@ -23,9 +22,9 @@ export interface CopyrightNoticeProps {
 
 function decodeHtml(text: string): string {
   if (typeof document === 'undefined') return text;
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = text;
-  return textarea.value;
+  const el = document.createElement('div');
+  el.textContent = text;
+  return el.textContent ?? text;
 }
 
 export function CopyrightNotice({

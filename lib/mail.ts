@@ -69,7 +69,7 @@ export async function sendMail(options: MailOptions): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('发送邮件失败:', error);
+    console.error('[mail] 发送邮件失败:', error instanceof Error ? error.message : String(error));
     return false;
   }
 }

@@ -330,7 +330,12 @@ export async function PATCH(req: NextRequest) {
     if (!rl.allowed) return NextResponse.json({ error: '操作过于频繁' }, { status: 429 });
   }
 
-  const body = (await req.json()) as Record<string, unknown>;
+  let body: Record<string, unknown>;
+  try {
+    body = (await req.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: '请求格式错误' }, { status: 400 });
+  }
   const patchErr = validatePatchInput(body);
   if (patchErr) return patchErr;
 

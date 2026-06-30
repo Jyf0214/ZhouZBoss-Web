@@ -85,12 +85,8 @@ async function b2Authorize(): Promise<B2AuthResult> {
   if (!keyId || !appKey) {
     throw new Error('B2 未配置: 请设置 B2_KEY_ID 和 B2_APP_KEY')
   }
-
   const credentials = Buffer.from(`${keyId}:${appKey}`).toString('base64')
-  const resp = await fetch('https://api.backblazeb2.com/b2api/v3/b2_authorize_account', {
-    headers: { Authorization: `Basic ${credentials}` },
-  })
-
+  const resp = await fetch('https://api.backblazeb2.com/b2api/v3/b2_authorize_account', { headers: { Authorization: `Basic ${credentials}` }, signal: AbortSignal.timeout(10000) })
   if (!resp.ok) {
     throw new Error(`B2 鉴权失败 (HTTP ${resp.status})`)
   }
