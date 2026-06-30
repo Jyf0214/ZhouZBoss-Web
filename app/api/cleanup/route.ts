@@ -6,6 +6,7 @@ import { getEnvConfig } from '@/lib/env';
 import { DELETION_PERIOD_DAYS } from '@/lib/constants';
 import { createApiLogger } from '@/lib/api-logger';
 import { apiHandler } from '@/lib/api-handler';
+import { deleteDraft } from '@/lib/draft-storage';
 
 const logger = createApiLogger('/api/cleanup');
 
@@ -69,7 +70,7 @@ async function cleanupExpiredArticle(
   await db.hdel('articles:index', id);
   await db.hdel('articles:published', id);
   await db.hdel('articles:drafts', id);
-  await db.del(`file:articles/${id}.md`);
+  try { await deleteDraft(id); } catch { /* 草稿清理失败不影响删除 */ }
   return true;
 }
 
