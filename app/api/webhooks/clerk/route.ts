@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
   if (!WEBHOOK_SECRET) {
     logger.error('POST', 'Webhook secret 未配置');
-    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'Webhook 密钥未配置' }, { status: 500 });
   }
 
   // 验证 webhook 签名
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   if (!svixId || !svixTimestamp || !svixSignature) {
     logger.warn('POST', '缺少 svix 头');
-    return NextResponse.json({ error: 'Missing svix headers' }, { status: 400 });
+    return NextResponse.json({ error: '缺少 svix 请求头' }, { status: 400 });
   }
 
 
@@ -48,7 +48,7 @@ try {
   payload = verified as ClerkWebhookPayload;
 } catch {
     logger.warn('POST', '无效签名');
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    return NextResponse.json({ error: '签名无效' }, { status: 401 });
   }
 
   const db = getDb();
@@ -76,7 +76,7 @@ try {
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('POST', 'Webhook 处理错误', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    return NextResponse.json({ error: '内部错误' }, { status: 500 });
   }
 }
 

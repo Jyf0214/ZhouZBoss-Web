@@ -31,7 +31,7 @@ export async function GET(
 
   if (!file) {
     logger.warn('GET', '联系人不存在', { fullPath });
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ error: '联系人不存在' }, { status: 404 });
   }
 
   // Check access
@@ -44,7 +44,7 @@ export async function GET(
 
   if (!isAccessible) {
     logger.warn('GET', '无权访问联系人', { fullPath });
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
   logger.info('GET', '联系人读取成功', { fullPath });

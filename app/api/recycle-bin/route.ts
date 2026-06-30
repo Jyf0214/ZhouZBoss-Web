@@ -80,14 +80,14 @@ export const POST = apiHandler('POST', { label: '恢复文章', requireAdmin: tr
   const { id } = await req.json();
   if (!id) {
     logger.warn('POST', '缺少文章ID');
-    return NextResponse.json({ error: 'Article ID required' }, { status: 400 });
+    return NextResponse.json({ error: '缺少文章 ID' }, { status: 400 });
   }
 
   const db = getDb();
   const articleStr = await db.get(`article:data:${id}`);
   if (!articleStr) {
     logger.warn('POST', '文章不存在', { id });
-    return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    return NextResponse.json({ error: '文章不存在' }, { status: 404 });
   }
 
   let article: Record<string, unknown>;
@@ -99,7 +99,7 @@ export const POST = apiHandler('POST', { label: '恢复文章', requireAdmin: tr
   }
   if (article.status !== 'pending_deletion') {
     logger.warn('POST', '文章不在回收站中', { id, status: article.status });
-    return NextResponse.json({ error: 'Article is not in recycle bin' }, { status: 400 });
+    return NextResponse.json({ error: '文章不在回收站中' }, { status: 400 });
   }
 
   // Check if still within restoration period
@@ -109,7 +109,7 @@ export const POST = apiHandler('POST', { label: '恢复文章', requireAdmin: tr
 
   if (now > requestedAt + periodMs) {
     logger.warn('POST', '恢复期已过期', { id });
-    return NextResponse.json({ error: 'Restoration period expired' }, { status: 400 });
+    return NextResponse.json({ error: '恢复期已过期' }, { status: 400 });
   }
 
   // Restore article — 保持原始状态（有 slug 表示曾发布）
@@ -130,7 +130,7 @@ export const POST = apiHandler('POST', { label: '恢复文章', requireAdmin: tr
   }
 
   logger.info('POST', '文章恢复成功', { id });
-  return NextResponse.json({ success: true, message: 'Article restored' });
+  return NextResponse.json({ success: true, message: '文章已恢复' });
 });
 
 /**
@@ -142,14 +142,14 @@ export const DELETE = apiHandler('DELETE', { label: '永久删除文章', requir
   const { id } = await req.json();
   if (!id) {
     logger.warn('DELETE', '缺少文章ID');
-    return NextResponse.json({ error: 'Article ID required' }, { status: 400 });
+    return NextResponse.json({ error: '缺少文章 ID' }, { status: 400 });
   }
 
   const db = getDb();
   const articleStr = await db.get(`article:data:${id}`);
   if (!articleStr) {
     logger.warn('DELETE', '文章不存在', { id });
-    return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    return NextResponse.json({ error: '文章不存在' }, { status: 404 });
   }
 
   let article: Record<string, unknown>;
@@ -163,7 +163,7 @@ export const DELETE = apiHandler('DELETE', { label: '永久删除文章', requir
   // Only delete if in pending_deletion status or user is sudo
   if (article.status !== 'pending_deletion' && session.role !== 'sudo') {
     logger.warn('DELETE', '无法删除此文章', { id, status: article.status, role: session.role });
-    return NextResponse.json({ error: 'Cannot delete this article' }, { status: 400 });
+    return NextResponse.json({ error: '无法删除此文章' }, { status: 400 });
   }
 
   // Permanently delete — 清理 GitHub 文件、数据库记录、草稿文件
@@ -193,5 +193,5 @@ export const DELETE = apiHandler('DELETE', { label: '永久删除文章', requir
   try { await deleteDraft(id); } catch { /* 草稿清理失败不影响删除 */ }
 
   logger.info('DELETE', '永久删除成功', { id });
-  return NextResponse.json({ success: true, message: 'Permanently deleted' });
+  return NextResponse.json({ success: true, message: '已永久删除' });
 });

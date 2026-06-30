@@ -112,7 +112,7 @@ export const GET = apiHandler('GET', { label: '获取用户列表', requireAuth:
   if (username || uid) {
     if (session.role !== 'sudo' && session.role !== 'admin') {
       logger.warn('GET', '禁止查询用户信息', { role: session.role, username, uid });
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
   }
 
@@ -120,7 +120,7 @@ export const GET = apiHandler('GET', { label: '获取用户列表', requireAuth:
     const userData = await getUserByUsernameSearch(db, username);
     if (!userData) {
       logger.warn('GET', '用户不存在', { username });
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: '用户不存在' }, { status: 404 });
     }
     return NextResponse.json(userData);
   }
@@ -129,14 +129,14 @@ export const GET = apiHandler('GET', { label: '获取用户列表', requireAuth:
     const userData = await getUserByUidSearch(db, uid);
     if (!userData) {
       logger.warn('GET', '用户不存在', { uid });
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: '用户不存在' }, { status: 404 });
     }
     return NextResponse.json(userData);
   }
 
   if (session.role !== 'sudo' && session.role !== 'admin') {
     logger.warn('GET', '禁止访问', { role: session.role });
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
   const allUsers = await listAllUsers(db);

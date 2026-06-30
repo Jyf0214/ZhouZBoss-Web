@@ -73,7 +73,7 @@ async function handleFileSystemLookup(
     return null;
   }
   if (!canAccess('posts', file.slug, isAuthenticated, dbAvailable, config)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
   return NextResponse.json({
     id: file.slug,

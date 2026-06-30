@@ -77,7 +77,7 @@ async function cleanupExpiredArticle(
 export const POST = apiHandler('POST', { label: '清理过期文章' }, async (req: NextRequest) => {
   if (!(await isCleanupAuthorized(req))) {
     logger.warn('POST', '未授权');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
   }
 
   logger.info('POST', '开始清理过期文章');
@@ -103,7 +103,7 @@ export const POST = apiHandler('POST', { label: '清理过期文章' }, async (r
   logger.info('POST', '清理任务完成', { deletedCount: deleted.length, errorCount: errors.length });
   return NextResponse.json({
     success: true,
-    message: `Cleanup completed. Deleted ${deleted.length} articles.`,
+    message: `清理完成，已删除 ${deleted.length} 篇文章`,
     deletedCount: deleted.length,
     errorCount: errors.length,
     timestamp: new Date().toISOString(),
@@ -118,7 +118,7 @@ export async function GET() {
     const session = await getSession();
     if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
       logger.warn('GET', '未授权', { role: session?.role });
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     logger.info('GET', '获取清理统计');

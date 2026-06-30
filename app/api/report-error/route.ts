@@ -115,7 +115,7 @@ function validateReport(raw: RawReport): ValidationResult {
     raw.message.trim() === '' ||
     raw.message.length > MAX_MESSAGE
   ) {
-    return { ok: false, error: 'message required' };
+    return { ok: false, error: '消息内容不能为空' };
   }
 
   const report: ValidatedReport = { message: raw.message };
@@ -228,7 +228,7 @@ async function handleReport(req: NextRequest): Promise<NextResponse> {
     raw = (await req.json()) as RawReport;
   } catch {
     logger.warn('POST', 'invalid JSON body');
-    return NextResponse.json({ error: 'message required' }, { status: 400 });
+    return NextResponse.json({ error: '消息内容不能为空' }, { status: 400 });
   }
 
   const result = validateReport(raw);

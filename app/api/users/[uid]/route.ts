@@ -17,7 +17,7 @@ async function validateRoleChange(
   const validRoles: UserRole[] = ['user', 'admin', 'sudo'];
   if (!validRoles.includes(role)) {
     logger.warn('PATCH', '无效角色', { role });
-    return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    return NextResponse.json({ error: '无效的角色' }, { status: 400 });
   }
   const currentSession = await getSession();
   if (currentSession && currentSession.role !== 'sudo') {
@@ -41,7 +41,7 @@ export const GET = apiHandler('GET', { label: '获取用户信息', requireAdmin
 
   if (!userStr) {
     logger.warn('GET', '用户不存在', { uid });
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    return NextResponse.json({ error: '用户不存在' }, { status: 404 });
   }
 
   let user: Record<string, unknown>;
@@ -74,7 +74,7 @@ export const PATCH = apiHandler('PATCH', { label: '更新用户信息', requireA
 
   if (!userStr) {
     logger.warn('PATCH', '用户不存在', { uid });
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    return NextResponse.json({ error: '用户不存在' }, { status: 404 });
   }
 
   let user: Record<string, unknown>;
