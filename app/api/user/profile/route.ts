@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { getUserAvatarAsync } from '@/lib/config';
 import { createApiLogger } from '@/lib/api-logger';
 import { apiHandler } from '@/lib/api-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/user/profile');
 
@@ -176,6 +177,12 @@ async function updateUserInDb(options: {
 
 export const PUT = apiHandler('PUT', { label: '更新用户资料', requireAuth: true }, async (req) => {
   const session = (await getSession())!;
+
+  const rl = rateLimit(`${session.uid}:profile-write`, 10, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '操作过于频繁' }, { status: 429 });
+  }
+
   const body = await req.json();
   const validation = validateAndSanitizeInput(body);
   if (validation.error) {

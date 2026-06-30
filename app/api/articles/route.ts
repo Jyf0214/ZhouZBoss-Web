@@ -5,6 +5,7 @@ import { loadConfig, canAccess, hasDatabase } from '@/lib/config';
 import { getDraft, saveDraft } from '@/lib/draft-storage';
 import { createApiLogger } from '@/lib/api-logger';
 import { apiHandler } from '@/lib/api-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/articles');
 
@@ -175,6 +176,12 @@ async function handlePublishedPost(
 
 export const POST = apiHandler('POST', { label: '创建文章', requireAuth: true }, async (req) => {
   const session = (await getSession())!;
+
+  const rl = rateLimit(`${session.uid}:articles-write`, 20, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '操作过于频繁' }, { status: 429 });
+  }
+
   const { title, content, tags: rawTags, coverImage, status, slug, description } = await req.json();
   const tags = Array.isArray(rawTags) ? rawTags.filter((t: unknown): t is string => typeof t === 'string') : [];
   logger.info('POST', '创建文章', { title, status });

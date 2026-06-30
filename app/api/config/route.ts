@@ -121,8 +121,9 @@ async function buildConfigResponse(config: Record<string, unknown>) {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   }
+  // 管理员响应不得被 CDN 缓存——包含 access 规则和用户映射
   return NextResponse.json(config, {
-    headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+    headers: { 'Cache-Control': 'private, no-cache, no-store' },
   });
 }
 

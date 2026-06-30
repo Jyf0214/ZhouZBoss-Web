@@ -4,8 +4,10 @@ import { getTicketTemplate, renderTicketBody } from '@/lib/tickets';
 import { getEnvConfig } from '@/lib/env';
 import { createApiLogger } from '@/lib/api-logger';
 import { apiHandler } from '@/lib/api-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/tickets');
+const MAX_TICKETS = 50;
 
 /**
  * 校验工单创建输入
@@ -31,6 +33,12 @@ function validateTicketInput(templateSlug: unknown, formData: unknown, title: un
  */
 export const POST = apiHandler('POST', { label: '创建工单', requireAuth: true }, async (req) => {
   const session = (await getSession())!;
+
+  const rl = rateLimit(`${session.uid}:tickets-write`, 10, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '操作过于频繁' }, { status: 429 });
+  }
+
   const { templateSlug, formData, title } = await req.json();
 
   const validationErr = validateTicketInput(templateSlug, formData, title);
@@ -97,6 +105,12 @@ export const POST = apiHandler('POST', { label: '创建工单', requireAuth: tru
 export const GET = apiHandler('GET', { label: '获取工单列表', requireAuth: true }, async (req) => {
   const session = (await getSession())!;
   logger.info('GET', '获取工单列表');
+
+  const rl = rateLimit(`${session.uid}:tickets-read`, 20, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '操作过于频繁' }, { status: 429 });
+  }
+
   const env = getEnvConfig();
   if (!env.githubRepo || !env.githubToken) {
     logger.error('GET', 'GitHub 配置缺失');
@@ -115,9 +129,12 @@ export const GET = apiHandler('GET', { label: '获取工单列表', requireAuth:
     return NextResponse.json([]);
   }
 
+  // 限制返回数量，防止 N+1 放大攻击
+  const limitedData = data.slice(0, MAX_TICKETS);
+
   // 读取每个工单文件
   const tickets = await Promise.all(
-    data.map(async (file: { path: string; name: string }) => {
+    limitedData.map(async (file: { path: string; name: string }) => {
       try {
         const contentRes = await fetch(`${req.nextUrl.origin}/api/github?path=${encodeURIComponent(file.path)}`);
         if (!contentRes.ok) return null;

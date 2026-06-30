@@ -46,8 +46,8 @@ export async function GET() {
         groupName: idx.groupName,
       })),
     }, {
-      // 帖子列表缓存：CDN 缓存 60s，过期后后台重验证 300s
-      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
+      // 帖子列表缓存：管理员响应不缓存，普通用户 CDN 缓存 60s
+      headers: { 'Cache-Control': isAuthenticated ? 'private, no-cache' : 'public, s-maxage=60, stale-while-revalidate=300' },
     });
   } catch (error) {
     logger.error('GET', '获取帖子列表失败', { error: error instanceof Error ? error.message : String(error) });

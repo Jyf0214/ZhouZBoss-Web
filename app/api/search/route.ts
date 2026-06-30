@@ -392,6 +392,11 @@ export const GET = apiHandler('GET', { label: '搜索' }, async (req: NextReques
   // 搜索词为空时使用标签作为搜索词
   const searchQuery = query || (tag ?? '');
 
+  // 防止超长搜索词导致性能问题
+  if (searchQuery.length > 200) {
+    return NextResponse.json({ error: '搜索词长度不能超过 200 字符' }, { status: 400 });
+  }
+
   logger.info('GET', '执行搜索', { query: searchQuery, tag });
 
   const session = await getSession();

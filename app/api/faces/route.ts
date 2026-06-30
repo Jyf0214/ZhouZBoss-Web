@@ -55,8 +55,8 @@ export async function GET() {
     })),
     site: config.site,
     }, {
-      // 通讯录缓存：CDN 缓存 600s，过期后后台重验证 1200s
-      headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },
+      // 通讯录缓存：管理员响应不缓存，普通用户 CDN 缓存 600s
+      headers: { 'Cache-Control': isAdmin ? 'private, no-cache' : 'public, s-maxage=600, stale-while-revalidate=1200' },
     });
   } catch (error) {
     logger.error('GET', '获取通讯录列表失败', { error: error instanceof Error ? error.message : String(error) });
