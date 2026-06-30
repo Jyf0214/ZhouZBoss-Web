@@ -80,6 +80,8 @@ if (
   );
 }
 
+// PWA 配置：Service Worker 位于 public/sw.js，通过 components/PWARegister.tsx 静默注册
+// manifest.json 位于 public/manifest.json，无需 Next.js 插件介入
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   headers() {

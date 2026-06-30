@@ -5,6 +5,7 @@ import { CustomHead } from '../components/CustomHead';
 import { Providers } from './providers';
 import { Navbar } from '../components/Navbar';
 import { RouteTransition } from '../components/RouteTransition';
+import { PWARegister } from '../components/PWARegister';
 import { loadConfig } from '@/lib/config';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -12,12 +13,22 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 export const metadata: Metadata = {
   title: 'Originium Kernel',
   description: '现代内容发布平台',
+  manifest: '/manifest.json',
+  themeColor: '#1a1a1a',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Originium',
+  },
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   const config = loadConfig();
   return (
     <html lang={config.site.lang} suppressHydrationWarning>
+      <head>
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+      </head>
       <body>
         <CustomHead />
         {/* 跳过导航链接：键盘用户可直接跳到正文 */}
@@ -37,6 +48,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         </Providers>
         <Analytics />
         <SpeedInsights />
+        <PWARegister />
       </body>
     </html>
   );
