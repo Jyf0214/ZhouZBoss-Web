@@ -13,10 +13,21 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getBacklinks, getOutgoingReferences } from '@/lib/content-registry';
 import { createApiLogger } from '@/lib/api-logger';
+import { getSession } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/backlinks');
 
-export function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  }
+
+  const rl = checkRateLimit(req, 'backlinks', 20, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '请求过于频繁' }, { status: 429 });
+  }
   const { searchParams } = new URL(req.url);
   const section = searchParams.get('section');
   const slug = searchParams.get('slug');

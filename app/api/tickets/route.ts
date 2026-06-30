@@ -8,6 +8,23 @@ import { apiHandler } from '@/lib/api-handler';
 const logger = createApiLogger('/api/tickets');
 
 /**
+ * 校验工单创建输入
+ */
+function validateTicketInput(templateSlug: unknown, formData: unknown, title: unknown): NextResponse | null {
+  if (!templateSlug || !formData) {
+    return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
+  }
+  if (typeof formData !== 'object' || formData === null || Array.isArray(formData)) {
+    return NextResponse.json({ error: 'formData 必须是对象' }, { status: 400 });
+  }
+  const trimmedTitle = (title as string | undefined)?.trim();
+  if (trimmedTitle && trimmedTitle.length > 200) {
+    return NextResponse.json({ error: '标题长度不能超过 200 字符' }, { status: 400 });
+  }
+  return null;
+}
+
+/**
  * 创建工单
  * - 根据模板生成 markdown 内容
  * - 提交到 GitHub 仓库的 tickets/ 目录
@@ -16,9 +33,10 @@ export const POST = apiHandler('POST', { label: '创建工单', requireAuth: tru
   const session = (await getSession())!;
   const { templateSlug, formData, title } = await req.json();
 
-  if (!templateSlug || !formData) {
-    logger.warn('POST', '缺少必填字段');
-    return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
+  const validationErr = validateTicketInput(templateSlug, formData, title);
+  if (validationErr) {
+    logger.warn('POST', '输入校验失败');
+    return validationErr;
   }
 
   logger.info('POST', '创建工单', { templateSlug });

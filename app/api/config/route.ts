@@ -30,6 +30,16 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 分钟
  * 所有配置统一使用 AppConfig 结构
  */
 export async function GET() {
+  try {
+    return await handleConfigGet();
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.error('GET', '获取配置失败', { error: msg });
+    return NextResponse.json({ error: '获取配置失败' }, { status: 500 });
+  }
+}
+
+async function handleConfigGet() {
   // 检查内存缓存，命中则直接返回（剥离内部字段）
   const now = Date.now();
   if (configCache && now - configCache.timestamp < CACHE_TTL) {

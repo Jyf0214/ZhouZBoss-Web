@@ -3,6 +3,7 @@ import { getContentFiles, getContentIndexes } from '@/lib/content';
 import { loadConfig, canAccess, hasDatabase } from '@/lib/config';
 import { type SessionPayload, getSession } from '@/lib/auth';
 import { createApiLogger } from '@/lib/api-logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 const logger = createApiLogger('/api/faces');
 
@@ -128,6 +129,11 @@ export async function POST(req: NextRequest) {
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
     logger.warn('POST', '无权限', { role: session?.role });
     return NextResponse.json({ error: '无权限' }, { status: 403 });
+  }
+
+  const rl = rateLimit(`${session.uid}:faces-write`, 30, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '操作过于频繁' }, { status: 429 });
   }
 
   try {
@@ -292,6 +298,24 @@ async function handleUpdateContact(
 }
 
 /**
+ * 校验 PATCH 请求输入
+ */
+function validatePatchInput(body: Record<string, unknown>): NextResponse | null {
+  if (!body.slug) {
+    logger.warn('PATCH', '缺少联系人路径');
+    return NextResponse.json({ error: '缺少联系人路径' }, { status: 400 });
+  }
+  if (!/^\/[\w-]+\/[\w-]+$/.test(String(body.slug)) || /\.\./.test(String(body.slug))) {
+    return NextResponse.json({ error: '无效的联系人路径' }, { status: 400 });
+  }
+  if (!body.name || !body.group) {
+    logger.warn('PATCH', '缺少必填字段');
+    return NextResponse.json({ error: '姓名和分组为必填项' }, { status: 400 });
+  }
+  return null;
+}
+
+/**
  * 更新联系人
  */
 export async function PATCH(req: NextRequest) {
@@ -301,27 +325,28 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: '无权限' }, { status: 403 });
   }
 
+  if (session) {
+    const rl = rateLimit(`${session.uid}:faces-write`, 30, 60 * 1000);
+    if (!rl.allowed) return NextResponse.json({ error: '操作过于频繁' }, { status: 429 });
+  }
+
+  const body = (await req.json()) as Record<string, unknown>;
+  const patchErr = validatePatchInput(body);
+  if (patchErr) return patchErr;
+
+  return handlePatchContact(req, body);
+}
+
+async function handlePatchContact(req: NextRequest, body: Record<string, unknown>): Promise<NextResponse> {
   try {
-    const { slug, name, email, phone, group, content } = await req.json();
-
-    if (!slug) {
-      logger.warn('PATCH', '缺少联系人路径');
-      return NextResponse.json({ error: '缺少联系人路径' }, { status: 400 });
-    }
-
-    // 防止路径穿越攻击：slug 必须是 /group/name 格式
-    if (!/^\/[\w-]+\/[\w-]+$/.test(slug) || /\.\./.test(slug)) {
-      return NextResponse.json({ error: '无效的联系人路径' }, { status: 400 });
-    }
-
-    if (!name || !group) {
-      logger.warn('PATCH', '缺少必填字段');
-      return NextResponse.json({ error: '姓名和分组为必填项' }, { status: 400 });
-    }
+    const slug = String(body.slug);
+    const name = String(body.name);
+    const email = String(body.email ?? '');
+    const phone = String(body.phone ?? '');
+    const group = String(body.group);
+    const content = body.content !== undefined && body.content !== null ? String(body.content) : undefined;
 
     const oldFilePath = `faces${slug}.md`;
-
-    // 使用统一的 /api/github 端点读取文件
     const fileData = await getFileFromGitHub(req, oldFilePath);
     if (!fileData) {
       logger.warn('PATCH', '联系人不存在', { slug });
@@ -329,26 +354,14 @@ export async function PATCH(req: NextRequest) {
     }
 
     const { sha } = fileData;
-
     const newSlug = generateSlug(name);
     const newFilePath = `faces/${group}/${newSlug}.md`;
-    const now = new Date().toISOString();
-
-    const frontMatter = buildFrontMatter(name, email, phone, group, now);
+    const frontMatter = buildFrontMatter(name, email, phone, group, new Date().toISOString());
 
     if (newFilePath !== oldFilePath) {
-      return handleRenameContact(req, {
-        name, group, newSlug, newFilePath, oldFilePath, frontMatter,
-        content: content ?? '',
-        sha,
-      });
+      return handleRenameContact(req, { name, group, newSlug, newFilePath, oldFilePath, frontMatter, content: content ?? '', sha });
     }
-
-    return handleUpdateContact(req, {
-      name, group, newSlug, oldFilePath, frontMatter,
-      content: content ?? '',
-      sha,
-    });
+    return handleUpdateContact(req, { name, group, newSlug, oldFilePath, frontMatter, content: content ?? '', sha });
   } catch (error: unknown) {
     logger.error('PATCH', '更新联系人失败', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: '更新联系人失败' }, { status: 500 });
@@ -363,6 +376,11 @@ export async function DELETE(req: NextRequest) {
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
     logger.warn('DELETE', '无权限', { role: session?.role });
     return NextResponse.json({ error: '无权限' }, { status: 403 });
+  }
+
+  const rl = rateLimit(`${session.uid}:faces-write`, 30, 60 * 1000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '操作过于频繁' }, { status: 429 });
   }
 
   try {

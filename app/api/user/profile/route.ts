@@ -160,7 +160,12 @@ async function updateUserInDb(options: {
 }): Promise<void> {
   if (options.avatar !== undefined) options.user.avatar = sanitizeAvatarUrl(options.avatar);
   if (options.sanitized.value !== null) options.user.username = options.sanitized.value;
-  if (options.name !== undefined) options.user.name = options.name;
+  if (options.name !== undefined && typeof options.name === 'string') {
+    const trimmed = options.name.trim();
+    if (trimmed.length > 0 && trimmed.length <= 50) {
+      options.user.name = trimmed;
+    }
+  }
 
   await options.db.set(`user:uid:${options.uid}`, JSON.stringify(options.user));
 

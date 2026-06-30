@@ -80,7 +80,8 @@ export function renderTicketBody(template: TicketTemplate, formData: Record<stri
   // 替换 {{fieldName}} 占位符
   for (const [key, value] of Object.entries(formData)) {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    body = body.replace(new RegExp(`\\{\\{${escapedKey}\\}\\}`, 'g'), value ?? '');
+    const safeValue = (value ?? '').replace(/\$/g, '$$$$');
+    body = body.replace(new RegExp(`\\{\\{${escapedKey}\\}\\}`, 'g'), safeValue);
   }
 
   return body;

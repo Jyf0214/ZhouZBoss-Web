@@ -67,6 +67,11 @@ export function MermaidBlock({ code }: MermaidBlockProps) {
         // 过滤 SVG 中的危险元素和事件处理器，防止 XSS
         const sanitized = svg
           .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<foreignObject\b[^<]*(?:(?!<\/foreignObject>)<[^<]*)*<\/foreignObject>/gi, '')
+          .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+          .replace(/<use\b[^>]*\/?>/gi, '')
+          .replace(/<animate\b[^<]*(?:(?!<\/animate>)<[^<]*)*<\/animate>/gi, '')
+          .replace(/<set\b[^<]*(?:(?!<\/set>)<[^<]*)*<\/set>/gi, '')
           .replace(/\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
           .replace(/javascript\s*:/gi, '')
           .replace(/data\s*:/gi, '');

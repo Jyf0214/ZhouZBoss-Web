@@ -10,6 +10,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
+  try {
   const { slug } = await params;
 
   // 路径遍历防护：拒绝包含 .. 的 slug 段
@@ -53,4 +54,9 @@ export async function GET(
     // 原始 Markdown 内容（Front Matter + 正文），读取失败时为空字符串
     rawContent: file.raw ?? '',
   });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.error('GET', '联系人查询失败', { error: msg });
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
+  }
 }
