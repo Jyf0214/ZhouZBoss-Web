@@ -24,7 +24,7 @@ export default function StoragePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-zinc-50">
+      <div className="flex items-center justify-center h-screen bg-zinc-50 dark:bg-zinc-900">
         <GlobalLoading size="large" />
       </div>
     );

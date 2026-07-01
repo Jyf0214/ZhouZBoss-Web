@@ -137,14 +137,14 @@ export default function StatsPage() {
     <PageContainer maxWidth="6xl">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">内容统计</h1>
-          <p className="text-zinc-400 text-sm mt-1">各模块内容数量、标签分布、字数统计</p>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">内容统计</h1>
+          <p className="text-zinc-400 dark:text-zinc-500 text-sm mt-1">各模块内容数量、标签分布、字数统计</p>
         </div>
         <button
           type="button"
           onClick={fetchStats}
           disabled={loading}
-          className="px-4 py-2 text-sm font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors disabled:opacity-50"
         >
           {loading ? '刷新中...' : '刷新数据'}
         </button>
@@ -182,28 +182,28 @@ export default function StatsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <ProCard padding="p-5">
               <div className="flex items-center gap-3">
-                <Clock size={18} className="text-zinc-400" />
+                <Clock size={18} className="text-zinc-400 dark:text-zinc-500" />
                 <div>
-                  <div className="text-lg font-bold text-zinc-900">{data.counts.total}</div>
-                  <div className="text-xs text-zinc-400">全部内容</div>
+                  <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{data.counts.total}</div>
+                  <div className="text-xs text-zinc-400 dark:text-zinc-500">全部内容</div>
                 </div>
               </div>
             </ProCard>
             <ProCard padding="p-5">
               <div className="flex items-center gap-3">
-                <BarChart3 size={18} className="text-zinc-400" />
+                <BarChart3 size={18} className="text-zinc-400 dark:text-zinc-500" />
                 <div>
-                  <div className="text-lg font-bold text-zinc-900">{data.timeline.last7Days}</div>
-                  <div className="text-xs text-zinc-400">最近 7 天发布</div>
+                  <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{data.timeline.last7Days}</div>
+                  <div className="text-xs text-zinc-400 dark:text-zinc-500">最近 7 天发布</div>
                 </div>
               </div>
             </ProCard>
             <ProCard padding="p-5">
               <div className="flex items-center gap-3">
-                <BarChart3 size={18} className="text-zinc-400" />
+                <BarChart3 size={18} className="text-zinc-400 dark:text-zinc-500" />
                 <div>
-                  <div className="text-lg font-bold text-zinc-900">{data.timeline.last30Days}</div>
-                  <div className="text-xs text-zinc-400">最近 30 天发布</div>
+                  <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{data.timeline.last30Days}</div>
+                  <div className="text-xs text-zinc-400 dark:text-zinc-500">最近 30 天发布</div>
                 </div>
               </div>
             </ProCard>
@@ -227,7 +227,7 @@ export default function StatsPage() {
           </ProCard>
 
           {/* 平均字数 */}
-          <div className="mt-6 text-center text-sm text-zinc-400">
+          <div className="mt-6 text-center text-sm text-zinc-400 dark:text-zinc-500">
             文章平均字数：{data.wordCount.avgPost.toLocaleString()} 字
           </div>
         </>

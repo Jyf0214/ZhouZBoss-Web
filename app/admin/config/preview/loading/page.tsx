@@ -158,11 +158,11 @@ function AnimationTypeGrid({
             key={item.type}
             onClick={() => onChange(item.type)}
             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-              isActive ? activeClass : 'border-zinc-100 hover:border-zinc-200'
+              isActive ? activeClass : 'border-zinc-100 dark:border-zinc-700 hover:border-zinc-200'
             }`}
           >
-            <ItemIcon size={24} className={isActive ? 'text-white' : 'text-zinc-600'} />
-            <span className={`text-sm font-medium ${isActive ? 'text-white' : 'text-zinc-600'}`}>
+            <ItemIcon size={24} className={isActive ? 'text-white' : 'text-zinc-600 dark:text-zinc-400'} />
+            <span className={`text-sm font-medium ${isActive ? 'text-white' : 'text-zinc-600 dark:text-zinc-400'}`}>
               {item.labelZh}
             </span>
           </button>
@@ -214,7 +214,7 @@ function PreviewArea({
 
   return (
     <div
-      className="bg-zinc-50 rounded-xl p-16 min-h-[200px]"
+      className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-16 min-h-[200px]"
       style={{ display: 'flex', alignItems, justifyContent, padding }}
     >
       <LoadingPreviewContent pageType={pageType} loadingColor={loadingColor} loadingPosition={loadingPosition} />
@@ -258,13 +258,13 @@ export default function LoadingPreviewPage() {
           href="/admin/config/preview"
           className="w-12 h-12 bg-zinc-100 hover:bg-zinc-200 rounded-2xl flex items-center justify-center transition-all"
         >
-          <ArrowLeft size={22} className="text-zinc-600" />
+          <ArrowLeft size={22} className="text-zinc-600 dark:text-zinc-400" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
             {t('loadingPreview.title') || '加载动画预览'}
           </h1>
-          <p className="text-zinc-400 text-sm mt-0.5">
+          <p className="text-zinc-400 dark:text-zinc-500 text-sm mt-0.5">
             {t('loadingPreview.subtitle') || '预览所有可用的加载动画样式'}
           </p>
         </div>
@@ -284,7 +284,7 @@ export default function LoadingPreviewPage() {
               <h2 className="text-lg font-bold text-zinc-900 mb-1">
                 {t('loadingPreview.category') || '进度条/加载动画'}
               </h2>
-              <p className="text-zinc-500 text-sm">
+              <p className="text-zinc-500 dark:text-zinc-400 text-sm">
                 {loadingTypes.length} 种可用样式 · {t('loadingPreview.selectTip') || '选择一种动画进行预览'}
               </p>
             </div>
@@ -295,11 +295,11 @@ export default function LoadingPreviewPage() {
         <Card title={t('loadingPreview.select') || '选择动画'} className="rounded-2xl border border-zinc-100">
           <div className="space-y-6">
             <div>
-              <div className="text-sm font-medium text-zinc-500 mb-3">轻加载 (pageType)</div>
+              <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-3">轻加载 (pageType)</div>
               <AnimationTypeGrid selected={pageType} onChange={setPageType} activeClass="border-zinc-900 bg-zinc-900 text-white" />
             </div>
             <div>
-              <div className="text-sm font-medium text-zinc-500 mb-3">重加载 (navType)</div>
+              <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-3">重加载 (navType)</div>
               <AnimationTypeGrid selected={navType} onChange={setNavType} activeClass="border-emerald-500 bg-emerald-500 text-white" />
             </div>
           </div>
@@ -316,7 +316,7 @@ export default function LoadingPreviewPage() {
                 showText
               />
             </div>
-            <div className="text-sm text-zinc-400">
+            <div className="text-sm text-zinc-400 dark:text-zinc-500">
               当前颜色: <code className="bg-zinc-100 px-2 py-1 rounded ml-1">{loadingColor}</code>
             </div>
           </div>
@@ -333,7 +333,7 @@ export default function LoadingPreviewPage() {
               size="large"
               placement="bottomLeft"
             />
-            <div className="text-sm text-zinc-400">
+            <div className="text-sm text-zinc-400 dark:text-zinc-500">
               配置: <code className="bg-zinc-100 px-2 py-1 rounded ml-1">appearance.loading.position = &quot;{loadingPosition}&quot;</code>
             </div>
           </div>
