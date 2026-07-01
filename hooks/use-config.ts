@@ -62,6 +62,7 @@ export interface FrontendConfig {
   postEdit?: { enable: boolean; github: string | false };
   site?: { title: string; description: string; lang: string };
   auth?: { allowRegistration: boolean };
+  music?: { enable: boolean; autoPlay: boolean; songs: { name: string; artist: string; url: string }[] };
 }
 
 let cachedConfig: FrontendConfig | null = null;

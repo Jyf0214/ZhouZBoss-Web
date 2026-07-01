@@ -387,7 +387,24 @@ export const zUserConfig = z.object({
 });
 
 // ============================================================================
-// 根 AppConfig
+// MusicConfig
+// ============================================================================
+
+export const zMusicItem = z.object({
+  name: z.string().default(''),
+  artist: z.string().default(''),
+  url: z.string().default(''),
+  cover: z.string().default(''),
+});
+
+export const zMusicConfig = z.object({
+  enable: z.boolean().default(false),
+  autoPlay: z.boolean().default(false),
+  songs: z.array(zMusicItem).default([]),
+});
+
+// ============================================================================
+// Root AppConfig
 // ============================================================================
 
 /**
@@ -424,6 +441,7 @@ export const zAppConfig = z.object({
   mainTone: withFullDefault(zMainToneConfig),
   footer: withFullDefault(zFooterConfig),
   clerk: withFullDefault(zClerkConfig),
+  music: withFullDefault(zMusicConfig),
   users: z.record(z.string(), zUserConfig).default({}),
 }).strict();
 
@@ -680,6 +698,19 @@ export interface ClerkConfig {
   enable: boolean;
 }
 
+export interface MusicItem {
+  name: string;
+  artist: string;
+  url: string;
+  cover: string;
+}
+
+export interface MusicConfig {
+  enable: boolean;
+  autoPlay: boolean;
+  songs: MusicItem[];
+}
+
 export interface UserConfig {
   avatar?: string;
 }
@@ -707,5 +738,6 @@ export interface AppConfig {
   mainTone?: MainToneConfig;
   footer?: FooterConfig;
   clerk?: ClerkConfig;
+  music?: MusicConfig;
   users?: Record<string, UserConfig>;
 }

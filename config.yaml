@@ -185,6 +185,10 @@ footer:
   typedText: []
 clerk:
   enable: false
+music:
+  enable: false
+  autoPlay: false
+  songs: []
 users:
   '169313142':
     avatar: https://avatars.githubusercontent.com/u/169313142?v=4
