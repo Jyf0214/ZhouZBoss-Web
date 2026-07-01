@@ -16,6 +16,7 @@ type ConfigResponse = AppConfig & {
   _remoteConfig?: string;
   _remoteConfigStatus?: string;
   _remoteConfigError?: string;
+  [key: string]: unknown;
 };
 let configCache: { data: ConfigResponse; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 分钟
@@ -44,8 +45,7 @@ async function handleConfigGet() {
   const now = Date.now();
   if (configCache && now - configCache.timestamp < CACHE_TTL) {
     logger.info('GET', '使用缓存配置');
-    const { _remoteConfig: _rc, _remoteConfigStatus: _rs, _remoteConfigError: _re, ...publicCached } = configCache.data;
-    return buildConfigResponse(publicCached);
+    return buildConfigResponse(configCache.data);
   }
 
   logger.info('GET', '读取配置');
@@ -106,22 +106,19 @@ async function handleConfigGet() {
   // 更新内存缓存
   configCache = { data: response, timestamp: Date.now() };
 
-  // 剥离内部字段（githubConfigured 保留，由 buildConfigResponse 按角色处理）
-  const { _remoteConfig, _remoteConfigStatus, _remoteConfigError, ...publicConfig } = response;
-
-  return buildConfigResponse(publicConfig);
+  return buildConfigResponse(response);
 }
 
-/** 未认证用户剥离 access 规则、users 映射和 githubConfigured，防止信息泄露 */
+/** 未认证用户剥离 access 规则、users 映射、githubConfigured 和 _remoteConfig 等内部字段，防止信息泄露 */
 async function buildConfigResponse(config: Record<string, unknown>) {
   const session = await getSession();
   if (!session || (session.role !== 'admin' && session.role !== 'sudo')) {
-    const { access: _access, users: _users, githubConfigured: _gc, ...safeConfig } = config;
+    const { access: _access, users: _users, githubConfigured: _gc, _remoteConfig: _rc, _remoteConfigStatus: _rs, _remoteConfigError: _re, ...safeConfig } = config;
     return NextResponse.json(safeConfig, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   }
-  // 管理员响应不得被 CDN 缓存——包含 access 规则和用户映射
+  // 管理员响应不得被 CDN 缓存——包含 access 规则、用户映射和远程配置
   return NextResponse.json(config, {
     headers: { 'Cache-Control': 'private, no-cache, no-store' },
   });

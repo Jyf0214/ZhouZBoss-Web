@@ -36,8 +36,6 @@ export async function syncAvatarChanges({
   if (!configRes.ok) throw new Error('读取配置失败');
   const configResData: RemoteConfigData = await configRes.json();
   const remoteRaw = configResData._remoteConfig ?? '';
-  // remoteRaw 可能为空（GitHub 首次同步或远程 config.yaml 不存在），
-  // useGitHubConfigSync 能正确处理空远程配置
   setLoading(false);
   syncAvatar(
     { avatarUrl: originalAvatar, _uid: uid },
