@@ -37,16 +37,16 @@ export function PostCardBody({
       <p className="text-zinc-400 text-sm line-clamp-2 mb-3 leading-relaxed">
         {post.description ?? ''}
       </p>
-      <div className="mt-auto pt-3 border-t border-zinc-50 dark:border-zinc-800 flex items-center justify-between text-zinc-400">
+      <div className="mt-auto pt-3 border-t border-zinc-50 dark:border-zinc-800 flex items-center justify-between text-zinc-500 dark:text-zinc-400">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-zinc-100 rounded flex items-center justify-center text-zinc-500">
+          <div className="w-5 h-5 bg-zinc-100 dark:bg-zinc-700 rounded flex items-center justify-center text-zinc-600 dark:text-zinc-300">
             <UserIcon size={10} />
           </div>
-          <span className="text-xs font-medium text-zinc-500">
+          <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
             {post.author ?? t('home.anonymous')}
           </span>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-zinc-400">
+        <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400">
           {post.readingTime && post.readingTime > 0 && (
             <span className="flex items-center gap-1">
               <Clock size={11} />

@@ -19,9 +19,6 @@ export interface CoverConfig {
 
 export interface HomePostGridProps {
   posts: PostItem[];
-  postCount: number;
-  facesCount: number;
-  isAdmin?: boolean;
   heroTitleLine1?: string;
   heroTitleLine2?: string;
   defaultCover?: string;

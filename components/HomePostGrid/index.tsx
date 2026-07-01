@@ -5,23 +5,17 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useI18n } from '@/hooks/use-i18n';
 import { CategoryBar } from '@/components/CategoryBar';
-import { RecentUpdatesBar } from '@/components/RecentUpdatesBar';
-import { Button } from '@/components/ui/Button';
 import { HeroSection } from './HeroSection';
-import { QuickLinks } from './QuickLinks';
 import { PostCard } from './PostCard';
 import { Pagination } from './Pagination';
 import { useHomeFilter } from './use-home-filter';
-import { DEFAULT_CATEGORIES, DEFAULT_RECENT_UPDATES } from './home-constants';
+import { DEFAULT_CATEGORIES } from './home-constants';
 import type { HomePostGridProps } from './types';
 
 export type { HomePostGridProps, PostItem, CoverConfig } from './types';
 
 export function HomePostGrid({
   posts,
-  postCount,
-  facesCount,
-  isAdmin = false,
   heroTitleLine1,
   heroTitleLine2,
   defaultCover,
@@ -29,8 +23,6 @@ export function HomePostGrid({
 }: HomePostGridProps) {
   const { t, locale } = useI18n();
   const {
-    searchTerm,
-    setSearchTerm,
     selectedTag,
     setSelectedTag,
     selectedCategory,
@@ -48,52 +40,19 @@ export function HomePostGrid({
       <HeroSection
         heroTitleLine1={heroTitleLine1}
         heroTitleLine2={heroTitleLine2}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
         t={t}
       />
 
-      <div className="mb-6 sticky top-[72px] z-30 md:relative md:top-0">
+      <div className="mb-10 sticky top-[72px] z-30 md:relative md:top-0">
         <CategoryBar
           categories={DEFAULT_CATEGORIES}
+          tags={allTags}
           selectedCategory={selectedCategory}
+          selectedTag={selectedTag}
           onSelectCategory={setSelectedCategory}
+          onSelectTag={setSelectedTag}
         />
       </div>
-
-      <div className="mb-8">
-        <RecentUpdatesBar updates={DEFAULT_RECENT_UPDATES} viewAllLink="/posts" />
-      </div>
-
-      {allTags.length > 0 && (
-        <section className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedTag === null ? 'primary' : 'ghost'}
-              size="sm"
-              autoLoading={false}
-              rounded="full"
-              onClick={() => setSelectedTag(null)}
-            >
-              全部
-            </Button>
-            {allTags.map((tag) => (
-              <Button
-                key={tag}
-                variant={selectedTag === tag ? 'primary' : 'ghost'}
-                size="sm"
-                autoLoading={false}
-                rounded="full"
-                onClick={() => setSelectedTag(tag)}
-              >
-                {tag}
-              </Button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <QuickLinks postCount={postCount} facesCount={facesCount} isAdmin={isAdmin} t={t} />
 
       <section>
         <div className="flex items-center justify-between mb-8">

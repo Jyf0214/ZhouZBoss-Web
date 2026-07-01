@@ -14,6 +14,7 @@ import { useConfig } from '@/hooks/use-config';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { Clock, MapPin, Search, Sun, Moon, Monitor, Keyboard } from 'lucide-react';
 import { useThemeMode } from '@/hooks/use-theme-mode';
+import { usePathname } from 'next/navigation';
 import LanguageSwitcher from '@/components/LanguageSwitcher/index';
 import type { NavConfig } from '@/lib/config-schema';
 
@@ -105,6 +106,8 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
   const { t } = useI18n();
   const { config: siteConfig } = useConfig();
   const { mode, cycle } = useThemeMode();
+  const pathname = usePathname();
+  const isHome = pathname === '/';
   // 优先使用服务端传入的配置，无则初始化为 null（降级 fetch 填充）
   const [navConfig, setNavConfig] = useState<NavConfig | null>(navConfigProp ?? null);
   const [time, setTime] = useState('');
@@ -221,7 +224,7 @@ export function Navbar({ navConfig: navConfigProp, siteTitle: _siteTitle }: Navb
               title="快捷键 (?)"
               className="hidden sm:inline-flex"
             />
-            <NavClock travelling={navConfig?.travelling} clock={navConfig?.clock} time={time} />
+            {!isHome && <NavClock travelling={navConfig?.travelling} clock={navConfig?.clock} time={time} />}
             <NavAuthSection user={user} allowRegistration={allowRegistration} clerkAvailable={clerkAvailable} t={t} />
           </div>
         </div>

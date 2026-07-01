@@ -3,8 +3,6 @@ import type { PostItem } from './types';
 import { PAGE_SIZE } from './home-constants';
 
 export interface UseHomeFilterResult {
-  searchTerm: string;
-  setSearchTerm: (v: string) => void;
   selectedTag: string | null;
   setSelectedTag: (v: string | null) => void;
   selectedCategory: string | null;
@@ -18,14 +16,13 @@ export interface UseHomeFilterResult {
 }
 
 export function useHomeFilter(posts: PostItem[]): UseHomeFilterResult {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedTag, selectedCategory]);
+  }, [selectedTag, selectedCategory]);
 
   const allTags = useMemo(
     () => Array.from(new Set(posts.flatMap((p) => p.tags || []))).sort(),
@@ -38,20 +35,14 @@ export function useHomeFilter(posts: PostItem[]): UseHomeFilterResult {
         .filter((p) => {
           if (selectedCategory && !p.tags?.some((tag) => tag === selectedCategory)) return false;
           if (selectedTag && !p.tags?.includes(selectedTag)) return false;
-          if (!searchTerm) return true;
-          const q = searchTerm.toLowerCase();
-          return (
-            p.title.toLowerCase().includes(q) ||
-            (p.description?.toLowerCase().includes(q) ?? false) ||
-            (p.tags?.some((tag) => tag.toLowerCase().includes(q)) ?? false)
-          );
+          return true;
         })
         .sort((a, b) => {
           if (a.pinned && !b.pinned) return -1;
           if (!a.pinned && b.pinned) return 1;
           return new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime();
         }),
-    [posts, searchTerm, selectedTag, selectedCategory],
+    [posts, selectedTag, selectedCategory],
   );
 
   const totalPages = useMemo(
@@ -65,8 +56,6 @@ export function useHomeFilter(posts: PostItem[]): UseHomeFilterResult {
   );
 
   return {
-    searchTerm,
-    setSearchTerm,
     selectedTag,
     setSelectedTag,
     selectedCategory,

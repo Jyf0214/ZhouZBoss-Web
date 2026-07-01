@@ -1,9 +1,8 @@
 import { getContentFiles, getContentIndexes } from '@/lib/content';
-import { loadConfig, hasDatabase, canAccess } from '@/lib/config';
+import { loadConfig } from '@/lib/config';
 import { estimateReadingTime } from '@/lib/reading-time';
 import { HomePostGrid } from '@/components/HomePostGrid';
 import Footer from '@/components/Footer';
-import { getSession } from '@/lib/auth';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -17,12 +16,10 @@ export const revalidate = 300; // 5 分钟 ISR
  * 首页 — 服务端组件，直接从文件系统读取帖子索引
  * 仅展示 public 内容，不查数据库
  */
-export default async function HomePage() {
+export default function HomePage() {
   const config = loadConfig();
   const allFiles = getContentFiles('posts');
   const indexes = getContentIndexes('posts');
-  const session = await getSession();
-  const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
 
   // 仅展示 public 的帖子（首页不显示 private 内容）
   const publicPosts = allFiles.filter((file) => {
@@ -45,28 +42,6 @@ export default async function HomePage() {
     readingTime: f.content ? estimateReadingTime(f.content) : undefined,
   }));
 
-  // facesCount - 游客无法看到通讯录
-  const facesCount = (() => {
-    try {
-      const faceFiles = getContentFiles('faces');
-      const dbAvailable = hasDatabase();
-      const publicFaces = faceFiles.filter(file => {
-        if (isAdmin) return true;
-        const dirSlug = '/' + file.slug.split('/').filter(Boolean).slice(0, -1).join('/');
-        
-        return canAccess('faces', file.slug, false, dbAvailable, config) &&
-               canAccess('faces', dirSlug ?? '/', false, dbAvailable, config) &&
-               file.meta.public === true;
-      });
-      return publicFaces.length;
-    } catch {
-      return 0;
-    }
-  })();
-
-  // 仅管理员可以看到 facesCount
-  const displayFacesCount = isAdmin ? facesCount : 0;
-
   // 哀悼日检测
   const today = new Date();
   const dateStr = `${today.getMonth() + 1}-${today.getDate()}`;
@@ -77,9 +52,6 @@ export default async function HomePage() {
       style={isMournDay ? { filter: 'grayscale(1)' } : undefined}>
       <HomePostGrid
         posts={posts}
-        postCount={posts.length}
-        facesCount={displayFacesCount}
-        isAdmin={isAdmin}
         heroTitleLine1={config.site.heroTitleLine1}
         heroTitleLine2={config.site.heroTitleLine2}
         defaultCover={config.cover?.defaultCover?.[0]}
