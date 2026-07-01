@@ -23,7 +23,7 @@ export const GET = apiHandler('GET', { label: '获取用户资料', requireAuth:
   } catch {
     return NextResponse.json({ error: '用户数据损坏' }, { status: 500 });
   }
-  const configAvatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo');
+  const configAvatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo', user.email as string);
 
   logger.info('GET', '获取用户资料成功', { uid: session.uid });
   return NextResponse.json({
@@ -213,7 +213,7 @@ export const PUT = apiHandler('PUT', { label: '更新用户资料', requireAuth:
   await handleUsernameChange(db, user, validation.sanitized);
   await updateUserInDb({ db, user, sanitized: validation.sanitized, avatar: validation.avatar, name: validation.name, uid: session.uid });
 
-  const configAvatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo');
+  const configAvatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo', user.email as string);
 
   logger.info('PUT', '资料更新成功', { uid: session.uid });
   return NextResponse.json({

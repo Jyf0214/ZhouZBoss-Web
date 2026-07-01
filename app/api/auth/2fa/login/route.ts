@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     // 验证通过，清除临时令牌并创建正式 session
     await clearTempToken();
 
-    const avatar = await getUserAvatarAsync(user.uid, user.role === 'admin' || user.role === 'sudo');
+    const avatar = await getUserAvatarAsync(user.uid, user.role === 'admin' || user.role === 'sudo', user.email);
 
     await createSession({
       uid: user.uid,

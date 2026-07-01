@@ -28,7 +28,7 @@ export async function GET() {
     }
 
     const user = JSON.parse(userStr);
-    const avatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo');
+    const avatar = await getUserAvatarAsync(session.uid, session.role === 'admin' || session.role === 'sudo', user.email);
     
     logger.info('GET', '获取用户信息成功', { uid: session.uid });
     return NextResponse.json({

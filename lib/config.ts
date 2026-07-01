@@ -140,20 +140,25 @@ export function filterAccessibleSlugs(
 
 /**
  * 获取用户头像（仅从配置文件读取）
- * 优先级：config.users[uid].avatar > auth.admin.avatar（仅当用户是管理员）
+ * 优先级：config.users[uid].avatar > config.users 中 email 匹配 > auth.admin.avatar（仅当用户是管理员）
  */
-export function getUserAvatarAsync(uid: string, isAdmin?: boolean): Promise<string | null> {
-  return Promise.resolve(getUserAvatar(uid, isAdmin));
+export function getUserAvatarAsync(uid: string, isAdmin?: boolean, email?: string): Promise<string | null> {
+  return Promise.resolve(getUserAvatar(uid, isAdmin, email));
 }
 
 /**
  * 获取用户头像（同步，仅从配置文件读取）
  */
-export function getUserAvatar(uid: string, isAdmin?: boolean): string | null {
+export function getUserAvatar(uid: string, isAdmin?: boolean, email?: string): string | null {
   const config = loadConfig();
 
   if (config.users?.[uid]?.avatar) {
     return config.users[uid].avatar;
+  }
+
+  // 按 email 匹配：config.users 的键可能是 UID 也可能是 email
+  if (email && config.users?.[email]?.avatar) {
+    return config.users[email].avatar;
   }
 
   if (isAdmin && config.auth?.admin?.avatar) {
