@@ -118,9 +118,13 @@ function buildViewModel(
 }
 
 function buildBreadcrumbs(slug: string[]): Crumb[] {
-  return slug.map((segment, index) => ({
-    label: segment,
-    href: '/posts/' + slug.slice(0, index + 1).join('/'),
-    isLast: index === slug.length - 1,
-  }));
+  return slug.map((segment, index) => {
+    const fullPath = '/posts/' + slug.slice(0, index + 1).join('/');
+    const file = getContentFile('posts', '/' + slug.slice(0, index + 1).join('/'));
+    return {
+      label: file?.meta.title ?? segment,
+      href: fullPath,
+      isLast: index === slug.length - 1,
+    };
+  });
 }

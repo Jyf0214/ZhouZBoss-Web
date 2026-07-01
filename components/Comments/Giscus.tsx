@@ -80,14 +80,7 @@ export function Giscus({ slug }: GiscusProps) {
   }, [enabled, config.repo, config.repoId, config.category, config.categoryId]);
 
   if (!enabled) {
-    return (
-      <div className="mt-12" data-giscus-placeholder data-slug={slug}>
-        {/* TODO: 配置 Giscus 环境变量后此处会自动渲染评论区 */}
-        <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center text-sm text-zinc-400">
-          评论区尚未启用，完成 Giscus 环境变量配置后即可加载。
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

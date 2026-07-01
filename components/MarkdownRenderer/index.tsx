@@ -83,6 +83,9 @@ export function MarkdownRenderer({ content, highlight, wikiLinkMap }: MarkdownRe
       prose-h1:text-4xl prose-h1:font-black prose-h1:mb-8 prose-h1:mt-16
       prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-6 prose-h2:mt-14 prose-h2:pb-3 prose-h2:border-b prose-h2:border-zinc-100
       prose-h3:text-xl prose-h3:font-bold prose-h3:mb-4 prose-h3:mt-10
+      prose-h4:text-lg prose-h4:font-bold prose-h4:mb-3 prose-h4:mt-8
+      prose-h5:text-base prose-h5:font-bold prose-h5:mb-2 prose-h5:mt-6
+      prose-h6:text-sm prose-h6:font-bold prose-h6:mb-2 prose-h6:mt-6 prose-h6:text-zinc-500
       prose-p:text-zinc-600 prose-p:leading-[1.7] prose-p:text-[15px]
       prose-a:text-zinc-900 prose-a:font-semibold prose-a:underline prose-a:decoration-zinc-300 prose-a:underline-offset-2 hover:prose-a:decoration-zinc-900
       prose-strong:text-zinc-900 prose-strong:font-bold

@@ -103,16 +103,7 @@ export function CopyrightNotice({
       <p className="text-xs text-zinc-400 leading-relaxed">
         {locale === 'en' ? (
           <>
-            Published by{' '}
-            <a
-              href={config.authorLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-500 hover:text-zinc-700 underline underline-offset-2 decoration-zinc-300 transition-colors"
-            >
-              {displayAuthor}
-            </a>
-            . Licensed under{' '}
+            Licensed under{' '}
             <a
               href={config.licenseUrl}
               target="_blank"
@@ -125,16 +116,7 @@ export function CopyrightNotice({
           </>
         ) : (
           <>
-            本文由{' '}
-            <a
-              href={config.authorLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-500 hover:text-zinc-700 underline underline-offset-2 decoration-zinc-300 transition-colors"
-            >
-              {displayAuthor}
-            </a>
-            {' '}发布，采用{' '}
+            采用{' '}
             <a
               href={config.licenseUrl}
               target="_blank"

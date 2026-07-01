@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 
 interface Crumb {
   label: string;
@@ -12,9 +11,8 @@ export type { Crumb };
 export function PostBreadcrumb({ crumbs, t }: { slug: string; crumbs: Crumb[]; t: (key: string) => string }) {
   return (
     <nav className="flex items-center gap-1.5 text-sm text-zinc-400 mb-10 flex-wrap">
-      <Link href="/posts" className="hover:text-zinc-900 transition-colors flex items-center gap-1.5 text-zinc-500">
-        <ArrowLeft size={14} />
-        <span className="font-medium">{t('title')}</span>
+      <Link href="/posts" className="hover:text-zinc-900 transition-colors font-medium text-zinc-500">
+        {t('title')}
       </Link>
       {crumbs.map((crumb) => (
         <span key={crumb.href} className="flex items-center gap-1.5">
