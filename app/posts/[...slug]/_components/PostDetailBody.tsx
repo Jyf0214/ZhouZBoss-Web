@@ -79,6 +79,7 @@ export function PostDetailBody({
           title={file.meta.title}
           author={file.meta.author}
           date={file.meta.date}
+          cover={file.meta.cover}
         />
 
         {/* 多语言版本切换 */}
@@ -90,7 +91,7 @@ export function PostDetailBody({
           />
         )}
 
-        <div className="h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent mb-12" />
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-200 dark:via-zinc-700 to-transparent mb-12" />
 
         <div>
           <MarkdownRenderer content={file.content} highlight={highlight} wikiLinkMap={wikiLinkMap} />
@@ -110,10 +111,10 @@ export function PostDetailBody({
       </div>
 
       {showWordCount && (
-        <div className="mt-12 px-6 py-4 bg-zinc-50 rounded-xl border border-zinc-100">
-          <div className="text-sm text-zinc-500 text-center">
+        <div className="mt-12 px-6 py-4 bg-zinc-50 dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700">
+          <div className="text-sm text-zinc-500 dark:text-zinc-400 text-center">
             <span>{t('posts.wordCountLabel', { count: wordCount.toLocaleString() })}</span>
-            <span className="mx-2 text-zinc-300">|</span>
+            <span className="mx-2 text-zinc-300 dark:text-zinc-600">|</span>
             <span>{t('posts.readingTimeLabel', { minutes: readingTime })}</span>
           </div>
         </div>
@@ -138,7 +139,7 @@ export function PostDetailBody({
         <button
           type="button"
           onClick={() => setQrOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 transition-colors text-sm text-zinc-600"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-500 transition-colors text-sm text-zinc-600 dark:text-zinc-300"
           title="分享二维码"
         >
           <QrCode size={16} />
@@ -155,12 +156,12 @@ export function PostDetailBody({
 
       <PostRelated posts={relatedPosts} />
 
-      <div className="mt-20 pt-8 border-t border-zinc-100">
+      <div className="mt-20 pt-8 border-t border-zinc-100 dark:border-zinc-700">
         <PostAdjacent prev={adjacentPosts.prev ?? null} next={adjacentPosts.next ?? null} />
 
         <Link
           href="/posts"
-          className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors group"
+          className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           {tPosts('backToPosts')}

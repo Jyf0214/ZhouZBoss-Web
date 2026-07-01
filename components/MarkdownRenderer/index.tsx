@@ -78,21 +78,22 @@ export function MarkdownRenderer({ content, highlight, wikiLinkMap }: MarkdownRe
   imagesRef.current = [];
 
   return (
-    <div className="markdown-content prose prose-zinc max-w-none overflow-x-auto
-      prose-headings:tracking-tight prose-headings:text-zinc-900
+    <div className="markdown-content prose prose-zinc dark:prose-invert max-w-none overflow-x-auto
+      prose-headings:tracking-tight
       prose-h1:text-4xl prose-h1:font-black prose-h1:mb-8 prose-h1:mt-16
-      prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-6 prose-h2:mt-14 prose-h2:pb-3 prose-h2:border-b prose-h2:border-zinc-100
+      prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-6 prose-h2:mt-14 prose-h2:pb-3 prose-h2:border-b prose-h2:border-zinc-100 dark:prose-h2:border-zinc-700
       prose-h3:text-xl prose-h3:font-bold prose-h3:mb-4 prose-h3:mt-10
       prose-h4:text-lg prose-h4:font-bold prose-h4:mb-3 prose-h4:mt-8
       prose-h5:text-base prose-h5:font-bold prose-h5:mb-2 prose-h5:mt-6
       prose-h6:text-sm prose-h6:font-bold prose-h6:mb-2 prose-h6:mt-6 prose-h6:text-zinc-500
-      prose-p:text-zinc-600 prose-p:leading-[1.7] prose-p:text-[15px]
-      prose-a:text-zinc-900 prose-a:font-semibold prose-a:underline prose-a:decoration-zinc-300 prose-a:underline-offset-2 hover:prose-a:decoration-zinc-900
-      prose-strong:text-zinc-900 prose-strong:font-bold
-      prose-blockquote:border-zinc-900 prose-blockquote:bg-zinc-50 prose-blockquote:rounded-r-2xl prose-blockquote:py-1 prose-blockquote:not-italic prose-blockquote:text-zinc-600
-      prose-li:text-zinc-600 prose-li:text-[15px]
-      prose-img:max-w-full prose-img:h-auto prose-img:rounded-2xl prose-img:border prose-img:border-zinc-100
-      prose-hr:border-zinc-100 prose-hr:my-12
+      prose-p:leading-[1.7] prose-p:text-[15px]
+      prose-a:font-semibold prose-a:underline prose-a:decoration-zinc-300 dark:prose-a:decoration-zinc-600 prose-a:underline-offset-2 hover:prose-a:decoration-zinc-900 dark:hover:prose-a:decoration-zinc-300
+      prose-strong:font-bold
+      prose-code:bg-zinc-100 dark:prose-code:bg-zinc-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[0.875em] prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
+      prose-blockquote:border-zinc-900 dark:prose-blockquote:border-zinc-400 prose-blockquote:bg-zinc-50 dark:prose-blockquote:bg-zinc-800 prose-blockquote:rounded-r-2xl prose-blockquote:py-1 prose-blockquote:not-italic
+      prose-li:text-[15px]
+      prose-img:rounded-2xl prose-img:border prose-img:border-zinc-100 dark:prose-img:border-zinc-700
+      prose-hr:border-zinc-100 dark:prose-hr:border-zinc-700 prose-hr:my-12
     ">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ ...components, img: imgComponent as never }}>
         {processedContent}
