@@ -28,7 +28,7 @@ appearance:
       - 不忘初心，一生浪漫
       - 最近还好吗？
       - 流星，落花，萤火
-      - 马车越空，晃荡越响
+      - 马���越空，晃荡越响
       - 在这里，时光静好
       - Hello ！
       - 心之所向，愿你常在
@@ -187,8 +187,8 @@ clerk:
   enable: false
 users:
   '169313142':
-    avatar: https://cdn.jsdelivr.net/gh/animal-avatar/animal-avatar@main/cat.jpg
-  UID-MN115BRJ-0MJ8C:
     avatar: https://avatars.githubusercontent.com/u/169313142?v=4
+  UID-MN115BRJ-0MJ8C:
+    avatar: https://github.com/Jyf0214.png
   169313142+Jyf0214@users.noreply.github.com:
     avatar: https://avatars.githubusercontent.com/u/169313142?v=4
