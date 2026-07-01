@@ -28,12 +28,12 @@ export function Avatar({ name, avatarUrl, size = 32, fallbackImg }: AvatarProps)
         className="flex items-center justify-center rounded-xl bg-zinc-100 overflow-hidden shrink-0 max-w-full"
         style={{ width: size, height: size }}
       >
+        { }
         <img
           src={avatarUrl}
           alt={name}
-          width={size}
-          height={size}
-          className="w-full h-full object-cover"
+          className="block w-full h-full"
+          style={{ objectFit: 'cover' }}
           onError={() => setImgError(true)}
         />
       </div>
@@ -46,12 +46,12 @@ export function Avatar({ name, avatarUrl, size = 32, fallbackImg }: AvatarProps)
         className="flex items-center justify-center rounded-xl bg-zinc-100 overflow-hidden shrink-0 max-w-full"
         style={{ width: size, height: size }}
       >
+        { }
         <img
           src={fallbackImg}
           alt={name}
-          width={size}
-          height={size}
-          className="w-full h-full object-cover"
+          className="block w-full h-full"
+          style={{ objectFit: 'cover' }}
           onError={() => setFallbackError(true)}
         />
       </div>

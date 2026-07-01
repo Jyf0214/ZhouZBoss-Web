@@ -153,17 +153,28 @@ export function getUserAvatar(uid: string, isAdmin?: boolean, email?: string): s
   const config = loadConfig();
 
   if (config.users?.[uid]?.avatar) {
+    console.warn('[getUserAvatar] UID 匹配', { uid });
     return config.users[uid].avatar;
   }
 
   // 按 email 匹配：config.users 的键可能是 UID 也可能是 email
   if (email && config.users?.[email]?.avatar) {
+    console.warn('[getUserAvatar] email 匹配', { email });
     return config.users[email].avatar;
   }
 
   if (isAdmin && config.auth?.admin?.avatar) {
+    console.warn('[getUserAvatar] admin fallback', { isAdmin });
     return config.auth.admin.avatar;
   }
+
+  // 诊断日志：头像查找失败时输出可用信息
+  console.warn('[getUserAvatar] 未找到头像', {
+    uid,
+    email,
+    isAdmin,
+    usersKeys: config.users ? Object.keys(config.users) : [],
+  });
 
   return null;
 }
