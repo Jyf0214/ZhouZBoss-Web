@@ -59,7 +59,7 @@ export function UserMenu() {
           <Avatar name={displayName} avatarUrl={avatarUrl} size={36} />
           <div className="hidden md:block">
             <div className="flex items-center gap-1.5">
-              <span className="font-medium text-sm text-zinc-900 leading-tight">{displayName}</span>
+              <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100 leading-tight">{displayName}</span>
               {isSudo && (
                 <span className="text-xs text-amber-600 font-medium" style={{ borderRadius: 6 }}>
                   {t('user.sudo')}
@@ -67,7 +67,7 @@ export function UserMenu() {
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-zinc-400 font-mono leading-tight">{userUid}</span>
+              <span className="text-xs text-zinc-400 dark:text-zinc-500 font-mono leading-tight">{userUid}</span>
             </div>
           </div>
         </Button>
