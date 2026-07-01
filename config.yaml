@@ -1,4 +1,3 @@
-# 未知字段会被 Zod schema 拒绝;新增字段请在 lib/config-schema.ts 的 zAppConfig 中添加 .default() 声明
 site:
   title: Originium Kernel
   description: 现代内容发布平台
@@ -51,7 +50,7 @@ access:
 auth:
   allowRegistration: false
   admin:
-    avatar: "https://avatar.vercel.sh/jyf0214?size=128&background=030712&color=fafaf9"
+    avatar: https://avatar.vercel.sh/jyf0214?size=128&background=030712&color=fafaf9
 nav:
   enable: true
   travelling: true
@@ -188,8 +187,8 @@ clerk:
   enable: false
 users:
   '169313142':
-    avatar: https://avatars.githubusercontent.com/u/169313142?v=4
+    avatar: https://cdn.jsdelivr.net/gh/animal-avatar/animal-avatar@main/cat.jpg
   UID-MN115BRJ-0MJ8C:
     avatar: https://github.com/Jyf0214.png
-  '169313142+Jyf0214@users.noreply.github.com':
+  169313142+Jyf0214@users.noreply.github.com:
     avatar: https://avatars.githubusercontent.com/u/169313142?v=4
