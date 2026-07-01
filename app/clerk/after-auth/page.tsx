@@ -50,7 +50,7 @@ export default function ClerkAfterAuthPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex flex-col bg-zinc-50">
+      <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
         <main className="flex-1 flex items-center justify-center">
           <GlobalLoading size="large" />
         </main>
@@ -59,16 +59,16 @@ export default function ClerkAfterAuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50">
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
       <main className="flex-1 flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm p-10 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 shadow-sm p-10 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <LinkIcon size={28} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 mb-2">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             登录成功
           </h1>
-          <p className="text-zinc-400 mb-8">
+          <p className="text-zinc-400 dark:text-zinc-500 mb-8">
             是否绑定已有的 Originium Kernel 账户？
           </p>
           <div className="space-y-3">

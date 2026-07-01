@@ -81,7 +81,7 @@ export default async function CustomPage({ params, searchParams }: PageProps) {
   if (access.allowed) {
     const title = extractTitle(html) ?? 'Custom Page';
     return (
-      <div className="relative w-full bg-white">
+      <div className="relative w-full bg-white dark:bg-zinc-900">
         <iframe
           srcDoc={html}
           sandbox="allow-scripts allow-forms"

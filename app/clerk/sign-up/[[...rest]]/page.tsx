@@ -30,7 +30,7 @@ export default function ClerkSignUpPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
         <GlobalLoading size="large" />
       </div>
     );
@@ -38,11 +38,11 @@ export default function ClerkSignUpPage() {
 
   if (!allowRegistration) {
     return (
-      <div className="min-h-screen flex flex-col bg-zinc-50">
+      <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
-            <p className="text-zinc-500 mb-1">{t('config.registrationClosed')}</p>
-            <p className="text-zinc-400 text-sm mb-4">{t('config.registrationClosedHint')}</p>
+            <p className="text-zinc-500 dark:text-zinc-400 mb-1">{t('config.registrationClosed')}</p>
+            <p className="text-zinc-400 dark:text-zinc-500 text-sm mb-4">{t('config.registrationClosedHint')}</p>
             <Link href="/login">
               <Button variant="primary" autoLoading={false}>{t('auth.login')}</Button>
             </Link>
@@ -53,7 +53,7 @@ export default function ClerkSignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50">
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
       <main className="flex-1 flex items-center justify-center p-6">
         {SignUpComp
           ? createElement(SignUpComp, {
@@ -62,7 +62,7 @@ export default function ClerkSignUpPage() {
               signInUrl: '/clerk/sign-in',
               fallbackRedirectUrl: '/clerk/after-auth',
             })
-          : <div className="text-zinc-400">正在加载 Clerk...</div>
+          : <div className="text-zinc-400 dark:text-zinc-500">正在加载 Clerk...</div>
         }
       </main>
     </div>

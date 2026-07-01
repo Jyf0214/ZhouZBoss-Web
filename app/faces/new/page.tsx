@@ -92,7 +92,7 @@ export default function NewFacePage() {
   /** 等待鉴权完成 */
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-zinc-50">
+      <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
         <div className="flex-1 flex items-center justify-center">
           <GlobalLoading size="large" />
         </div>
@@ -103,14 +103,14 @@ export default function NewFacePage() {
   /** 非管理员显示无权限提示 */
   if (!isSudo) {
     return (
-      <div className="min-h-screen flex flex-col bg-zinc-50">
+      <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
         <PageContainer maxWidth="4xl">
-          <div className="bg-white rounded-2xl border border-zinc-100 p-6 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-zinc-50 rounded-xl flex items-center justify-center mb-6">
-              <Lock size={28} className="text-zinc-400" />
+          <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 p-6 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-700 rounded-xl flex items-center justify-center mb-6">
+              <Lock size={28} className="text-zinc-400 dark:text-zinc-500" />
             </div>
-            <h2 className="text-2xl font-bold text-zinc-900 mb-2">{t('faces.needAdmin')}</h2>
-            <p className="text-zinc-400 mb-8">{t('faces.needAdminDesc')}</p>
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">{t('faces.needAdmin')}</h2>
+            <p className="text-zinc-400 dark:text-zinc-500 mb-8">{t('faces.needAdminDesc')}</p>
             <Link href="/faces">
               <Button
                 variant="default"
@@ -128,7 +128,7 @@ export default function NewFacePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50">
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
       <PageContainer maxWidth="4xl">
         <PageHeader
           title={t('faces.newFace')}
@@ -137,7 +137,7 @@ export default function NewFacePage() {
           backLabel={t('faces.backToFaces')}
         />
 
-        <div className="bg-white rounded-2xl border border-zinc-100 p-6">
+        <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 p-6">
           <Form
             form={form}
             layout="vertical"
@@ -152,25 +152,25 @@ export default function NewFacePage() {
             }}
           >
             <Form.Item
-              label={<span className="text-zinc-700 font-medium">{t('faces.nameLabel')}</span>}
+              label={<span className="text-zinc-700 dark:text-zinc-300 font-medium">{t('faces.nameLabel')}</span>}
               name="name"
               rules={[{ required: true, message: t('faces.nameRequired') }]}
             >
               <Input
                 placeholder={t('faces.namePlaceholder')}
-                className="h-10 rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
+                className="h-10 rounded-lg text-sm border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 focus:border-zinc-900"
               />
             </Form.Item>
 
             <Form.Item
-              label={<span className="text-zinc-700 font-medium">{t('faces.groupsLabel')}</span>}
+              label={<span className="text-zinc-700 dark:text-zinc-300 font-medium">{t('faces.groupsLabel')}</span>}
               name="groups"
               extra={t('faces.groupsHint')}
             >
               <Select
                 mode="tags"
                 placeholder={t('faces.groupsPlaceholder')}
-                className="rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
+                className="rounded-lg text-sm border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 focus:border-zinc-900"
                 style={{ minHeight: 40 }}
                 tokenSeparators={[',']}
                 placement="bottomLeft"
@@ -178,31 +178,31 @@ export default function NewFacePage() {
             </Form.Item>
 
             <Form.Item
-              label={<span className="text-zinc-700 font-medium">{t('faces.descriptionLabel')}</span>}
+              label={<span className="text-zinc-700 dark:text-zinc-300 font-medium">{t('faces.descriptionLabel')}</span>}
               name="description"
               extra={t('faces.descriptionHint')}
             >
               <Input
                 placeholder={t('faces.descriptionPlaceholder')}
-                className="h-10 rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
+                className="h-10 rounded-lg text-sm border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 focus:border-zinc-900"
               />
             </Form.Item>
 
             <Form.Item
-              label={<span className="text-zinc-700 font-medium">{t('faces.contentLabel')} *</span>}
+              label={<span className="text-zinc-700 dark:text-zinc-300 font-medium">{t('faces.contentLabel')} *</span>}
               name="content"
               rules={[{ required: true, message: t('faces.contentRequired') }]}
               extra={t('faces.contentHint')}
             >
               <TextArea
                 placeholder={t('faces.contentPlaceholder')}
-                className="rounded-lg text-sm border-zinc-200 hover:border-zinc-300 focus:border-zinc-900"
+                className="rounded-lg text-sm border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 focus:border-zinc-900"
                 rows={12}
                 style={{ fontFamily: 'inherit', resize: 'vertical' }}
               />
             </Form.Item>
 
-            <div className="flex items-center justify-between pt-6 border-t border-zinc-100">
+            <div className="flex items-center justify-between pt-6 border-t border-zinc-100 dark:border-zinc-700">
               <Link href="/faces">
                 <Button
                   variant="default"

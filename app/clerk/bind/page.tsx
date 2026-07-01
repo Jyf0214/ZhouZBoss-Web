@@ -139,18 +139,18 @@ export default function ClerkBindPage() {
 
   if (!clerkLoggedIn) {
     return (
-      <div className="min-h-screen flex flex-col bg-zinc-50">
+      <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-zinc-400">正在检查登录状态...</p>
+          <p className="text-zinc-400 dark:text-zinc-500">正在检查登录状态...</p>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50">
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-900">
       <main className="flex-1 flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm p-10 max-w-md w-full">
+        <div className="bg-white dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 shadow-sm p-10 max-w-md w-full">
           {/* 步骤条 */}
           <Steps
             current={step}
@@ -168,14 +168,14 @@ export default function ClerkBindPage() {
               <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Mail size={24} className="text-blue-600" />
               </div>
-              <h1 className="text-xl font-bold text-zinc-900 mb-2 text-center">
+              <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-center">
                 绑定已有账户
               </h1>
-              <p className="text-zinc-400 text-sm mb-8 text-center">
+              <p className="text-zinc-400 dark:text-zinc-500 text-sm mb-8 text-center">
                 输入你 Originium Kernel 账户的邮箱，我们将发送验证码确认身份
               </p>
               <div className="mb-6">
-                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   账户邮箱
                 </label>
                 <Input
@@ -183,7 +183,7 @@ export default function ClerkBindPage() {
                   placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  prefix={<Mail size={16} className="text-zinc-400" />}
+                  prefix={<Mail size={16} className="text-zinc-400 dark:text-zinc-500" />}
                   className="h-12 rounded-xl"
                 />
               </div>
@@ -206,14 +206,14 @@ export default function ClerkBindPage() {
               <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Shield size={24} className="text-amber-600" />
               </div>
-              <h1 className="text-xl font-bold text-zinc-900 mb-2 text-center">
+              <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2 text-center">
                 验证身份
               </h1>
-              <p className="text-zinc-400 text-sm mb-8 text-center">
-                验证码已发送至 <strong className="text-zinc-700">{email}</strong>
+              <p className="text-zinc-400 dark:text-zinc-500 text-sm mb-8 text-center">
+                验证码已发送至 <strong className="text-zinc-700 dark:text-zinc-300">{email}</strong>
               </p>
               <div className="mb-6">
-                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   验证码
                 </label>
                 <Input
@@ -222,7 +222,7 @@ export default function ClerkBindPage() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   maxLength={6}
-                  prefix={<KeyRound size={16} className="text-zinc-400" />}
+                  prefix={<KeyRound size={16} className="text-zinc-400 dark:text-zinc-500" />}
                   className="h-12 rounded-xl text-center text-lg tracking-[0.5em]"
                 />
               </div>
@@ -257,10 +257,10 @@ export default function ClerkBindPage() {
               <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 size={32} className="text-emerald-600" />
               </div>
-              <h1 className="text-xl font-bold text-zinc-900 mb-2">
+              <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
                 绑定完成
               </h1>
-              <p className="text-zinc-400 text-sm">
+              <p className="text-zinc-400 dark:text-zinc-500 text-sm">
                 正在跳转到控制台...
               </p>
             </div>
