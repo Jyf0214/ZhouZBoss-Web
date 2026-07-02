@@ -52,43 +52,43 @@ describe('sync-pages 索引生成逻辑(writePagesIndex)', () => {
   }
 
   it('单个根级文件 → 索引仅含文件路径', () => {
-    const index = generateIndex(['pages/about.html']);
-    expect(index).toEqual(['pages/about.html']);
+    const index = generateIndex(['page/about.html']);
+    expect(index).toEqual(['page/about.html']);
   });
 
   it('多个根级文件 → 索引包含所有文件路径', () => {
-    const index = generateIndex(['pages/about.html', 'pages/contact.html']);
-    expect(index).toContain('pages/about.html');
-    expect(index).toContain('pages/contact.html');
+    const index = generateIndex(['page/about.html', 'page/contact.html']);
+    expect(index).toContain('page/about.html');
+    expect(index).toContain('page/contact.html');
     expect(index.length).toBe(2);
   });
 
   it('子目录文件 → 索引同时包含目录路径和文件路径', () => {
-    const index = generateIndex(['pages/hello world/index.html']);
-    expect(index).toContain('pages/hello world');
-    expect(index).toContain('pages/hello world/index.html');
+    const index = generateIndex(['page/hello world/index.html']);
+    expect(index).toContain('page/hello world');
+    expect(index).toContain('page/hello world/index.html');
     expect(index.length).toBe(2);
   });
 
   it('多层嵌套目录 → 逐级提取所有父目录', () => {
-    const index = generateIndex(['pages/a/b/c/page.html']);
-    expect(index).toContain('pages/a');
-    expect(index).toContain('pages/a/b');
-    expect(index).toContain('pages/a/b/c');
-    expect(index).toContain('pages/a/b/c/page.html');
+    const index = generateIndex(['page/a/b/c/page.html']);
+    expect(index).toContain('page/a');
+    expect(index).toContain('page/a/b');
+    expect(index).toContain('page/a/b/c');
+    expect(index).toContain('page/a/b/c/page.html');
     expect(index.length).toBe(4);
   });
 
   it('混合根级和子目录文件 → 正确合并去重', () => {
     const index = generateIndex([
-      'pages/about.html',
-      'pages/blog/post.html',
-      'pages/blog/draft.html',
+      'page/about.html',
+      'page/blog/post.html',
+      'page/blog/draft.html',
     ]);
-    expect(index).toContain('pages/about.html');
-    expect(index).toContain('pages/blog');
-    expect(index).toContain('pages/blog/post.html');
-    expect(index).toContain('pages/blog/draft.html');
+    expect(index).toContain('page/about.html');
+    expect(index).toContain('page/blog');
+    expect(index).toContain('page/blog/post.html');
+    expect(index).toContain('page/blog/draft.html');
     // about.html 没有子目录，blog 两个文件共享同一个目录路径
     expect(index.length).toBe(4);
   });
@@ -99,71 +99,71 @@ describe('sync-pages 索引生成逻辑(writePagesIndex)', () => {
   });
 
   it('路径含空格 → 目录路径正确提取', () => {
-    const index = generateIndex(['pages/hello world/index.html']);
-    expect(index).toContain('pages/hello world');
+    const index = generateIndex(['page/hello world/index.html']);
+    expect(index).toContain('page/hello world');
   });
 
   it('路径含中文 → 目录路径正确提取', () => {
-    const index = generateIndex(['pages/我的项目/index.html']);
-    expect(index).toContain('pages/我的项目');
+    const index = generateIndex(['page/我的项目/index.html']);
+    expect(index).toContain('page/我的项目');
   });
 
   it('路径含特殊字符 → 目录路径正确提取', () => {
-    const index = generateIndex(['pages/project (v2)/readme.html']);
-    expect(index).toContain('pages/project (v2)');
+    const index = generateIndex(['page/project (v2)/readme.html']);
+    expect(index).toContain('page/project (v2)');
   });
 
   it('pages 前缀本身不被加入目录集合', () => {
-    const index = generateIndex(['pages/index.html']);
+    const index = generateIndex(['page/index.html']);
     // 'pages' 应被过滤掉
     expect(index).not.toContain('pages');
-    expect(index).toContain('pages/index.html');
+    expect(index).toContain('page/index.html');
   });
 
   it('索引去重：同一目录下多个文件只产生一个目录条目', () => {
     const index = generateIndex([
-      'pages/blog/a.html',
-      'pages/blog/b.html',
-      'pages/blog/c.html',
+      'page/blog/a.html',
+      'page/blog/b.html',
+      'page/blog/c.html',
     ]);
-    const blogDirs = index.filter((p) => p === 'pages/blog');
+    const blogDirs = index.filter((p) => p === 'page/blog');
     expect(blogDirs.length).toBe(1);
   });
 
   it('索引文件写入后可正确读取', () => {
-    const entries = ['pages/about.html', 'pages/hello world/index.html'];
+    const entries = ['page/about.html', 'page/hello world/index.html'];
     const index = generateIndex(entries);
     fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
 
     const content = fs.readFileSync(indexPath, 'utf8');
     const parsed = JSON.parse(content) as string[];
-    expect(parsed).toContain('pages/about.html');
-    expect(parsed).toContain('pages/hello world');
-    expect(parsed).toContain('pages/hello world/index.html');
+    expect(parsed).toContain('page/about.html');
+    expect(parsed).toContain('page/hello world');
+    expect(parsed).toContain('page/hello world/index.html');
   });
 });
 
 // ── lib/page-source/shared.ts 纯函数测试 ─────────────────────────────────
 
 describe('buildPageRelativePath', () => {
-  it('正常路径 → 拼接 pages/ 前缀', async () => {
+  it('正常路径 → 拼接 page/ 前缀', async () => {
     const { buildPageRelativePath } = await import('@/lib/page-source/shared');
-    expect(buildPageRelativePath(['hello'])).toBe('pages/hello');
+    expect(buildPageRelativePath(['hello'])).toBe('page/hello');
   });
 
   it('多级路径 → 正确拼接', async () => {
     const { buildPageRelativePath } = await import('@/lib/page-source/shared');
-    expect(buildPageRelativePath(['blog', 'post'])).toBe('pages/blog/post');
+    expect(buildPageRelativePath(['blog', 'post'])).toBe('page/blog/post');
   });
 
   it('含空格路径 → 保留空格', async () => {
     const { buildPageRelativePath } = await import('@/lib/page-source/shared');
-    expect(buildPageRelativePath(['hello world'])).toBe('pages/hello world');
+    expect(buildPageRelativePath(['hello world'])).toBe('page/hello world');
   });
 
   it('含中文路径 → 保留中文', async () => {
     const { buildPageRelativePath } = await import('@/lib/page-source/shared');
-    expect(buildPageRelativePath(['我的页面'])).toBe('pages/我的页面');
+    expect(buildPageRelativePath(['我的页面'])).toBe('page/我的页面');
   });
 
   it('空数组 → null', async () => {
@@ -183,45 +183,45 @@ describe('buildPageRelativePath', () => {
 
   it('绝对路径 → 前导 / 被 joinPath 去除，路径被当作普通段', async () => {
     const { buildPageRelativePath } = await import('@/lib/page-source/shared');
-    // joinPath('pages', '/etc/passwd') → 'pages/etc/passwd'（前导 / 被去除）
-    expect(buildPageRelativePath(['/etc/passwd'])).toBe('pages/etc/passwd');
+    // joinPath('pages', '/etc/passwd') → 'page/etc/passwd'（前导 / 被去除）
+    expect(buildPageRelativePath(['/etc/passwd'])).toBe('page/etc/passwd');
   });
 
   it('含 .html 扩展名 → 仍然有效(不再强制)', async () => {
     const { buildPageRelativePath } = await import('@/lib/page-source/shared');
-    expect(buildPageRelativePath(['about.html'])).toBe('pages/about.html');
+    expect(buildPageRelativePath(['about.html'])).toBe('page/about.html');
   });
 });
 
 describe('resolvePageFilePath', () => {
   it('已含 .html 扩展名 → 原样返回', async () => {
     const { resolvePageFilePath } = await import('@/lib/page-source/shared');
-    expect(resolvePageFilePath('pages/about.html')).toBe('pages/about.html');
+    expect(resolvePageFilePath('page/about.html')).toBe('page/about.html');
   });
 
   it('已含 .htm 扩展名 → 原样返回', async () => {
     const { resolvePageFilePath } = await import('@/lib/page-source/shared');
-    expect(resolvePageFilePath('pages/about.htm')).toBe('pages/about.htm');
+    expect(resolvePageFilePath('page/about.htm')).toBe('page/about.htm');
   });
 
   it('目录路径 → 拼接 index.html', async () => {
     const { resolvePageFilePath } = await import('@/lib/page-source/shared');
-    expect(resolvePageFilePath('pages/hello')).toBe('pages/hello/index.html');
+    expect(resolvePageFilePath('page/hello')).toBe('page/hello/index.html');
   });
 
   it('含空格目录路径 → 正确拼接', async () => {
     const { resolvePageFilePath } = await import('@/lib/page-source/shared');
-    expect(resolvePageFilePath('pages/hello world')).toBe('pages/hello world/index.html');
+    expect(resolvePageFilePath('page/hello world')).toBe('page/hello world/index.html');
   });
 
   it('嵌套目录路径 → 拼接 index.html', async () => {
     const { resolvePageFilePath } = await import('@/lib/page-source/shared');
-    expect(resolvePageFilePath('pages/blog/draft')).toBe('pages/blog/draft/index.html');
+    expect(resolvePageFilePath('page/blog/draft')).toBe('page/blog/draft/index.html');
   });
 
   it('大写 .HTML → 原样返回(不区分大小写)', async () => {
     const { resolvePageFilePath } = await import('@/lib/page-source/shared');
-    expect(resolvePageFilePath('pages/ABOUT.HTML')).toBe('pages/ABOUT.HTML');
+    expect(resolvePageFilePath('page/ABOUT.HTML')).toBe('page/ABOUT.HTML');
   });
 });
 
@@ -315,25 +315,25 @@ describe('extractTitle', () => {
 });
 
 describe('buildMetaPath', () => {
-  it('根级 HTML 文件 → pages/{name}/meta.json', async () => {
+  it('根级 HTML 文件 → page/{name}/meta.json', async () => {
     const { buildMetaPath } = await import('@/lib/page-source/shared');
-    expect(buildMetaPath('pages/about.html')).toBe('pages/about/meta.json');
+    expect(buildMetaPath('page/about.html')).toBe('page/about/meta.json');
   });
 
-  it('子目录 HTML 文件 → pages/{dir}/{name}/meta.json', async () => {
+  it('子目录 HTML 文件 → page/{dir}/{name}/meta.json', async () => {
     const { buildMetaPath } = await import('@/lib/page-source/shared');
-    expect(buildMetaPath('pages/blog/post.html')).toBe('pages/blog/post/meta.json');
+    expect(buildMetaPath('page/blog/post.html')).toBe('page/blog/post/meta.json');
   });
 
   it('.htm 扩展名 → 同样处理', async () => {
     const { buildMetaPath } = await import('@/lib/page-source/shared');
-    expect(buildMetaPath('pages/page.htm')).toBe('pages/page/meta.json');
+    expect(buildMetaPath('page/page.htm')).toBe('page/page/meta.json');
   });
 
   it('无扩展名 → 仍生成 meta.json 路径(不做扩展名校验)', async () => {
     const { buildMetaPath } = await import('@/lib/page-source/shared');
     // buildMetaPath 不校验扩展名，无扩展名时 name 仍可提取
-    expect(buildMetaPath('pages/readme')).toBe('pages/readme/meta.json');
+    expect(buildMetaPath('page/readme')).toBe('page/readme/meta.json');
   });
 
   it('根目录下(无父级) → null', async () => {
@@ -436,19 +436,19 @@ describe('fetchPageHtml (本地文件系统)', () => {
     // 模拟 process.cwd() 指向 tmpPagesDir 的父目录
     const { fetchPageHtml } = await import('@/lib/page-source/fs');
     // fetchPageHtml 使用 process.cwd() 拼接路径，这里用相对路径测试
-    // 由于我们不能轻易 mock process.cwd()，测试实际的 pages/ 目录
-    // 改为在项目 pages/ 目录下创建测试文件
+    // 由于我们不能轻易 mock process.cwd()，测试实际的 page/ 目录
+    // 改为在项目 page/ 目录下创建测试文件
     const projectPagesDir = path.join(origCwd, 'pages');
     fs.mkdirSync(projectPagesDir, { recursive: true });
     const testFile = path.join(projectPagesDir, '__test_fetch.html');
     fs.writeFileSync(testFile, '<html><body>Test Content</body></html>', 'utf8');
 
     try {
-      const result = fetchPageHtml('pages/__test_fetch.html');
+      const result = fetchPageHtml('page/__test_fetch.html');
       expect(result).toBe('<html><body>Test Content</body></html>');
     } finally {
       fs.rmSync(testFile, { force: true });
-      // 如果 pages/ 目录是空的，也清理掉
+      // 如果 page/ 目录是空的，也清理掉
       try {
         const remaining = fs.readdirSync(projectPagesDir);
         if (remaining.length === 0) {
@@ -462,7 +462,7 @@ describe('fetchPageHtml (本地文件系统)', () => {
 
   it('文件不存在 → 返回 null', async () => {
     const { fetchPageHtml } = await import('@/lib/page-source/fs');
-    const result = fetchPageHtml('pages/__nonexistent_page__.html');
+    const result = fetchPageHtml('page/__nonexistent_page__.html');
     expect(result).toBeNull();
   });
 
@@ -474,7 +474,7 @@ describe('fetchPageHtml (本地文件系统)', () => {
 
     try {
       const { fetchPageHtml } = await import('@/lib/page-source/fs');
-      const result = fetchPageHtml('pages/__test_empty.html');
+      const result = fetchPageHtml('page/__test_empty.html');
       expect(result).toBeNull();
     } finally {
       fs.rmSync(testFile, { force: true });
@@ -497,7 +497,7 @@ describe('fetchPageHtml (本地文件系统)', () => {
 
     try {
       const { fetchPageHtml } = await import('@/lib/page-source/fs');
-      const result = fetchPageHtml('pages/__test_whitespace.html');
+      const result = fetchPageHtml('page/__test_whitespace.html');
       // normalizeWebDavContent 不做 trim，空白内容原样返回
       expect(result).toBe('   \n\t  ');
     } finally {
@@ -522,7 +522,7 @@ describe('fetchPageHtml (本地文件系统)', () => {
 
     try {
       const { fetchPageHtml } = await import('@/lib/page-source/fs');
-      const result = fetchPageHtml('pages/__test_bom.html');
+      const result = fetchPageHtml('page/__test_bom.html');
       expect(result).not.toBeNull();
       // BOM 字符保留在原始内容中（浏览器会自动处理）
       expect(result).toContain('BOM');
@@ -543,33 +543,33 @@ describe('fetchPageHtml (本地文件系统)', () => {
 // ── getPageProjectFolder 路径提取测试 ──────────────────────────────────
 
 describe('getPageProjectFolder', () => {
-  it('pages/hello/index.html → pages/hello', async () => {
+  it('page/hello/index.html → page/hello', async () => {
     const { getPageProjectFolder } = await import('@/lib/storage/acl');
-    expect(getPageProjectFolder('pages/hello/index.html')).toBe('pages/hello');
+    expect(getPageProjectFolder('page/hello/index.html')).toBe('page/hello');
   });
 
-  it('pages/hello → pages/hello', async () => {
+  it('page/hello → page/hello', async () => {
     const { getPageProjectFolder } = await import('@/lib/storage/acl');
-    expect(getPageProjectFolder('pages/hello')).toBe('pages/hello');
+    expect(getPageProjectFolder('page/hello')).toBe('page/hello');
   });
 
-  it('pages/hello/deep/x.html → pages/hello (只看第一级)', async () => {
+  it('page/hello/deep/x.html → page/hello (只看第一级)', async () => {
     const { getPageProjectFolder } = await import('@/lib/storage/acl');
-    expect(getPageProjectFolder('pages/hello/deep/x.html')).toBe('pages/hello');
+    expect(getPageProjectFolder('page/hello/deep/x.html')).toBe('page/hello');
   });
 
-  it('pages/about.html → pages (根级文件)', async () => {
+  it('page/about.html → pages (根级文件)', async () => {
     const { getPageProjectFolder } = await import('@/lib/storage/acl');
-    expect(getPageProjectFolder('pages/about.html')).toBe('pages');
+    expect(getPageProjectFolder('page/about.html')).toBe('pages');
   });
 
-  it('pages/hello world/index.html → pages/hello world (含空格)', async () => {
+  it('page/hello world/index.html → page/hello world (含空格)', async () => {
     const { getPageProjectFolder } = await import('@/lib/storage/acl');
-    expect(getPageProjectFolder('pages/hello world/index.html')).toBe('pages/hello world');
+    expect(getPageProjectFolder('page/hello world/index.html')).toBe('page/hello world');
   });
 
-  it('pages/我的项目/page.html → pages/我的项目 (含中文)', async () => {
+  it('page/我的项目/page.html → page/我的项目 (含中文)', async () => {
     const { getPageProjectFolder } = await import('@/lib/storage/acl');
-    expect(getPageProjectFolder('pages/我的项目/page.html')).toBe('pages/我的项目');
+    expect(getPageProjectFolder('page/我的项目/page.html')).toBe('page/我的项目');
   });
 });
