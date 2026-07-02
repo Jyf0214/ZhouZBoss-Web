@@ -105,6 +105,7 @@ export async function readFolderMeta(path: string): Promise<StorageFolderMeta | 
       path: row.path,
       public: row.public,
       description: row.description,
+      hasPassword: !!row.password,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     }
@@ -156,6 +157,39 @@ export async function deleteFolderMeta(path: string): Promise<void> {
     if (code === 'P2025') return
     // 其他错误不再上抛,避免 WebDAV 已删除成功却被元数据删除失败阻断
     // 上层若有更高一致性需求,可在路由层另行处理
+  }
+}
+
+/**
+ * 删除文件夹元数据(级联删除子文件夹)
+ *
+ * - 数据库未配置 → 静默跳过
+ * - 删除 path 本身 + 所有以 path/ 开头的子记录
+ */
+export async function deleteFolderMetaCascade(path: string): Promise<void> {
+  const prisma = getDb().prisma
+  if (!prisma) return
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 查找自身
+      const existing = await tx.storageFolder.findUnique({ where: { path } })
+      if (existing) {
+        await tx.storageFolder.delete({ where: { path } })
+      }
+      // 级联删除所有子路径
+      const children = await tx.storageFolder.findMany({
+        where: { path: { startsWith: `${path}/` } },
+      })
+      if (children.length > 0) {
+        await tx.storageFolder.deleteMany({
+          where: { path: { startsWith: `${path}/` } },
+        })
+      }
+    })
+  } catch (err) {
+    const code = (err as { code?: string })?.code
+    if (code === 'P2025') return
+    console.error(`[storage] deleteFolderMetaCascade 失败: ${path}`, err)
   }
 }
 
@@ -220,6 +254,7 @@ export async function listAllFolderMetas(): Promise<StorageFolderMeta[]> {
       path: row.path,
       public: row.public,
       description: row.description,
+      hasPassword: !!row.password,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     }))

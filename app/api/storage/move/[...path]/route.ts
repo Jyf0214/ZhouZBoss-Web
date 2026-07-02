@@ -58,9 +58,23 @@ export const POST = catchAllHandler<{ path: string[] }>(
       return NextResponse.json({ error: '源路径和目标路径相同' }, { status: 400 })
     }
 
+    // 防止移动到自身子目录导致数据丢失
+    if (destRel.startsWith(srcRel + '/')) {
+      return NextResponse.json({ error: '不能移动到自身的子目录中' }, { status: 400 })
+    }
+
     const oldTarget = buildWebDavTarget(parts)
     const destSegments = destRel.split('/')
     const newTarget = buildWebDavTarget(destSegments)
+
+    // 检查目标是否已存在，防止静默覆盖
+    try {
+      const provider = await getStorageProvider()
+      await provider.stat(newTarget)
+      return NextResponse.json({ error: '目标位置已存在同名文件或文件夹' }, { status: 409 })
+    } catch {
+      // stat 失败说明目标不存在，可以安全移动
+    }
 
     try {
       const provider = await getStorageProvider()

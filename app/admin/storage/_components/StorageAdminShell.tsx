@@ -213,18 +213,12 @@ export function StorageAdminShell() {
 
   const toggleSearch = () => { setSearchOpen((prev) => !prev); };
 
-  // 搜索结果点击回调：跳转到对应文件预览
-  const handleSearchResultClick = (path: string, filename: string) => {
+  // 搜索结果点击回调：跳转到文件所在目录
+  const handleSearchResultClick = (path: string, _filename: string) => {
     const segments = path.split('/');
-    const basename = segments[segments.length - 1] ?? filename;
-    setPreviewEntry({
-      filename: basename,
-      basename,
-      isDirectory: false,
-      size: 0,
-      lastModified: '',
-      mimeType: null,
-    });
+    // 去掉最后一段（文件名），保留目录路径
+    const dirPath = segments.length > 1 ? segments.slice(0, -1).join('/') : '';
+    void state.navigateTo(dirPath);
   };
 
   const handleOpenMove = (entry: WebDavEntry) => {

@@ -22,7 +22,12 @@ export class ApiError extends Error {
 
   /** 判定当前错误是否表示 WebDAV 未配置 */
   public get isNotConfigured(): boolean {
-    return this.status === 503 && this.code === 'NOT_CONFIGURED';
+    return this.status === 503 && (this.code === 'NOT_CONFIGURED' || this.code === 'DB_NOT_CONFIGURED');
+  }
+
+  /** 判定当前错误是否表示数据库未配置 */
+  public get isDbNotConfigured(): boolean {
+    return this.status === 503 && this.code === 'DB_NOT_CONFIGURED';
   }
 }
 
@@ -115,11 +120,10 @@ export function uploadFile(
   file: File,
   onProgress?: (loaded: number, total: number) => void
 ): Promise<{ path: string; size: number; uploadedAt: string }> {
-  const formData = new FormData();
-  formData.append('file', file);
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `/api/storage/upload/${encodePathSegments(path)}`);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
         onProgress(e.loaded, e.total);
@@ -150,7 +154,7 @@ export function uploadFile(
     xhr.onerror = () => {
       reject(new ApiError('网络错误,上传失败', 0));
     };
-    xhr.send(formData);
+    xhr.send(file);
   });
 }
 

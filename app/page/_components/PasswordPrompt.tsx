@@ -19,9 +19,11 @@ import { Button } from '@/components/ui/Button';
 export function PasswordPrompt({
   path,
   wrongPassword = false,
+  hint,
 }: {
   path: string;
   wrongPassword?: boolean;
+  hint?: string;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -38,13 +40,13 @@ export function PasswordPrompt({
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-zinc-50 p-6">
-      <div className="w-full max-w-md rounded-2xl bg-white/90 p-8 shadow-sm ring-1 ring-zinc-200 backdrop-blur">
+    <div className="flex min-h-screen w-full items-center justify-center bg-zinc-50 dark:bg-zinc-900 p-6">
+      <div className="w-full max-w-md rounded-2xl bg-white/90 dark:bg-zinc-900/90 p-8 shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-700 backdrop-blur">
         <div className="mb-6 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600">
             <Lock size={20} aria-hidden />
           </span>
-          <h1 className="text-xl font-semibold text-zinc-900">
+          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
             {t('page.passwordRequired')}
           </h1>
         </div>
@@ -58,33 +60,37 @@ export function PasswordPrompt({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder={t('page.passwordPlaceholder')}
-              autoFocus
-              required
-              minLength={1}
-              className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 pr-11 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400"
-              aria-label={t('page.passwordPlaceholder')}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600"
-              aria-label={showPassword ? t('page.hidePassword') : t('page.showPassword')}
-            >
-              {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
-            </button>
-          </div>
+        {hint ? (
+          <p className="text-sm text-zinc-600">{hint}</p>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder={t('page.passwordPlaceholder')}
+                autoFocus
+                required
+                minLength={1}
+                className="h-11 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 pr-11 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition-colors placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400"
+                aria-label={t('page.passwordPlaceholder')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-zinc-400 dark:text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600"
+                aria-label={showPassword ? t('page.hidePassword') : t('page.showPassword')}
+              >
+                {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+              </button>
+            </div>
 
-          <Button type="submit" variant="primary" size="lg" block disabled={!value.trim() || submitting} loading={submitting}>
-            {t('page.passwordSubmit')}
-          </Button>
-        </form>
+            <Button type="submit" variant="primary" size="lg" block disabled={!value.trim() || submitting} loading={submitting}>
+              {t('page.passwordSubmit')}
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   );

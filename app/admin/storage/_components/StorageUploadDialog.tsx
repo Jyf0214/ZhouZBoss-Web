@@ -23,7 +23,7 @@ interface Props {
   emptyHint: string;
   rootLabel: string;
   onCancel: () => void;
-  onUpload: (files: File[]) => void;
+  onUpload: (files: File[]) => Promise<void> | void;
   disabled?: boolean;
 }
 
@@ -47,6 +47,7 @@ export function StorageUploadDialog({
 }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleAdd = (incoming: FileList | File[]) => {
@@ -69,17 +70,23 @@ export function StorageUploadDialog({
     setFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleSubmit = () => {
-    if (disabled) return;
+  const handleSubmit = async () => {
+    if (disabled || uploading) return;
     if (files.length === 0) return;
     const oversize = files.find((f) => f.size > MAX_FILE_SIZE);
     if (oversize) {
-      // 父级 hook 会再校验一次,这里仅做即时反馈
       message.warning(`${fileTooLargeLabel}: ${oversize.name}`);
       return;
     }
-    onUpload(files);
-    setFiles([]);
+    setUploading(true);
+    try {
+      await onUpload(files);
+      setFiles([]);
+    } catch {
+      // 失败时保留文件列表，用户可重试
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleClose = () => {
@@ -172,16 +179,17 @@ export function StorageUploadDialog({
       )}
 
       <div className="flex justify-end gap-2 mt-5">
-        <Button variant="ghost" size="sm" onClick={handleClose} disabled={disabled} autoLoading={false}>
+        <Button variant="ghost" size="sm" onClick={handleClose} disabled={uploading} autoLoading={false}>
           {cancelLabel}
         </Button>
         <Button
           variant="primary"
           size="sm"
           onClick={handleSubmit}
-          disabled={disabled || files.length === 0}
+          disabled={disabled || files.length === 0 || uploading}
+          loading={uploading}
         >
-          {uploadLabel}
+          {uploading ? '上传中...' : uploadLabel}
         </Button>
       </div>
     </Modal>

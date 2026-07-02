@@ -140,6 +140,7 @@ export const PATCH = catchAllHandler<{ path: string[] }>(
       path: updated.path,
       public: updated.public,
       description: updated.description,
+      hasPassword: !!updated.password,
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
     })

@@ -38,9 +38,7 @@ export const dynamic = 'force-dynamic';
 
 function isPasswordReason(reason: PageAccessResult['reason']): boolean {
   return (
-    reason === 'password-required' ||
-    reason === 'wrong-password' ||
-    reason === 'db-error'
+    reason === 'wrong-password'
   );
 }
 
@@ -50,8 +48,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!relativePath || !isStorageConfigured()) {
     return { title: 'Custom Page' };
   }
-  const filePath = resolvePageFilePath(relativePath);
-  const html = await cachedFetchPageHtml(filePath);
+  let filePath = resolvePageFilePath(relativePath);
+  let html = await cachedFetchPageHtml(filePath);
+  if (!html && !filePath.endsWith('.html')) {
+    filePath = `${relativePath}.html`;
+    html = await cachedFetchPageHtml(filePath);
+  }
   const title = html ? extractTitle(html) : null;
   return { title: title ?? 'Custom Page' };
 }
@@ -69,8 +71,14 @@ export default async function CustomPage({ params, searchParams }: PageProps) {
     notFound();
   }
 
-  const filePath = resolvePageFilePath(relativePath);
-  const html = await cachedFetchPageHtml(filePath);
+  let filePath = resolvePageFilePath(relativePath);
+  let html = await cachedFetchPageHtml(filePath);
+  // 根级 HTML 页面（如 pages/about.html）的 clean URL 访问：
+  // resolvePageFilePath 会尝试 index.html，若不存在则尝试 .html 后缀
+  if (!html && !filePath.endsWith('.html')) {
+    filePath = `${relativePath}.html`;
+    html = await cachedFetchPageHtml(filePath);
+  }
   if (!html) {
     notFound();
   }
@@ -98,6 +106,28 @@ export default async function CustomPage({ params, searchParams }: PageProps) {
       <PasswordPrompt
         path={path.join('/')}
         wrongPassword={access.reason === 'wrong-password'}
+      />
+    );
+  }
+
+  // 私有页面但管理员未设置密码 → 明确提示，而非显示无意义的密码输入框
+  if (access.reason === 'password-required') {
+    return (
+      <PasswordPrompt
+        path={path.join('/')}
+        wrongPassword={false}
+        hint="此页面已设为私有但尚未配置访问密码，请联系管理员"
+      />
+    );
+  }
+
+  // 数据库错误 → 明确提示，而非陷入密码输入循环
+  if (access.reason === 'db-error' || access.reason === 'db-not-configured') {
+    return (
+      <PasswordPrompt
+        path={path.join('/')}
+        wrongPassword={false}
+        hint="服务暂时不可用，请稍后再试"
       />
     );
   }

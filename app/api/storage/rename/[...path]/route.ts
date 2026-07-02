@@ -22,6 +22,27 @@ import {
   storageNotConfigured,
 } from '../../_helpers'
 
+/** 检查目标路径是否已存在（数据库 + 存储层双重检查） */
+async function assertTargetAvailable(newRel: string, segments: string[], newName: string): Promise<NextResponse | null> {
+  try {
+    const existingMeta = await readFolderMeta(newRel)
+    if (existingMeta) {
+      return NextResponse.json({ error: '目标名称已存在' }, { status: 409 })
+    }
+  } catch {
+    // 忽略 DB 检查失败，继续检查存储层
+  }
+  try {
+    const provider = await getStorageProvider()
+    const newTarget = buildWebDavTarget([...segments, newName])
+    await provider.stat(newTarget)
+    return NextResponse.json({ error: '目标名称已存在' }, { status: 409 })
+  } catch {
+    // stat 失败说明目标不存在，可以继续
+  }
+  return null
+}
+
 /** 校验重命名名称合法性:空值、特殊字符、目录穿越 */
 function validateNewName(newName: string): NextResponse | null {
   if (!newName) {
@@ -69,15 +90,9 @@ export const POST = catchAllHandler<{ path: string[] }>(
 
     if (!isValidStoragePath(newRel)) return invalidPathResponse()
 
-    // 检查目标是否已存在
-    try {
-      const existingMeta = await readFolderMeta(newRel)
-      if (existingMeta) {
-        return NextResponse.json({ error: '目标名称已存在' }, { status: 409 })
-      }
-    } catch {
-      // 忽略检查失败,继续执行
-    }
+    // 检查目标是否已存在（数据库 + 存储层双重检查）
+    const conflict = await assertTargetAvailable(newRel, segments, newName)
+    if (conflict) return conflict
 
     const oldTarget = buildWebDavTarget(parts)
     // 构建新目标路径:替换最后一段

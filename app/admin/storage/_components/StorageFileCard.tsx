@@ -8,6 +8,7 @@
  */
 'use client';
 
+import { useState } from 'react';
 import { Eye, Copy, Download, FileText, Folder, FolderInput, Image as ImageIcon, Pencil, Trash2 } from 'lucide-react';
 import { message, Tooltip } from 'antd';
 import type { WebDavEntry } from '@/lib/storage/types';
@@ -55,10 +56,11 @@ function CardThumbnail({
 }) {
   const Icon = getFileIcon(entry.mimeType, entry.isDirectory);
   const showImage = !entry.isDirectory && mimeMatchesImage(entry.mimeType);
+  const [imgError, setImgError] = useState(false);
   return (
     <div className="aspect-square bg-zinc-50 flex items-center justify-center overflow-hidden">
-      {showImage ? (
-        <img src={publicUrl} alt={entry.filename} className="w-full h-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+      {showImage && !imgError ? (
+        <img src={publicUrl} alt={entry.filename} className="w-full h-full object-cover" loading="lazy" onError={() => setImgError(true)} />
       ) : (
         <Icon size={entry.isDirectory ? 48 : 40} className={entry.isDirectory ? 'text-amber-500' : 'text-zinc-300'} />
       )}

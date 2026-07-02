@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server'
 import {
   buildWebDavTarget,
   catchAllHandler,
-  deleteFolderMeta,
+  deleteFolderMetaCascade,
   getPathParts,
   getStorageProvider,
   invalidPathResponse,
@@ -42,7 +42,7 @@ export const DELETE = catchAllHandler<{ path: string[] }>(
       return storageErrorResponse(err, '删除目录')
     }
 
-    await deleteFolderMeta(rel)
+    await deleteFolderMetaCascade(rel)
     console.warn(`[storage.rmdir] target="${target}" 已删除(元数据已清理)`)
     return new NextResponse(null, { status: 204 })
   }

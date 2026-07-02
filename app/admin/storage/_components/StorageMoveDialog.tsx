@@ -46,10 +46,18 @@ export function StorageMoveDialog({
     : '';
 
   const [selected, setSelected] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleMove = () => {
-    if (selected === null) return;
-    onMove(selected);
+  const handleMove = async () => {
+    if (selected === null || submitting) return;
+    setSubmitting(true);
+    try {
+      await onMove(selected);
+    } catch {
+      // 失败时保持对话框打开
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // 过滤掉当前文件所在的目录(不能移到自身)
@@ -110,14 +118,15 @@ export function StorageMoveDialog({
       </div>
 
       <div className="flex justify-end gap-2 mt-5">
-        <Button variant="ghost" size="sm" onClick={onCancel} disabled={disabled} autoLoading={false}>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={submitting} autoLoading={false}>
           {cancelLabel}
         </Button>
         <Button
           variant="primary"
           size="sm"
           onClick={handleMove}
-          disabled={disabled || selected === null}
+          disabled={disabled || selected === null || submitting}
+          loading={submitting}
         >
           {createLabel}
         </Button>

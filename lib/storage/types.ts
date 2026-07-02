@@ -29,6 +29,8 @@ export interface StorageFolderMeta {
   public: boolean
   /** 描述(可选) */
   description: string | null
+  /** 是否已设置访问密码（不泄露密码内容） */
+  hasPassword?: boolean
   createdAt: Date
   updatedAt: Date
 }

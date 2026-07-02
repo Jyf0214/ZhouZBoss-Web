@@ -74,6 +74,20 @@ export class WebDavProvider implements StorageProvider {
 
   async deleteDirectory(dirPath: string): Promise<void> {
     const client = getWebDavClient()
+    // 递归列出目录所有内容，按深度倒序删除（先删子文件/子目录，再删父目录）
+    const contents = await client.getDirectoryContents(dirPath, { deep: true })
+    if (Array.isArray(contents)) {
+      const entries = contents
+        .filter((e) => e.filename !== dirPath && e.filename !== dirPath + '/')
+        .sort((a, b) => b.filename.localeCompare(a.filename))
+      for (const entry of entries) {
+        if (entry.type === 'directory') {
+          await client.deleteFile(entry.filename)
+        } else {
+          await client.deleteFile(entry.filename)
+        }
+      }
+    }
     await client.deleteFile(dirPath)
   }
 

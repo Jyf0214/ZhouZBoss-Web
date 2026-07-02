@@ -42,21 +42,30 @@ export function StorageRenameDialog({
   disabled = false,
 }: Props) {
   const [name, setName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // 打开时预填当前名称
   useEffect(() => {
     if (open) {
       setName(currentName);
+      setSubmitting(false);
     }
   }, [open, currentName]);
 
   const trimmed = name.trim();
-  const canSubmit = !disabled && trimmed.length > 0 && trimmed !== currentName;
+  const canSubmit = !disabled && trimmed.length > 0 && trimmed !== currentName && !submitting;
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    onRename(trimmed);
+    setSubmitting(true);
+    try {
+      await onRename(trimmed);
+    } catch {
+      // 失败时保留输入
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -92,7 +101,7 @@ export function StorageRenameDialog({
           />
         </label>
         <div className="flex justify-end gap-2 mt-5">
-          <Button variant="ghost" size="sm" onClick={handleClose} disabled={disabled} autoLoading={false}>
+          <Button variant="ghost" size="sm" onClick={handleClose} disabled={submitting} autoLoading={false}>
             {cancelLabel}
           </Button>
           <Button
@@ -101,6 +110,7 @@ export function StorageRenameDialog({
             type="submit"
             autoLoading={false}
             disabled={!canSubmit}
+            loading={submitting}
           >
             {createLabel}
           </Button>

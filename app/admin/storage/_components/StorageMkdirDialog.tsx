@@ -36,13 +36,21 @@ export function StorageMkdirDialog({
   disabled = false,
 }: Props) {
   const [name, setName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (disabled) return;
+    if (disabled || submitting) return;
     if (!name.trim()) return;
-    onCreate(name.trim());
-    setName('');
+    setSubmitting(true);
+    try {
+      await onCreate(name.trim());
+      setName('');
+    } catch {
+      // 失败时保留输入内容，用户可修改后重试
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -78,7 +86,7 @@ export function StorageMkdirDialog({
           />
         </label>
         <div className="flex justify-end gap-2 mt-5">
-          <Button variant="ghost" size="sm" onClick={handleClose} disabled={disabled} autoLoading={false}>
+          <Button variant="ghost" size="sm" onClick={handleClose} disabled={submitting} autoLoading={false}>
             {cancelLabel}
           </Button>
           <Button
@@ -86,7 +94,8 @@ export function StorageMkdirDialog({
             size="sm"
             type="submit"
             autoLoading={false}
-            disabled={disabled || !name.trim()}
+            disabled={disabled || !name.trim() || submitting}
+            loading={submitting}
           >
             {createLabel}
           </Button>
