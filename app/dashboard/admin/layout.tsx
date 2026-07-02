@@ -3,8 +3,6 @@ import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { GlobalLoading } from '@/components/Loading';
-import Sidebar from '@/components/Sidebar/index';
-import TopHeader from '@/components/TopHeader';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isSudo, loading } = useAuth();
@@ -22,13 +20,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
   if (!user || !isSudo) return null;
 
-  return (
-    <div className="flex min-h-screen overflow-x-hidden">
-      <Sidebar variant="admin" />
-      <div className="flex-1 flex flex-col min-h-screen bg-zinc-50 overflow-x-hidden">
-        <TopHeader />
-        <main className="flex-1 overflow-x-hidden">{children}</main>
-      </div>
-    </div>
-  );
+  return <>{children}</>;
 }

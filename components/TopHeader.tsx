@@ -8,16 +8,16 @@ const breadcrumbMap: Record<string, string> = {
   '/dashboard': 'dashboard.title',
   '/dashboard/articles': 'sidebar.articleManagement',
   '/dashboard/settings': 'settings.title',
-  '/admin/config': 'sidebar.systemConfig',
-  '/admin/config/preview': 'sidebar.configPreview',
-  '/admin/env': 'sidebar.envVariables',
-  '/admin/tickets': 'sidebar.tickets',
-  '/admin/users': 'sidebar.userManagement',
+  '/dashboard/admin': 'dashboard.adminConsole',
+  '/dashboard/admin/config': 'sidebar.systemConfig',
+  '/dashboard/admin/config/preview': 'sidebar.configPreview',
+  '/dashboard/admin/env': 'sidebar.envVariables',
+  '/dashboard/admin/tickets': 'sidebar.tickets',
+  '/dashboard/admin/users': 'sidebar.userManagement',
   '/posts': 'sidebar.posts',
   '/faces': 'sidebar.faces',
   '/editor': 'sidebar.writeArticle',
   '/diary': 'sidebar.diary',
-  '/page': 'sidebar.customPages',
 };
 
 export function TopHeader() {

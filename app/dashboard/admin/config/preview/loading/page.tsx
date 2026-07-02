@@ -255,7 +255,7 @@ export default function LoadingPreviewPage() {
       {/* 页面标题 */}
       <div className="flex items-center gap-4 mb-8">
         <Link
-          href="/admin/config/preview"
+          href="/dashboard/admin/config/preview"
           className="w-12 h-12 bg-zinc-100 hover:bg-zinc-200 rounded-2xl flex items-center justify-center transition-all"
         >
           <ArrowLeft size={22} className="text-zinc-600 dark:text-zinc-400" />

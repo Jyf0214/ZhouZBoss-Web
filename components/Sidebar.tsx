@@ -18,10 +18,10 @@ export function Sidebar() {
     { href: '/dashboard/settings', label: t('sidebar.settings'), icon: User, roles: ['admin', 'sudo', 'user'] },
     { href: '/dashboard/articles', label: t('sidebar.articleManagement'), icon: FileText, roles: ['admin', 'sudo', 'user'] },
     { href: '/tickets', label: t('sidebar.tickets'), icon: FileText, roles: ['admin', 'sudo', 'user'] },
-    { href: '/admin/requests', label: t('sidebar.requests'), icon: ShieldAlert, roles: ['admin', 'sudo'] },
-    { href: '/admin/config', label: t('sidebar.systemConfig'), icon: Settings, roles: ['admin', 'sudo'] },
-    { href: '/admin/env', label: t('sidebar.envVariables'), icon: Globe, roles: ['admin', 'sudo'] },
-    { href: '/admin/apikeys', label: t('sidebar.apiKeys') || 'API 密钥', icon: Key, roles: ['admin', 'sudo'] },
+    { href: '/dashboard/admin/requests', label: t('sidebar.requests'), icon: ShieldAlert, roles: ['admin', 'sudo'] },
+    { href: '/dashboard/admin/config', label: t('sidebar.systemConfig'), icon: Settings, roles: ['admin', 'sudo'] },
+    { href: '/dashboard/admin/env', label: t('sidebar.envVariables'), icon: Globe, roles: ['admin', 'sudo'] },
+    { href: '/dashboard/admin/apikeys', label: t('sidebar.apiKeys') || 'API 密钥', icon: Key, roles: ['admin', 'sudo'] },
   ];
 
   if (!userRole) return null;

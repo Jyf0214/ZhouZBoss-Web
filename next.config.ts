@@ -83,10 +83,6 @@ if (
 // manifest.json 位于 public/manifest.json，无需 Next.js 插件介入
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // 确保 data/pages-index.json 在 Vercel serverless 环境中可用
-  outputFileTracingIncludes: {
-    '/page': ['./data/pages-index.json'],
-  },
   headers() {
     return [
       {

@@ -10,13 +10,13 @@ import { Settings, Eye, Activity, FileText, Users, Plus, ArrowRight, BarChart3 }
 import { PageContainer } from '@/components/ui/PageContainer';
 
 const adminSections = [
-  { key: 'sidebar.systemConfig', icon: Settings, href: '/admin/config', color: 'bg-zinc-900', descKey: 'admin.desc.systemConfig' },
-  { key: 'sidebar.configPreview', icon: Eye, href: '/admin/config/preview', color: 'bg-blue-500', descKey: 'admin.desc.configPreview' },
-  { key: 'sidebar.envVariables', icon: Activity, href: '/admin/env', color: 'bg-emerald-500', descKey: 'admin.desc.envVariables' },
-  { key: 'sidebar.tickets', icon: FileText, href: '/admin/tickets', color: 'bg-amber-500', descKey: 'admin.desc.tickets' },
-  { key: 'sidebar.writeArticle', icon: Plus, href: '/admin/tickets/new', color: 'bg-purple-500', descKey: 'admin.desc.writeArticle' },
-  { key: 'sidebar.userManagement', icon: Users, href: '/admin/users', color: 'bg-rose-500', descKey: 'admin.desc.userManagement' },
-  { key: 'sidebar.contentStats', icon: BarChart3, href: '/admin/stats', color: 'bg-indigo-500', descKey: 'admin.desc.contentStats' },
+  { key: 'sidebar.systemConfig', icon: Settings, href: '/dashboard/admin/config', color: 'bg-zinc-900', descKey: 'admin.desc.systemConfig' },
+  { key: 'sidebar.configPreview', icon: Eye, href: '/dashboard/admin/config/preview', color: 'bg-blue-500', descKey: 'admin.desc.configPreview' },
+  { key: 'sidebar.envVariables', icon: Activity, href: '/dashboard/admin/env', color: 'bg-emerald-500', descKey: 'admin.desc.envVariables' },
+  { key: 'sidebar.tickets', icon: FileText, href: '/dashboard/admin/tickets', color: 'bg-amber-500', descKey: 'admin.desc.tickets' },
+  { key: 'sidebar.writeArticle', icon: Plus, href: '/dashboard/admin/tickets/new', color: 'bg-purple-500', descKey: 'admin.desc.writeArticle' },
+  { key: 'sidebar.userManagement', icon: Users, href: '/dashboard/admin/users', color: 'bg-rose-500', descKey: 'admin.desc.userManagement' },
+  { key: 'sidebar.contentStats', icon: BarChart3, href: '/dashboard/admin/stats', color: 'bg-indigo-500', descKey: 'admin.desc.contentStats' },
 ];
 
 export default function AdminPage() {
