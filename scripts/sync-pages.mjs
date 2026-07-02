@@ -679,8 +679,7 @@ async function b2ListFiles(prefix, delimiter = '/') {
  */
 async function b2DownloadFile(filePath) {
   const auth = await b2Authorize();
-  const encodedPath = filePath.split('/').map(segment => encodeURIComponent(segment)).join('/');
-  const bucketPath = `${auth.bucketName}/${encodedPath}`;
+  const bucketPath = `${auth.bucketName}/${filePath}`;
   const useCdn = !!process.env.B2_DOWNLOAD_URL;
 
   let url;
