@@ -10,6 +10,7 @@
  */
 import { NextResponse } from 'next/server'
 import { apiHandler } from '@/lib/api-handler'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import { getStorageProvider, isStorageConfigured } from '@/lib/storage/storage-provider'
 import { storageNotConfigured } from '../_helpers'
 
@@ -172,6 +173,13 @@ export const GET = apiHandler(
   { label: 'storage.search', requireAdmin: true },
   async (req) => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'search')
+      if (permErr) return permErr
+    }
 
     const query = req.nextUrl.searchParams.get('q')?.trim()
     if (!query) {

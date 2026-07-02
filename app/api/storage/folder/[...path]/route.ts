@@ -5,6 +5,7 @@
  */
 import { NextResponse } from 'next/server'
 import { ApiErr } from '@/lib/api-handler'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import { getDb } from '@/lib/db'
 import { hashPassword } from '@/lib/hash'
 import {
@@ -27,6 +28,13 @@ export const GET = catchAllHandler<{ path: string[] }>(
   async (_req, context) => {
     if (!isStorageConfigured()) return storageNotConfigured()
     if (!getDb().prisma) return databaseNotConfigured()
+
+    // API 密钥权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'storage_read')
+      if (permErr) return permErr
+    }
 
     const parts = await getPathParts(context)
     const path = resolveStoragePath(parts)
@@ -103,6 +111,13 @@ export const PATCH = catchAllHandler<{ path: string[] }>(
     if (!isStorageConfigured()) return storageNotConfigured()
     const prisma = getDb().prisma
     if (!prisma) return databaseNotConfigured()
+
+    // API 密钥权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'settings_write')
+      if (permErr) return permErr
+    }
 
     const parts = await getPathParts(context)
     const path = resolveStoragePath(parts)

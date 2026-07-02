@@ -12,6 +12,7 @@
  */
 import { NextResponse } from 'next/server'
 import { apiHandler } from '@/lib/api-handler'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import { getStorageProvider, isStorageConfigured } from '@/lib/storage/storage-provider'
 import { storageNotConfigured } from '../_helpers'
 
@@ -220,6 +221,13 @@ export const GET = apiHandler(
   { label: 'storage.stats', requireAdmin: true },
   async () => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'stats_read')
+      if (permErr) return permErr
+    }
 
     // 检查缓存是否有效
     const now = Date.now()

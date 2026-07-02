@@ -4,6 +4,7 @@
  * path 为空数组时表示根目录
  */
 import { NextResponse } from 'next/server'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import {
   catchAllHandler,
   getPathParts,
@@ -21,6 +22,13 @@ export const GET = catchAllHandler<{ path?: string[] }>(
   { label: 'storage.list', requireAdmin: true },
   async (_req, context) => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'storage_read')
+      if (permErr) return permErr
+    }
 
     const parts = await getPathParts(context)
     const target = buildWebDavTarget(parts)
