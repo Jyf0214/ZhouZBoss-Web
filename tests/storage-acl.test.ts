@@ -321,6 +321,125 @@ describe('checkPageAccess', () => {
     const right = await checkPageAccess('pages/private/notes.html', 'nested-pwd');
     expect(right).toEqual({ allowed: true, reason: 'public' });
   });
+
+  // ── session 管理员绕过测试 ──────────────────────────────────────────
+
+  it('admin session + 私有文件夹 → 直接放行(跳过所有权限检查)', async () => {
+    mocks.getDb.mockImplementation(() => makeDbUnconfigured());
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'admin' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/secret.html', null, session);
+    expect(result).toEqual({ allowed: true, reason: 'public' });
+  });
+
+  it('sudo session + 私有文件夹 → 直接放行', async () => {
+    mocks.getDb.mockImplementation(() => makeDbUnconfigured());
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'sudo' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/secret.html', null, session);
+    expect(result).toEqual({ allowed: true, reason: 'public' });
+  });
+
+  it('admin session + DB 未配置 → 仍放行(DB 检查被跳过)', async () => {
+    mocks.getDb.mockImplementation(() => makeDbUnconfigured());
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'admin' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/anything.html', null, session);
+    expect(result).toEqual({ allowed: true, reason: 'public' });
+    // DB 不应被调用
+    expect(mocks.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('admin session + DB 抛错 → 仍放行(DB 检查被跳过)', async () => {
+    mocks.getDb.mockImplementation(() => makeDbThrowing());
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'admin' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/secret.html', null, session);
+    expect(result).toEqual({ allowed: true, reason: 'public' });
+    expect(mocks.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('admin session + 错误密码 → 仍放行(密码检查被跳过)', async () => {
+    mocks.getDb.mockImplementation(() =>
+      makeDbWithFolder({ path: 'pages', public: false, password: 'correct-pwd' })
+    );
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'admin' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/secret.html', 'wrong-pwd', session);
+    expect(result).toEqual({ allowed: true, reason: 'public' });
+  });
+
+  it('user session + 私有文件夹 → 仍拒绝(仅 admin/sudo 绕过)', async () => {
+    mocks.getDb.mockImplementation(() =>
+      makeDbWithFolder({ path: 'pages', public: false, password: null })
+    );
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'user' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/secret.html', null, session);
+    expect(result).toEqual({ allowed: false, reason: 'password-required' });
+  });
+
+  it('null session + 私有文件夹 → 仍拒绝(向后兼容)', async () => {
+    mocks.getDb.mockImplementation(() =>
+      makeDbWithFolder({ path: 'pages', public: false, password: null })
+    );
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const result = await checkPageAccess('pages/secret.html', null, null);
+    expect(result).toEqual({ allowed: false, reason: 'password-required' });
+  });
+
+  it('无 session 参数(默认) + 私有文件夹 → 仍拒绝(向后兼容)', async () => {
+    mocks.getDb.mockImplementation(() =>
+      makeDbWithFolder({ path: 'pages', public: false, password: null })
+    );
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const result = await checkPageAccess('pages/secret.html', null);
+    expect(result).toEqual({ allowed: false, reason: 'password-required' });
+  });
+
+  it('admin session + 嵌套私有目录 → 放行', async () => {
+    mocks.findUnique.mockImplementation(({ where }: { where: { path: string } }) => {
+      if (where.path === 'pages/deep') {
+        return Promise.resolve({
+          path: 'pages/deep',
+          public: false,
+          password: 'very-secret',
+          description: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+      return Promise.resolve(null);
+    });
+    mocks.getDb.mockImplementation(
+      () =>
+        ({
+          prisma: { storageFolder: { findUnique: mocks.findUnique } },
+        }) as unknown as IDatabase
+    );
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'admin' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/deep/nested/page.html', null, session);
+    expect(result).toEqual({ allowed: true, reason: 'public' });
+  });
+
+  it('admin session + 根级页面(pages/about.html) → 放行', async () => {
+    mocks.getDb.mockImplementation(() => makeDbUnconfigured());
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'admin' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/about.html', null, session);
+    expect(result).toEqual({ allowed: true, reason: 'public' });
+  });
+
+  it('admin session + 密码超长 → 仍放行(密码检查被跳过)', async () => {
+    mocks.getDb.mockImplementation(() =>
+      makeDbWithFolder({ path: 'pages', public: false, password: 'pwd' })
+    );
+    const { checkPageAccess } = await import('@/lib/storage/acl');
+    const session = { role: 'admin' as const, uid: 'test', email: 'a@b.com' };
+    const result = await checkPageAccess('pages/secret.html', 'a'.repeat(200), session);
+    expect(result).toEqual({ allowed: true, reason: 'public' });
+  });
 });
 
 describe('normalizePath / getTopLevelFolder (纯函数)', () => {
