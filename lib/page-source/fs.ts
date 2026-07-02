@@ -1,54 +1,61 @@
 /**
  * 自定义 HTML 页面 — 本地 fs 读取层
  *
- * 用途:
- * - 运行时 (Runtime) 页面渲染唯一数据源
- * - 直接从构建时同步好的 `./pages/` 目录读取文件
- *
- * 设计原则:
- * - 极致性能: 使用原生 fs.readFileSync (同步读取，因为在 Next.js Server Component 中)
- * - 零网络依赖: 运行时完全不调用 B2/WebDAV API
- * - 接口对齐: 与 `lib/page-source/webdav.ts` 保持一致的 `fetchPageHtml` 签名
+ * 用于运行时直接从构建时同步好的 `public/page/` 目录读取页面内容和元数据。
+ * 完全替代运行时的远端 WebDAV/B2 网络请求，解决底层 404 及鉴权过期等问题。
  */
 import fs from 'fs';
 import path from 'path';
-import { normalizeWebDavContent } from './shared';
+import { normalizeWebDavContent, buildMetaPath, validatePageMeta, type PageMeta } from './shared';
 
 /**
- * 从本地文件系统读取 HTML 内容
+ * 从本地文件系统读取 HTML 页面内容
  *
- * @param relativePath 已通过 `buildPageRelativePath` 校验的相对路径(含 `pages/` 前缀)
- * @returns 文件内容字符串或 null (不存在/读取失败)
+ * @param relativePath 校验后的相对路径(含 `page/` 前缀，如 `page/about.html`)
  */
 export function fetchPageHtml(relativePath: string): string | null {
   try {
-    // 1. 构造本地绝对路径
-    // relativePath 已经是 'pages/xxx.html' 格式
-    const absolutePath = path.join(process.cwd(), relativePath);
+    const absolutePath = path.join(process.cwd(), 'public', relativePath);
 
-    // 2. 检查文件是否存在
     if (!fs.existsSync(absolutePath)) {
       return null;
     }
 
-    // 3. 读取内容
     const raw = fs.readFileSync(absolutePath, 'utf-8');
-    
-    // 4. 统一归一化处理 (保持与 webdav.ts 一致)
     const text = normalizeWebDavContent(raw);
     return text.length > 0 ? text : null;
   } catch (err) {
-    console.error(`[page-source-fs] fetchPageHtml failed for "${relativePath}"`, err);
+    console.error(`[page-source-fs] fetchPageHtml 失败: "${relativePath}"`, err);
     return null;
   }
 }
 
 /**
- * 本地文件系统版本 de scanPagesHtmlDeep
- * 仅用于本地调试或构建后验证，运行时不再需要调用
+ * 从本地文件系统读取页面元数据
+ *
+ * @param relativePath 校验后的相对路径(含 `page/` 前缀)
+ */
+export function fetchPageMeta(relativePath: string): PageMeta | null {
+  const metaPath = buildMetaPath(relativePath);
+  if (!metaPath) return null;
+  try {
+    const absolutePath = path.join(process.cwd(), 'public', metaPath);
+    if (!fs.existsSync(absolutePath)) {
+      return null;
+    }
+    const raw = fs.readFileSync(absolutePath, 'utf-8');
+    const data = JSON.parse(raw);
+    return validatePageMeta(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 扫描本地 public/page 目录下的 HTML 页面 (深度限制 2 层: 根 + 1 级子目录)
  */
 export function scanLocalPagesHtml(): { relativePath: string }[] {
-  const pagesDir = path.join(process.cwd(), 'pages');
+  const pagesDir = path.join(process.cwd(), 'public', 'page');
   if (!fs.existsSync(pagesDir)) return [];
 
   const out: { relativePath: string }[] = [];
@@ -58,7 +65,7 @@ export function scanLocalPagesHtml(): { relativePath: string }[] {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      const relPath = path.relative(process.cwd(), fullPath);
+      const relPath = path.relative(path.join(process.cwd(), 'public'), fullPath);
       if (entry.isFile() && /\.html?$/i.test(entry.name)) {
         out.push({ relativePath: relPath });
       } else if (entry.isDirectory()) {
@@ -68,5 +75,32 @@ export function scanLocalPagesHtml(): { relativePath: string }[] {
   };
 
   readDir(pagesDir, 1);
+  return out;
+}
+
+/**
+ * 递归深度扫描本地文件 (用于发现未索引文件)
+ *
+ * @param dir 相对 public 的路径前缀 (如 'page')
+ */
+export function deepScanLocalFiles(dir: string, depth: number): { relativePath: string }[] {
+  if (depth > 3) return [];
+  const absoluteDir = path.join(process.cwd(), 'public', dir);
+  if (!fs.existsSync(absoluteDir)) return [];
+
+  const out: { relativePath: string }[] = [];
+  try {
+    const entries = fs.readdirSync(absoluteDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        out.push({ relativePath: `${dir}/${entry.name}` });
+      } else if (entry.isDirectory()) {
+        const sub = deepScanLocalFiles(`${dir}/${entry.name}`, depth + 1);
+        out.push(...sub);
+      }
+    }
+  } catch {
+    // 忽略读取错误
+  }
   return out;
 }

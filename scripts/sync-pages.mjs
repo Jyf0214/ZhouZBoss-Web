@@ -48,8 +48,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
-/** 本地镜像目录绝对路径:项目根的 `./pages/` */
-const LOCAL_DIR = path.join(PROJECT_ROOT, 'pages');
+/** 本地镜像目录绝对路径:项目根的 `./public/page` */
+const LOCAL_DIR = path.join(PROJECT_ROOT, 'public', 'page');
 /** WebDAV 上的同步前缀 */
 const WEBDAV_PREFIX = 'pages';
 /** 下载并发上限 */
@@ -365,7 +365,7 @@ async function webdavListHtmlRecursive(client) {
   const out = [];
   for (const entry of rootEntries) {
     const name = entry.filename.split('/').pop() || entry.filename;
-    if (entry.type === 'file' && /\.html?$/i.test(name)) {
+    if (entry.type === 'file') {
       out.push(`${WEBDAV_PREFIX}/${name}`);
       continue;
     }
@@ -373,9 +373,8 @@ async function webdavListHtmlRecursive(client) {
       const subPath = `${WEBDAV_PREFIX}/${name}`;
       const subEntries = await webdavListDir(client, subPath);
       for (const sub of subEntries) {
-        const subName = sub.filename.split('/').pop() || sub.filename;
-        if (sub.type === 'file' && /\.html?$/i.test(subName)) {
-          out.push(`${subPath}/${subName}`);
+        if (sub.type === 'file') {
+          out.push(`${subPath}/${sub.filename}`);
         }
       }
     }
@@ -847,7 +846,7 @@ async function b2ListHtmlRecursive() {
   // 处理根级文件
   for (const f of rootFiles) {
     const name = f.fileName.split('/').pop();
-    if (name && /\.html?$/i.test(name) && name !== '.keep') {
+    if (name && name !== '.keep') {
       out.push(`${WEBDAV_PREFIX}/${name}`);
     }
   }
@@ -870,7 +869,7 @@ async function b2ListHtmlRecursive() {
     const subFiles = subData.files?.files || subData.files || [];
     for (const f of subFiles) {
       const subName = f.fileName.split('/').pop();
-      if (subName && /\.html?$/i.test(subName) && subName !== '.keep') {
+      if (subName && subName !== '.keep') {
         out.push(`${WEBDAV_PREFIX}/${folderName}/${subName}`);
       }
     }

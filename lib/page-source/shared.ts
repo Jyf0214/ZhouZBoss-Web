@@ -18,7 +18,7 @@ import { isValidPath, joinPath } from '@/lib/storage/path'
 import { normalizeWebDavContent as normalizeWebDavContentImpl } from './normalize-webdav.mjs'
 
 /** WebDAV 与本地 fs 上 `pages/` 目录的统一前缀 */
-export const PAGES_PREFIX = 'pages';
+export const PAGES_PREFIX = 'page';
 
 /**
  * 仅接受 `.html` / `.htm` 扩展名(大小写不敏感)
