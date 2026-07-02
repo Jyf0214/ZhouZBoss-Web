@@ -20,7 +20,7 @@ import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { buildPageRelativePath, resolvePageFilePath, extractTitle } from '@/lib/page-source/shared';
 import { isStorageConfigured } from '@/lib/storage/storage-provider';
-import { fetchPageHtml } from '@/lib/page-source/fs';
+import { fetchPageHtml } from '@/lib/page-source/webdav';
 import { getSession } from '@/lib/auth';
 import { checkPageAccess, type PageAccessResult } from '@/lib/storage/acl';
 import { UserWidget } from '../_components/UserWidget';
@@ -72,7 +72,7 @@ export default async function CustomPage({ params, searchParams }: PageProps) {
     notFound();
   }
 
-  // 读取本地文件系统中的 HTML（构建时由 sync-pages.mjs 从 WebDAV/B2 同步）
+  // 从 WebDAV/B2 读取 HTML 文件
   let filePath = resolvePageFilePath(relativePath);
   let html = await cachedFetchPageHtml(filePath);
   // 根级 HTML 页面（如 pages/about.html）的 clean URL 访问：
