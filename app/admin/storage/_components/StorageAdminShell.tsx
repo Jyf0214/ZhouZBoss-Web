@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/Button';
 import { ProCard } from '@/components/ui/ProCard';
 import { PageContainer } from '@/components/ui/PageContainer';
 import { useStorageState } from '../_lib/use-storage-state';
-import { splitPath } from '../_lib/format';
 import { StorageNotConfiguredBanner } from './StorageNotConfiguredBanner';
 import { StorageBreadcrumb } from './StorageBreadcrumb';
 import { StorageFolderTree } from './StorageFolderTree';
@@ -66,10 +65,7 @@ export function StorageAdminShell() {
   // 当前选中文件夹元数据
   const currentFolder = useMemo(() => {
     if (!state.currentPath) return null;
-    const segments = splitPath(state.currentPath);
-    if (segments.length === 0) return null;
-    const topLevel = segments[0];
-    return state.folders.find((f) => f.path === topLevel) ?? null;
+    return state.folders.find((f) => f.path === state.currentPath) ?? null;
   }, [state.currentPath, state.folders]);
 
   // i18n 字符串(集中获取,避免内联表达式污染 JSX)
