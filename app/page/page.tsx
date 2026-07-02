@@ -1,14 +1,27 @@
 import 'server-only';
+import fs from 'fs';
+import path from 'path';
 import { PAGES_PREFIX } from '@/lib/page-source/shared';
-import {
-  scanLocalPagesHtml,
-  fetchPageHtml,
-  fetchPageMeta,
-  deepScanLocalFiles,
-} from '@/lib/page-source/fs';
-import { PageIndexView, type PageIndexItem, type StorageOrphan } from './_components/PageIndexView';
+import { fetchPageHtml, fetchPageMeta } from '@/lib/page-source/fs';
+import { PageIndexView, type PageIndexItem } from './_components/PageIndexView';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * 从 public/data/pages-index.json 读取索引
+ */
+function readPagesIndex(): string[] {
+  const indexPath = path.join(process.cwd(), 'public', 'data', 'pages-index.json');
+  try {
+    if (!fs.existsSync(indexPath)) return [];
+    const content = fs.readFileSync(indexPath, 'utf-8');
+    const index = JSON.parse(content);
+    return Array.isArray(index) ? index : [];
+  } catch (err) {
+    console.error('[custom-page-index] 读取索引文件失败:', err);
+    return [];
+  }
+}
 
 /**
  * 解析页面标题：优先 meta.title，再提取 <title> 标签
@@ -31,7 +44,7 @@ function resolvePageTitle(
  * 生成 clean URL：index.html 用目录名，其他去掉 .html 后缀
  */
 function buildPageHref(relativePath: string): string {
-  // relativePath 已经是 'page/xxx.html'
+  // relativePath 已经是 'page/xxx.html' 或 'page/xxx'
   const relPath = relativePath.slice(PAGES_PREFIX.length + 1);
   const relParts = relPath.split('/');
   const relFilename = relParts[relParts.length - 1];
@@ -40,48 +53,38 @@ function buildPageHref(relativePath: string): string {
       ? `/page/${relParts.slice(0, -1).join('/')}`
       : `/page`;
   }
+  // 目录路径直接返回
+  if (!relFilename.includes('.')) {
+    return `/page/${relPath}`;
+  }
   return `/page/${relPath.replace(/\.(html?|htm)$/i, '')}`;
 }
 
 /**
- * 检测本地 public/page 中存在但未在索引中显示的条目
+ * 从索引中提取文件路径（排除目录路径）
+ * 并将 pages/ 前缀转换为 page/（运行时使用）
  */
-function detectOrphans(
-  scanned: { relativePath: string }[]
-): StorageOrphan[] {
-  const allFiles = deepScanLocalFiles(PAGES_PREFIX, 0);
+function extractFilePaths(index: string[]): string[] {
+  return index
+    .filter(p => p.endsWith('.html') || p.endsWith('.htm'))
+    .map(p => p.replace(/^pages\//, 'page/'));
+}
 
-  const indexed = new Map<string, boolean>();
-  for (const s of scanned) {
-    indexed.set(s.relativePath, true);
-  }
-
-  const orphans: StorageOrphan[] = [];
-  for (const f of allFiles) {
-    if (indexed.has(f.relativePath)) continue;
-    const filename = f.relativePath.split('/').pop() ?? '';
-    if (filename === '.keep' || filename.startsWith('.')) continue;
-
-    const reason: StorageOrphan['reason'] = f.relativePath.endsWith('.html') ||
-      f.relativePath.endsWith('.htm')
-      ? 'depth'
-      : 'notHtml';
-    orphans.push({ relativePath: f.relativePath, reason });
-  }
-  return orphans;
+/**
+ * 从索引中提取目录路径
+ * 并将 pages/ 前缀转换为 page/（运行时使用）
+ */
+function extractDirPaths(index: string[]): string[] {
+  return index
+    .filter(p => !p.endsWith('.html') && !p.endsWith('.htm'))
+    .map(p => p.replace(/^pages\//, 'page/'));
 }
 
 export default async function PageIndex() {
-  // 直接从本地 fs 扫描
-  let scanned: { relativePath: string }[] = [];
-  try {
-    scanned = scanLocalPagesHtml();
-  } catch (err) {
-    console.error('[custom-page-index] scan local pages failed:', err);
-    scanned = [];
-  }
+  // 从索引文件读取
+  const index = readPagesIndex();
 
-  if (scanned.length === 0) {
+  if (index.length === 0) {
     return (
       <PageIndexView
         notConfigured={false}
@@ -91,24 +94,14 @@ export default async function PageIndex() {
     );
   }
 
-  // 检测未索引文件
-  let orphans: StorageOrphan[] = [];
-  try {
-    orphans = await detectOrphans(scanned);
-  } catch (err) {
-    console.error('[custom-page-index] detect orphans failed:', err);
-  }
+  const filePaths = extractFilePaths(index);
+  const dirPaths = extractDirPaths(index);
 
   const items: PageIndexItem[] = await Promise.all(
-    scanned.map(async ({ relativePath }): Promise<PageIndexItem> => {
+    filePaths.map(async (relativePath): Promise<PageIndexItem> => {
       const parts = relativePath.split('/');
       const filename = parts[parts.length - 1] ?? 'index.html';
       const dir = parts.length > 1 ? parts.slice(0, -1).join('/') : PAGES_PREFIX;
-
-      const hiddenInDir = orphans.filter(o =>
-        o.relativePath.startsWith(dir + '/') ||
-        (dir === PAGES_PREFIX && o.relativePath.startsWith(PAGES_PREFIX + '/') && !o.relativePath.slice(PAGES_PREFIX.length + 1).includes('/'))
-      ).length;
 
       const [meta, html] = await Promise.all([
         fetchPageMeta(relativePath),
@@ -123,8 +116,8 @@ export default async function PageIndex() {
         filename,
         folder: dir.slice(PAGES_PREFIX.length + 1),
         title,
-        isPrivate: false, // 移除访问控制，全部设为公开
-        hiddenCount: hiddenInDir,
+        isPrivate: false,
+        hiddenCount: 0,
         description: meta?.description,
         coverImage: meta?.coverImage,
         tags: meta?.tags,
@@ -138,8 +131,7 @@ export default async function PageIndex() {
     <PageIndexView
       notConfigured={false}
       pages={items}
-      emptyDirs={[]}
-      orphans={orphans}
+      emptyDirs={dirPaths.map(d => d.slice(PAGES_PREFIX.length + 1))}
     />
   );
 }

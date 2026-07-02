@@ -68,7 +68,7 @@ const LOG_PREFIX = '[sync-pages]';
  * @param {string[]} entries 文件相对路径列表 (如 ['pages/index.html', 'pages/about.html'])
  */
 async function writePagesIndex(entries) {
-  const indexDir = path.join(PROJECT_ROOT, 'data');
+  const indexDir = path.join(PROJECT_ROOT, 'public', 'data');
   const indexPath = path.join(indexDir, 'pages-index.json');
 
   try {

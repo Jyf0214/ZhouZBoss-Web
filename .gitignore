@@ -46,6 +46,7 @@ bun.lockb
 
 # 构建期生成产物
 /data/
+!/data/pages-index.json
 
 # 构建期同步产物(由 npm run sync:pages 生成)
 /pages/
