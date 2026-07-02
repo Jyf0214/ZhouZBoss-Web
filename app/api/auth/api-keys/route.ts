@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { getSession, hashApiKey, generateApiKey } from '@/lib/auth';
 import { apiHandler } from '@/lib/api-handler';
 import { getDb } from '@/lib/db';
+import { parsePermissions, serializePermissions, type ApiKeyPermissions } from '@/lib/api-key-permissions';
 
 /** 列出当前用户的 API 密钥(不返回明文) */
 export const GET = apiHandler(
@@ -26,11 +27,19 @@ export const GET = apiHandler(
     try {
       const rows = await db.prisma.apiKey.findMany({
         where: { uid: session.uid },
-        select: { id: true, name: true, lastUsed: true, createdAt: true },
+        select: { id: true, name: true, permissions: true, lastUsed: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       });
-      console.warn(`[api-keys.list] uid="${session.uid}" count=${rows.length}`);
-      return NextResponse.json({ keys: rows });
+      // 解析 permissions JSON
+      const result = rows.map(r => ({
+        id: r.id,
+        name: r.name,
+        permissions: parsePermissions(r.permissions),
+        lastUsed: r.lastUsed,
+        createdAt: r.createdAt,
+      }));
+      console.warn(`[api-keys.list] uid="${session.uid}" count=${result.length}`);
+      return NextResponse.json({ keys: result });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[api-keys.list] uid="${session.uid}" hasPrisma=${hasPrisma} error:`, msg);
@@ -52,9 +61,9 @@ export const POST = apiHandler(
       return NextResponse.json({ error: '数据库未配置' }, { status: 503 });
     }
 
-    let body: { name?: string } = {};
+    let body: { name?: string; permissions?: ApiKeyPermissions } = {};
     try {
-      body = (await req.json()) as { name?: string };
+      body = (await req.json()) as { name?: string; permissions?: ApiKeyPermissions };
     } catch {
       // 无 body 也允许
     }
@@ -63,9 +72,17 @@ export const POST = apiHandler(
     const rawKey = generateApiKey();
     const hashed = hashApiKey(rawKey);
 
+    // 序列化权限(传入 null/undefined 不存储，表示全部权限)
+    const permissionsJson = body.permissions ? serializePermissions(body.permissions) : null;
+
     try {
       const row = await db.prisma.apiKey.create({
-        data: { uid: session.uid, key: hashed, name },
+        data: {
+          uid: session.uid,
+          key: hashed,
+          name,
+          ...(permissionsJson ? { permissions: permissionsJson } : {}),
+        },
         select: { id: true, name: true, createdAt: true },
       });
       console.warn(`[api-keys.create] uid="${session.uid}" id=${row.id} name="${name}"`);

@@ -4,6 +4,7 @@
  * 已有元数据时保留原 public/description/createdAt,只刷新 updatedAt
  */
 import { NextResponse } from 'next/server'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import { getDb } from '@/lib/db'
 import {
   buildWebDavTarget,
@@ -26,6 +27,14 @@ export const POST = catchAllHandler<{ path: string[] }>(
   { label: 'storage.mkdir', requireAdmin: true },
   async (_req, context) => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥细粒度权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'storage_write')
+      if (permErr) return permErr
+    }
+
     const prisma = getDb().prisma
     if (!prisma) return databaseNotConfigured()
 

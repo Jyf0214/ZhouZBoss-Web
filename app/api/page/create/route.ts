@@ -11,9 +11,11 @@
  */
 import { NextResponse } from 'next/server'
 import { apiHandler } from '@/lib/api-handler'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import { getDb } from '@/lib/db'
 import { isStorageConfigured, getStorageProvider } from '@/lib/storage/storage-provider'
 import { renderTemplate, type TemplateType } from '@/lib/page-templates'
+import { checkApiKeyPageAccess } from '@/lib/storage/acl'
 
 /** 名称白名单:字母、数字、中文、连字符、下划线，1-100 字符 */
 const NAME_REGEX = /^[a-zA-Z0-9\u4e00-\u9fff_-]{1,100}$/
@@ -78,6 +80,18 @@ export const POST = apiHandler('POST', { label: 'page.create', requireSudo: true
 
   const validateError = validateParams(body)
   if (validateError) return validateError
+
+  // API 密钥权限检查
+  const authResult = await getSessionWithKeyId()
+  if (authResult) {
+    const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'pages_write')
+    if (permErr) return permErr
+    // 检查文件夹级权限
+    const targetPath = `pages/${body.name}`
+    if (!checkApiKeyPageAccess(authResult.currentKeyId, authResult.session.permissions, targetPath, true)) {
+      return NextResponse.json({ error: '无权操作该页面文件夹' }, { status: 403 })
+    }
+  }
 
   if (!isStorageConfigured()) {
     return NextResponse.json(

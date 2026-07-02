@@ -6,6 +6,7 @@
  * 重命名存储后端文件/文件夹 + 更新数据库元数据
  */
 import { NextResponse } from 'next/server'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import {
   buildWebDavTarget,
   catchAllHandler,
@@ -54,11 +55,42 @@ function validateNewName(newName: string): NextResponse | null {
   return null
 }
 
+/** 解析重命名请求：校验名称、计算新路径 */
+function parseRenameInput(
+  reqBody: Record<string, unknown>,
+  rel: string,
+): { newName: string; newRel: string; segments: string[] } | NextResponse {
+  const newName = String(reqBody.newName ?? '').trim()
+  const nameError = validateNewName(newName)
+  if (nameError) return nameError
+
+  // 提取父路径和旧文件夹名
+  const segments = rel.split('/')
+  const oldName = segments.pop()!
+  const parentPath = segments.join('/')
+
+  if (newName === oldName) {
+    return NextResponse.json({ error: '新名称与当前名称相同' }, { status: 400 })
+  }
+
+  const newRel = parentPath ? `${parentPath}/${newName}` : newName
+  if (!isValidStoragePath(newRel)) return invalidPathResponse()
+
+  return { newName, newRel, segments }
+}
+
 export const POST = catchAllHandler<{ path: string[] }>(
   'POST',
   { label: 'storage.rename', requireAdmin: true },
   async (req, context) => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥细粒度权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'storage_write')
+      if (permErr) return permErr
+    }
 
     const parts = await getPathParts(context)
     const rel = resolveStoragePath(parts)
@@ -66,29 +98,16 @@ export const POST = catchAllHandler<{ path: string[] }>(
     if (!isValidStoragePath(rel)) return invalidPathResponse()
 
     // 解析请求体
-    let newName: string
+    let body: Record<string, unknown>
     try {
-      const body = await req.json() as Record<string, unknown>
-      newName = String(body.newName ?? '').trim()
+      body = (await req.json()) as Record<string, unknown>
     } catch {
       return NextResponse.json({ error: '请求体格式错误' }, { status: 400 })
     }
 
-    const nameError = validateNewName(newName)
-    if (nameError) return nameError
-
-    // 提取父路径和旧文件夹名
-    const segments = rel.split('/')
-    const oldName = segments.pop()!
-    const parentPath = segments.join('/')
-
-    if (newName === oldName) {
-      return NextResponse.json({ error: '新名称与当前名称相同' }, { status: 400 })
-    }
-
-    const newRel = parentPath ? `${parentPath}/${newName}` : newName
-
-    if (!isValidStoragePath(newRel)) return invalidPathResponse()
+    const parseResult = parseRenameInput(body, rel)
+    if (parseResult instanceof NextResponse) return parseResult
+    const { newName, newRel, segments } = parseResult
 
     // 检查目标是否已存在（数据库 + 存储层双重检查）
     const conflict = await assertTargetAvailable(newRel, segments, newName)

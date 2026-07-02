@@ -5,6 +5,7 @@
  * - WebDAV 物理删除 + Prisma 元数据清理
  */
 import { NextResponse } from 'next/server'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import {
   buildWebDavTarget,
   catchAllHandler,
@@ -25,6 +26,13 @@ export const DELETE = catchAllHandler<{ path: string[] }>(
   { label: 'storage.rmdir', requireAdmin: true },
   async (req, context) => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'storage_delete')
+      if (permErr) return permErr
+    }
 
     const parts = await getPathParts(context)
     const rel = resolveStoragePath(parts)

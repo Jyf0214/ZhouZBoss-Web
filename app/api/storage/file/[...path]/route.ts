@@ -4,6 +4,7 @@
  * 路径必须指向一个具体文件,不能是根
  */
 import { NextResponse } from 'next/server'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import {
   buildWebDavTarget,
   catchAllHandler,
@@ -23,6 +24,13 @@ export const DELETE = catchAllHandler<{ path: string[] }>(
   { label: 'storage.file.delete', requireAdmin: true },
   async (_req, context) => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'storage_delete')
+      if (permErr) return permErr
+    }
 
     const parts = await getPathParts(context)
     const rel = resolveStoragePath(parts)

@@ -3,6 +3,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies, headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { SESSION_EXPIRY_MS, SESSION_EXPIRY } from '@/lib/constants';
+import { parsePermissions, type ApiKeyPermissions, type PermissionAction } from '@/lib/api-key-permissions';
 
 /**
  * Originium Kernel 认证逻辑（Serverless/Edge）
@@ -46,6 +47,8 @@ export interface SessionPayload {
   userGroup?: string;
   /** 会话版本号，密码修改时递增，用于吊销旧 JWT */
   sv?: number;
+  /** API 密钥权限配置(Cookie 认证时为 undefined) */
+  permissions?: ApiKeyPermissions;
 }
 
 /**
@@ -193,7 +196,16 @@ async function getSessionFromApiKey(): Promise<SessionPayload | null> {
     // role 白名单校验，防止损坏数据提权
     const validRoles = ['user', 'admin', 'sudo'] as const;
     const role = validRoles.includes(user.role as typeof validRoles[number]) ? user.role as SessionPayload['role'] : 'user';
-    return { uid: user.uid, email: user.email, role, userGroup: user.userGroup };
+    // 加载 API 密钥权限配置
+    const permissions = parsePermissions(row.permissions);
+    return {
+      uid: user.uid,
+      email: user.email,
+      role,
+      userGroup: user.userGroup,
+      // permissions 为 null 表示全部权限(向后兼容)
+      ...(permissions ? { permissions } : {}),
+    };
   } catch {
     return null;
   }
@@ -245,6 +257,49 @@ export async function getSession(): Promise<SessionPayload | null> {
  * 若通过 Cookie 认证，currentKeyId 为 null
  * 未认证时返回 null（与 getSession() 行为一致）
  */
+/** 通过 API 密钥认证，返回会话和密钥 ID，失败返回 null */
+async function authenticateApiKey(): Promise<{ session: SessionPayload; currentKeyId: string } | null> {
+  try {
+    const hdrs = await headers();
+    const authHeader = hdrs.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) return null;
+
+    const token = authHeader.slice(7).trim();
+    if (!token?.startsWith('sk-')) return null;
+
+    const { getDb } = await import('@/lib/db');
+    const db = getDb();
+    if (!db.prisma) return null;
+
+    const hashed = hashApiKey(token);
+    const row = await db.prisma.apiKey.findUnique({ where: { key: hashed } });
+    if (!row) return null;
+
+    // 更新最后使用时间(异步,不阻塞)
+    db.prisma.apiKey.update({ where: { id: row.id }, data: { lastUsed: new Date() } }).catch(() => { /* best-effort */ });
+
+    const userRaw = await db.get(`user:uid:${row.uid}`);
+    if (!userRaw) return null;
+
+    const user = JSON.parse(userRaw) as { uid: string; email: string; role: string; userGroup?: string };
+    const validRoles = ['user', 'admin', 'sudo'] as const;
+    const role = validRoles.includes(user.role as typeof validRoles[number]) ? user.role as SessionPayload['role'] : 'user';
+    const permissions = parsePermissions(row.permissions);
+    return {
+      session: {
+        uid: user.uid,
+        email: user.email,
+        role,
+        userGroup: user.userGroup,
+        ...(permissions ? { permissions } : {}),
+      },
+      currentKeyId: row.id,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getSessionWithKeyId(): Promise<{ session: SessionPayload; currentKeyId: string | null } | null> {
   // 1. 尝试 Cookie session
   const session = (await cookies()).get('session')?.value;
@@ -265,47 +320,7 @@ export async function getSessionWithKeyId(): Promise<{ session: SessionPayload; 
   }
 
   // 2. 尝试 API 密钥
-  try {
-    const hdrs = await headers();
-    const authHeader = hdrs.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return null;
-    }
-
-    const token = authHeader.slice(7).trim();
-    if (!token?.startsWith('sk-')) {
-      return null;
-    }
-
-    const { getDb } = await import('@/lib/db');
-    const db = getDb();
-    if (!db.prisma) {
-      return null;
-    }
-
-    const hashed = hashApiKey(token);
-    const row = await db.prisma.apiKey.findUnique({ where: { key: hashed } });
-    if (!row) {
-      return null;
-    }
-
-    // 更新最后使用时间(异步,不阻塞)
-    db.prisma.apiKey.update({ where: { id: row.id }, data: { lastUsed: new Date() } }).catch(() => { /* best-effort */ });
-
-    const userRaw = await db.get(`user:uid:${row.uid}`);
-    if (!userRaw) {
-      return null;
-    }
-    const user = JSON.parse(userRaw) as { uid: string; email: string; role: string; userGroup?: string };
-    const validRoles = ['user', 'admin', 'sudo'] as const;
-    const role = validRoles.includes(user.role as typeof validRoles[number]) ? user.role as SessionPayload['role'] : 'user';
-    return {
-      session: { uid: user.uid, email: user.email, role, userGroup: user.userGroup },
-      currentKeyId: row.id,
-    };
-  } catch {
-    return null;
-  }
+  return authenticateApiKey();
 }
 
 /**
@@ -373,6 +388,32 @@ export async function requireSudo() {
 export function hasRole(session: SessionPayload | null, roles: ('user' | 'admin' | 'sudo')[]): boolean {
   if (!session) return false;
   return roles.includes(session.role);
+}
+
+/**
+ * API 密钥权限检查中间件
+ *
+ * 使用方式: 在 apiHandler 的 handler 内调用
+ * @param session 当前会话
+ * @param keyId API 密钥 ID(Cookie 认证时为 null)
+ * @param action 要检查的操作标识
+ * @returns 允许返回 null，禁止返回 NextResponse(403)
+ */
+export function requireApiKeyPermission(
+  session: SessionPayload,
+  keyId: string | null,
+  action: PermissionAction,
+): NextResponse | null {
+  // Cookie 认证，不受限制
+  if (keyId === null) return null;
+  // 无权限配置，全部权限
+  if (!session.permissions) return null;
+  // 检查具体操作
+  if (session.permissions.actions[action]) return null;
+  return NextResponse.json(
+    { error: `无权限: ${action}` },
+    { status: 403 },
+  );
 }
 
 /* ---------- 密码复杂度校验 ---------- */

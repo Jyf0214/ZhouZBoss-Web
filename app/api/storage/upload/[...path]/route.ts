@@ -8,6 +8,7 @@
  * 完整数据收集后通过 StorageProvider.putFileContents() 写入。
  */
 import { NextResponse } from 'next/server'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import {
   MAX_UPLOAD_SIZE,
   buildWebDavTarget,
@@ -109,6 +110,13 @@ export const POST = catchAllHandler<{ path: string[] }>(
   { label: 'storage.upload', requireAdmin: true },
   async (req, context) => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥细粒度权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'storage_write')
+      if (permErr) return permErr
+    }
 
     const parts = await getPathParts(context)
     const rel = resolveStoragePath(parts)

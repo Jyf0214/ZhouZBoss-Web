@@ -13,6 +13,7 @@ import { verifyPassword } from '@/lib/hash'
 import { splitDirFilename } from './path'
 import type { AccessResult, StorageFolderMeta } from './types'
 import { PAGES_PREFIX, isHtmlPath } from '@/lib/page-source/shared'
+import { checkCustomPageAccess, type ApiKeyPermissions } from '@/lib/api-key-permissions'
 
 /**
  * 规范化路径:去除前导/尾随斜杠,空字符串代表根
@@ -262,4 +263,33 @@ export async function checkPageAccess(
     // 任何未捕获异常:失败安全,等同 password-required
     return { allowed: false, reason: 'db-error' }
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * API 密钥自定义页面权限检查
+ *
+ * 用于 API 路由层:当请求通过 API 密钥认证时,检查该密钥是否有权操作
+ * 指定文件夹下的自定义页面。
+ *
+ * 决策逻辑:
+ * - Cookie 认证(keyId===null) → 始终允许(管理员完整权限)
+ * - API 密钥无权限配置 → 允许(向后兼容)
+ * - API 密钥有权限配置 → 调用 checkCustomPageAccess() 检查文件夹级权限
+ *
+ * @returns true=允许, false=拒绝
+ * ------------------------------------------------------------------------- */
+export function checkApiKeyPageAccess(
+  keyId: string | null,
+  permissions: ApiKeyPermissions | null | undefined,
+  pagePath: string,
+  isWrite: boolean,
+): boolean {
+  // Cookie 认证，不受限制
+  if (keyId === null) return true
+  // 无权限配置，全部权限
+  if (!permissions) return true
+
+  // 从页面路径提取文件夹路径(用于权限匹配)
+  const folderPath = getPageProjectFolder(pagePath)
+  return checkCustomPageAccess(keyId, permissions, folderPath, isWrite)
 }

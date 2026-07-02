@@ -6,6 +6,7 @@
  * 移动存储后端文件 + 更新数据库元数据
  */
 import { NextResponse } from 'next/server'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import {
   buildWebDavTarget,
   catchAllHandler,
@@ -21,11 +22,49 @@ import {
   storageNotConfigured,
 } from '../../_helpers'
 
+/** 解析并校验移动目标路径 */
+function parseMoveDestination(
+  reqBody: Record<string, unknown>,
+  srcRel: string,
+): { destRel: string } | NextResponse {
+  const destination = String(reqBody.destination ?? '').trim()
+  if (!destination) {
+    return NextResponse.json({ error: '目标路径不能为空' }, { status: 400 })
+  }
+
+  // 提取源名称
+  const srcSegments = srcRel.split('/')
+  const srcName = srcSegments[srcSegments.length - 1]!
+
+  // 构建目标相对路径: destination/srcName
+  const destRel = destination ? `${destination}/${srcName}` : srcName
+
+  if (!isValidStoragePath(destRel)) return invalidPathResponse()
+
+  if (srcRel === destRel) {
+    return NextResponse.json({ error: '源路径和目标路径相同' }, { status: 400 })
+  }
+
+  // 防止移动到自身子目录导致数据丢失
+  if (destRel.startsWith(srcRel + '/')) {
+    return NextResponse.json({ error: '不能移动到自身的子目录中' }, { status: 400 })
+  }
+
+  return { destRel }
+}
+
 export const POST = catchAllHandler<{ path: string[] }>(
   'POST',
   { label: 'storage.move', requireAdmin: true },
   async (req, context) => {
     if (!isStorageConfigured()) return storageNotConfigured()
+
+    // API 密钥细粒度权限检查
+    const authResult = await getSessionWithKeyId()
+    if (authResult) {
+      const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'storage_write')
+      if (permErr) return permErr
+    }
 
     const parts = await getPathParts(context)
     const srcRel = resolveStoragePath(parts)
@@ -33,35 +72,16 @@ export const POST = catchAllHandler<{ path: string[] }>(
     if (!isValidStoragePath(srcRel)) return invalidPathResponse()
 
     // 解析请求体
-    let destination: string
+    let body: Record<string, unknown>
     try {
-      const body = await req.json() as Record<string, unknown>
-      destination = String(body.destination ?? '').trim()
+      body = (await req.json()) as Record<string, unknown>
     } catch {
       return NextResponse.json({ error: '请求体格式错误' }, { status: 400 })
     }
 
-    if (!destination) {
-      return NextResponse.json({ error: '目标路径不能为空' }, { status: 400 })
-    }
-
-    // 提取源名称
-    const srcSegments = srcRel.split('/')
-    const srcName = srcSegments[srcSegments.length - 1]!
-
-    // 构建目标相对路径: destination/srcName
-    const destRel = destination ? `${destination}/${srcName}` : srcName
-
-    if (!isValidStoragePath(destRel)) return invalidPathResponse()
-
-    if (srcRel === destRel) {
-      return NextResponse.json({ error: '源路径和目标路径相同' }, { status: 400 })
-    }
-
-    // 防止移动到自身子目录导致数据丢失
-    if (destRel.startsWith(srcRel + '/')) {
-      return NextResponse.json({ error: '不能移动到自身的子目录中' }, { status: 400 })
-    }
+    const destResult = parseMoveDestination(body, srcRel)
+    if (destResult instanceof NextResponse) return destResult
+    const { destRel } = destResult
 
     const oldTarget = buildWebDavTarget(parts)
     const destSegments = destRel.split('/')

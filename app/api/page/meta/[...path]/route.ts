@@ -8,10 +8,11 @@
  */
 import { NextResponse } from 'next/server'
 import { apiHandler } from '@/lib/api-handler'
+import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth'
 import { buildPageRelativePath, type PageMeta } from '@/lib/page-source/shared'
 import { isStorageConfigured } from '@/lib/storage/storage-provider'
 import { fetchPageMeta, putPageMeta, deletePageMeta } from '@/lib/page-source/webdav'
-import { checkPageAccess } from '@/lib/storage/acl'
+import { checkPageAccess, checkApiKeyPageAccess } from '@/lib/storage/acl'
 
 /** 从请求参数提取相对路径 */
 async function resolveRelativePath(ctx: { params: Promise<Record<string, unknown>> } | undefined): Promise<string | null> {
@@ -69,6 +70,17 @@ export const PUT = apiHandler<{ path: string[] }>('PUT', { label: 'page-meta.put
   }
   const relativePath = await resolveRelativePath(ctx);
   if (!relativePath) return NextResponse.json({ error: '路径无效' }, { status: 400 });
+
+  // API 密钥权限检查
+  const authResult = await getSessionWithKeyId();
+  if (authResult) {
+    const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'pages_write');
+    if (permErr) return permErr;
+    if (!checkApiKeyPageAccess(authResult.currentKeyId, authResult.session.permissions, relativePath, true)) {
+      return NextResponse.json({ error: '无权操作该页面文件夹' }, { status: 403 });
+    }
+  }
+
   let body: unknown;
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: '请求体格式错误' }, { status: 400 });
@@ -87,6 +99,17 @@ export const DELETE = apiHandler<{ path: string[] }>('DELETE', { label: 'page-me
   }
   const relativePath = await resolveRelativePath(ctx);
   if (!relativePath) return NextResponse.json({ error: '路径无效' }, { status: 400 });
+
+  // API 密钥权限检查
+  const authResult = await getSessionWithKeyId();
+  if (authResult) {
+    const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'pages_delete');
+    if (permErr) return permErr;
+    if (!checkApiKeyPageAccess(authResult.currentKeyId, authResult.session.permissions, relativePath, true)) {
+      return NextResponse.json({ error: '无权操作该页面文件夹' }, { status: 403 });
+    }
+  }
+
   const result = await deletePageMeta(relativePath);
   if (!result.ok) return NextResponse.json({ error: result.error ?? '删除失败' }, { status: 500 });
   return NextResponse.json({ ok: true });

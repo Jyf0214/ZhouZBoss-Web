@@ -99,10 +99,11 @@ model StorageFolder {
 
 // API 密钥表(替代 Cookie 的无状态认证方式)
 model ApiKey {
-  id        String    @id @default(cuid())
+  id          String    @id @default(cuid())
   uid       String                     // 关联用户 UID
   key       String    @unique          // sk-xxx 明文哈希(仅创建时返回原文明文)
   name      String                     // 用户自定义名称(如 "iOS App")
+  permissions String?                   // JSON 序列化的权限配置(null=全部权限)
   lastUsed  DateTime? @map("last_used")
   createdAt DateTime  @default(now()) @map("created_at")
 

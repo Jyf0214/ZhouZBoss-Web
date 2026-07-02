@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { getSession } from '@/lib/auth';
+import { getSession, getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth';
 import { apiHandler } from '@/lib/api-handler';
 import { createApiLogger } from '@/lib/api-logger';
 import { canAccess, loadConfig, hasDatabase } from '@/lib/config';
@@ -377,10 +377,14 @@ function checkSearchRateLimit(req: NextRequest): NextResponse | null {
   return null;
 }
 
-export const GET = apiHandler('GET', { label: '搜索' }, async (req: NextRequest) => {
-  const rlErr = checkSearchRateLimit(req);
-  if (rlErr) return rlErr;
-
+/** 解析并校验搜索参数，返回搜索上下文或错误响应 */
+async function parseSearchParams(req: NextRequest): Promise<{
+  searchQuery: string;
+  tag: string | null;
+  isAuthenticated: boolean;
+  dbAvailable: boolean;
+  isAdmin: boolean;
+} | NextResponse> {
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q')?.trim() ?? '';
   const tag = searchParams.get('tag')?.trim();
@@ -404,8 +408,37 @@ export const GET = apiHandler('GET', { label: '搜索' }, async (req: NextReques
   const dbAvailable = hasDatabase();
   const isAdmin = session?.role === 'admin' || session?.role === 'sudo';
 
-  return executeSearch(searchQuery, tag ?? null, isAuthenticated, dbAvailable, isAdmin);
+  return { searchQuery, tag: tag ?? null, isAuthenticated, dbAvailable, isAdmin };
+}
+
+export const GET = apiHandler('GET', { label: '搜索' }, async (req: NextRequest) => {
+  const rlErr = checkSearchRateLimit(req);
+  if (rlErr) return rlErr;
+
+  // API 密钥权限检查
+  const authResult = await getSessionWithKeyId();
+  if (authResult) {
+    const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'search');
+    if (permErr) return permErr;
+  }
+
+  // 解析并校验搜索参数
+  const params = await parseSearchParams(req);
+  if (params instanceof NextResponse) return params;
+  const { searchQuery, tag, isAuthenticated, dbAvailable, isAdmin } = params;
+
+  return executeSearch(searchQuery, tag, isAuthenticated, dbAvailable, isAdmin);
 });
+
+/** 按相关性排序并截取前 N 条结果 */
+function rankAndTruncate(results: SearchResult[], query: string, limit = 5): SearchResult[] {
+  results.sort((a, b) => {
+    const scoreA = calcRelevance(a.title, a.description, a.tags, '', query);
+    const scoreB = calcRelevance(b.title, b.description, b.tags, '', query);
+    return scoreB - scoreA;
+  });
+  return results.slice(0, limit);
+}
 
 async function executeSearch(
   searchQuery: string,
@@ -422,25 +455,13 @@ async function executeSearch(
     { isAuthenticated, dbAvailable, tagFilter: tag ?? undefined },
   );
 
-  // 按相关性排序
-  postResults.sort((a, b) => {
-    const scoreA = calcRelevance(a.title, a.description, a.tags, '', searchQuery);
-    const scoreB = calcRelevance(b.title, b.description, b.tags, '', searchQuery);
-    return scoreB - scoreA;
-  });
-
-  const topPosts = postResults.slice(0, 5);
+  const topPosts = rankAndTruncate(postResults, searchQuery);
 
   // 搜索日记（仅管理员）
   let topDiary: SearchResult[] = [];
   if (isAdmin && searchQuery) {
     const diaryResults = await searchDiaryEntries(searchQuery);
-    diaryResults.sort((a, b) => {
-      const scoreA = calcRelevance(a.title, a.description, a.tags, '', searchQuery);
-      const scoreB = calcRelevance(b.title, b.description, b.tags, '', searchQuery);
-      return scoreB - scoreA;
-    });
-    topDiary = diaryResults.slice(0, 5);
+    topDiary = rankAndTruncate(diaryResults, searchQuery);
   }
 
   // 构建分组
