@@ -688,6 +688,7 @@ async function b2DownloadFile(filePath) {
   if (useCdn) {
     // CDN 直链格式: {download_url}/file/{bucket_name}/{path}
     url = `${auth.downloadUrl}/file/${bucketPath}`;
+    headers.Authorization = auth.authorizationToken;
   } else {
     // API 直连格式: {apiUrl}/file/{bucket_name}/{path}
     url = `${auth.apiUrl}/file/${bucketPath}`;
