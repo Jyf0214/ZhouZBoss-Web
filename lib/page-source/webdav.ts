@@ -33,8 +33,13 @@ export async function fetchPageHtml(relativePath: string): Promise<string | null
     if (raw === null || raw === undefined) return null;
     const text = normalizeWebDavContent(raw);
     return text.length > 0 ? text : null;
-  } catch {
-    return null;
+  } catch (err) {
+    // 404 是正常情况（文件不存在），其他错误需要记录以便排查
+    const msg = err instanceof Error ? err.message : String(err)
+    if (!msg.includes('404') && !msg.toLowerCase().includes('not found')) {
+      console.error(`[page-source] fetchPageHtml failed for "${relativePath}"`, err)
+    }
+    return null
   }
 }
 
@@ -115,6 +120,9 @@ export async function putPageMeta(relativePath: string, meta: PageMeta): Promise
     } catch { /* 文件不存在 */ }
     const merged: PageMeta = { ...existing, ...meta, updatedAt: new Date().toISOString() };
     if (!existing.createdAt) merged.createdAt = merged.updatedAt;
+    // 创建中间目录，防止严格 WebDAV 服务器返回 409 Conflict
+    const dirPath = metaPath.substring(0, metaPath.lastIndexOf('/'));
+    try { await provider.createDirectory(dirPath, { recursive: true }); } catch { /* 目录可能已存在，忽略 */ }
     await provider.putFileContents(metaPath, Buffer.from(JSON.stringify(merged, null, 2), 'utf-8'), { headers: { overwrite: 'true' } });
     return { ok: true };
   } catch (err) { return { ok: false, error: err instanceof Error ? err.message : String(err) }; }
