@@ -81,7 +81,7 @@ async function writePagesIndex(entries) {
       // 逐级提取父目录（不含文件名本身）
       for (let i = 1; i < parts.length; i++) {
         const dirPath = parts.slice(0, i).join('/');
-        if (dirPath && dirPath !== 'pages') {
+        if (dirPath && dirPath !== 'page') {
           dirs.add(dirPath);
         }
       }

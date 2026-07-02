@@ -43,7 +43,7 @@ describe('sync-pages 索引生成逻辑(writePagesIndex)', () => {
       const parts = entry.split('/');
       for (let i = 1; i < parts.length; i++) {
         const dirPath = parts.slice(0, i).join('/');
-        if (dirPath && dirPath !== 'pages') {
+        if (dirPath && dirPath !== 'page') {
           dirs.add(dirPath);
         }
       }
@@ -437,8 +437,8 @@ describe('fetchPageHtml (本地文件系统)', () => {
     const { fetchPageHtml } = await import('@/lib/page-source/fs');
     // fetchPageHtml 使用 process.cwd() 拼接路径，这里用相对路径测试
     // 由于我们不能轻易 mock process.cwd()，测试实际的 page/ 目录
-    // 改为在项目 page/ 目录下创建测试文件
-    const projectPagesDir = path.join(origCwd, 'pages');
+    // 改为在项目 public/page/ 目录下创建测试文件
+    const projectPagesDir = path.join(origCwd, 'public', 'page');
     fs.mkdirSync(projectPagesDir, { recursive: true });
     const testFile = path.join(projectPagesDir, '__test_fetch.html');
     fs.writeFileSync(testFile, '<html><body>Test Content</body></html>', 'utf8');
@@ -448,7 +448,7 @@ describe('fetchPageHtml (本地文件系统)', () => {
       expect(result).toBe('<html><body>Test Content</body></html>');
     } finally {
       fs.rmSync(testFile, { force: true });
-      // 如果 page/ 目录是空的，也清理掉
+      // 如果 public/page/ 目录是空的，也清理掉
       try {
         const remaining = fs.readdirSync(projectPagesDir);
         if (remaining.length === 0) {
@@ -490,7 +490,7 @@ describe('fetchPageHtml (本地文件系统)', () => {
   });
 
   it('仅空白内容 → 返回原始空白(不做 trim)', async () => {
-    const projectPagesDir = path.join(origCwd, 'pages');
+    const projectPagesDir = path.join(origCwd, 'public', 'page');
     fs.mkdirSync(projectPagesDir, { recursive: true });
     const testFile = path.join(projectPagesDir, '__test_whitespace.html');
     fs.writeFileSync(testFile, '   \n\t  ', 'utf8');
@@ -514,7 +514,7 @@ describe('fetchPageHtml (本地文件系统)', () => {
   });
 
   it('含 BOM 头的文件 → 返回包含 BOM 的原始内容', async () => {
-    const projectPagesDir = path.join(origCwd, 'pages');
+    const projectPagesDir = path.join(origCwd, 'public', 'page');
     fs.mkdirSync(projectPagesDir, { recursive: true });
     const testFile = path.join(projectPagesDir, '__test_bom.html');
     // 写入 UTF-8 BOM + HTML
@@ -558,9 +558,9 @@ describe('getPageProjectFolder', () => {
     expect(getPageProjectFolder('page/hello/deep/x.html')).toBe('page/hello');
   });
 
-  it('page/about.html → pages (根级文件)', async () => {
+  it('page/about.html → page (根级文件)', async () => {
     const { getPageProjectFolder } = await import('@/lib/storage/acl');
-    expect(getPageProjectFolder('page/about.html')).toBe('pages');
+    expect(getPageProjectFolder('page/about.html')).toBe('page');
   });
 
   it('page/hello world/index.html → page/hello world (含空格)', async () => {
