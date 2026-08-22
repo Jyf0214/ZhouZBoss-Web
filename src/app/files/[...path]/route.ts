@@ -262,12 +262,27 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<Route
     const debugResp = debugInfoResponse(_req, session, relativePath, stat, provider.backend)
     if (debugResp) return debugResp
     if (provider.backend === 'backblaze') {
-      return b2FileResponse(provider, stat, relativePath)
+      try {
+        return await b2FileResponse(provider, stat, relativePath)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        const status = (err as { status?: number })?.status
+        // 404 语义透传，避免将“文件不存在”误判为 500
+        if (status === 404 || /not found|no such key|不存在/i.test(msg)) {
+          return NextResponse.json({ error: getTranslate('lib.files.notFound') }, { status: 404 })
+        }
+        throw err
+      }
     }
-    return webdavFileResponse(stat, relativePath)
+    return await webdavFileResponse(stat, relativePath)
   } catch (err) {
+    const e = err as { status?: number; message?: string }
     const msg = err instanceof Error ? err.message : JSON.stringify(err)
     console.error(`[files] 未捕获异常 path="${relativePath || '?'}" error="${msg}"`)
+    // 404 错误应返回 404 而非 500，避免前端误判为服务故障
+    if (e?.status === 404 || /not found|no such key|不存在/i.test(msg)) {
+      return NextResponse.json({ error: getTranslate('lib.files.notFound') }, { status: 404 })
+    }
     return NextResponse.json({ error: getTranslate('lib.files.downloadFailed') }, { status: 500 })
   }
 }

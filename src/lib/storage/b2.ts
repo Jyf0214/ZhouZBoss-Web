@@ -539,9 +539,13 @@ export class B2Provider implements StorageProvider {
         Bucket: process.env.B2_BUCKET!,
         Key: key,
       }))
-      return !!resp.ContentLength && resp.ContentLength > 0 ||
-        (resp.Metadata && Object.keys(resp.Metadata).length > 0) ||
-        resp.ContentType !== undefined
+      // 明确括号，避免 &&/|| 优先级歧义；零字节文件若带有 ContentType 或 Metadata 仍视为文件
+      const hasContent = (resp.ContentLength ?? 0) > 0
+      const hasMetadata = !!(resp.Metadata && Object.keys(resp.Metadata).length > 0)
+      const hasContentType = resp.ContentType !== undefined && resp.ContentType !== null
+      if (hasContent || hasMetadata || hasContentType) return true
+      // 零字节且无元数据的文件，仍通过 HeadObject 成功视为文件（避免误判为空目录）
+      return true
     } catch {
       // HeadObject 失败 → 可能是目录或不存在
       // 尝试列出前缀下的内容

@@ -94,7 +94,7 @@ function isApiKeyRequest(request: NextRequest): boolean {
 }
 
 function isAdminPath(pathname: string): boolean {
-  return ADMIN_PREFIXES.some(p => pathname.startsWith(p));
+  return ADMIN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p.endsWith('/') ? p : p + '/'));
 }
 
 /**

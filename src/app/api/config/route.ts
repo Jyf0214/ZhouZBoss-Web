@@ -45,6 +45,9 @@ function mergeAppearance(
   const background = override.background
     ? { ...base.background, ...override.background }
     : base.background;
+  const fontFamily = override.fontFamily
+    ? { ...base.fontFamily, ...override.fontFamily }
+    : base.fontFamily;
   const baseLoading = base.loading ?? { page: { type: 'spinner' as const }, navigation: { type: 'spinner' as const }, slogans: [] as string[] };
   const ovLoading = override.loading;
   const loading = ovLoading
@@ -57,6 +60,7 @@ function mergeAppearance(
   return {
     fontSize: override.fontSize ?? base.fontSize,
     favicon: override.favicon ?? base.favicon,
+    fontFamily,
     background,
     customCSS: override.customCSS ?? base.customCSS,
     customHead: override.customHead ?? base.customHead,
@@ -92,6 +96,38 @@ function mergePostMeta(
 }
 
 /** 合并 App 配置:每个段调用 mergeSection 或专用合并函数 */
+function mergeFooter(
+  base: AppConfig['footer'],
+  override: Partial<AppConfig['footer']> | undefined,
+): AppConfig['footer'] {
+  if (!override) return base;
+  const b = base as NonNullable<AppConfig['footer']>;
+  const owner = override.owner ? { ...b.owner, ...override.owner } : b.owner;
+  const runtime = override.runtime
+    ? {
+        ...b.runtime,
+        ...override.runtime,
+        onlineHours: override.runtime.onlineHours
+          ? { ...b.runtime.onlineHours, ...override.runtime.onlineHours }
+          : b.runtime.onlineHours,
+        statusText: override.runtime.statusText
+          ? { ...b.runtime.statusText, ...override.runtime.statusText }
+          : b.runtime.statusText,
+      }
+    : b.runtime;
+  // 过滤 undefined 覆盖，避免将必填字段（如 customText）设为 undefined
+  const filteredOverride = Object.fromEntries(
+    Object.entries(override).filter(([, v]) => v !== undefined),
+  ) as Partial<AppConfig['footer']>;
+  const result: AppConfig['footer'] = {
+    ...b,
+    ...filteredOverride,
+    owner,
+    runtime,
+  };
+  return result;
+}
+
 function mergeAppConfig(
   base: AppConfig,
   override: Partial<AppConfig>,
@@ -118,7 +154,7 @@ function mergeAppConfig(
     postEdit: mergeSection(base.postEdit, override.postEdit),
     share: mergeSection(base.share, override.share),
     mainTone: mergeSection(base.mainTone, override.mainTone),
-    footer: mergeSection(base.footer, override.footer),
+    footer: mergeFooter(base.footer, override.footer),
     music: mergeSection(base.music, override.music),
   };
 }

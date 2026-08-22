@@ -71,6 +71,8 @@ export function isValidPath(path: string): boolean {
   if (path.includes('\\')) return false
   const segments = path.split('/')
   for (const seg of segments) {
+    // 空段代表连续斜杠 "a//b" 或尾随斜杠，已由 joinPath 规范化，但在直接校验时应拒绝
+    if (seg.length === 0) return false
     if (seg === '..' || seg === '.') return false
   }
   return true

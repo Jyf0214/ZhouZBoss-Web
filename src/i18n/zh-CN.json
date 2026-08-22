@@ -960,7 +960,10 @@
       "togglePin": "切换置顶状态",
       "updateDiary": "更新日记",
       "versionNotFound": "版本不存在",
-      "yes": "是"
+      "yes": "是",
+      "referencesInvalid": "引用数据格式无效",
+      "referencesTooMany": "引用数量过多，最多 100 条",
+      "referencesTooLarge": "单条引用数据过大"
     },
     "envStatus": {
       "fetchStatus": "获取环境变量状态",

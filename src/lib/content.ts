@@ -150,8 +150,9 @@ async function withConcurrency<T, R>(
       const i = index++
       if (i >= items.length) break
       try {
-        const item = items.at(i)
-        if (item) results[i] = await fn(item)
+        const item = items[i]
+        if (item !== undefined) results[i] = await fn(item)
+        else results[i] = null
       } catch {
         results[i] = null
       }
@@ -227,7 +228,7 @@ export async function getContentFilesAsync(
     MAX_FILE_READ_CONCURRENCY,
   );
 
-  const files = results.filter((f): f is ContentFile => f !== null);
+  const files = results.filter((f): f is ContentFile => f !== null && f !== undefined);
 
   // 按日期降序排序
   files.sort((a, b) => {

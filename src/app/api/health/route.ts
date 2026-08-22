@@ -42,8 +42,11 @@ interface HealthResponse {
 function readVersion(): { version: string; generatedAt: string } {
   try {
     const raw = readFileSync(join(process.cwd(), 'data', 'version.json'), 'utf-8')
-    const data = JSON.parse(raw) as { major: string; minor: string; generatedAt: string }
-    return { version: data.major, generatedAt: '' }
+    const data = JSON.parse(raw) as { major: string; minor: string; version: string; generatedAt: string }
+    // 优先使用完整的 version 字段（含 commit hash），回退到 major
+    const version = typeof data.version === 'string' && data.version.length > 0 ? data.version : data.major ?? 'unknown'
+    const generatedAt = typeof data.generatedAt === 'string' ? data.generatedAt : ''
+    return { version, generatedAt }
   } catch {
     return { version: 'unknown', generatedAt: '' }
   }

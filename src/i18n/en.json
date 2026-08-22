@@ -960,7 +960,10 @@
       "togglePin": "Toggle pin status",
       "updateDiary": "Update diary",
       "versionNotFound": "Version not found",
-      "yes": "Yes"
+      "yes": "Yes",
+      "referencesInvalid": "Invalid references format",
+      "referencesTooMany": "Too many references, max 100",
+      "referencesTooLarge": "Single reference too large"
     },
     "envStatus": {
       "fetchStatus": "Fetch environment variable status",

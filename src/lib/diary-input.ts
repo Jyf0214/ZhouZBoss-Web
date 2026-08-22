@@ -93,6 +93,40 @@ export function validateDiaryInput(
   const scheduledCheck = parseDateField(scheduledAt, 'api.diary.scheduledAtInvalid');
   if (!scheduledCheck.ok) return scheduledCheck;
 
+  // references 校验：必须为数组且每项为可序列化对象/字符串，且总量不超过 100 条，防止恶意注入超大 JSON
+  let safeReferences: Prisma.InputJsonValue[] = [];
+  if (references !== undefined && references !== null) {
+    if (!Array.isArray(references)) {
+      return { ok: false, error: getTranslate('api.diary.referencesInvalid') };
+    }
+    if (references.length > 100) {
+      return { ok: false, error: getTranslate('api.diary.referencesTooMany') };
+    }
+    // 仅允许基本 JSON 类型，防止原型污染等异常结构
+    for (const item of references) {
+      if (
+        item !== null &&
+        typeof item !== 'string' &&
+        typeof item !== 'number' &&
+        typeof item !== 'boolean' &&
+        (typeof item !== 'object' || Array.isArray(item) && item.some(v => typeof v === 'function'))
+      ) {
+        // 非法类型直接跳过而非报错，保持向后兼容，但记录过滤
+        continue;
+      }
+      // 简单深度限制：对象层级超过 3 层或字符串超过 500 字符则拒绝
+      try {
+        const str = JSON.stringify(item);
+        if (str.length > 2000) {
+          return { ok: false, error: getTranslate('api.diary.referencesTooLarge') };
+        }
+      } catch {
+        return { ok: false, error: getTranslate('api.diary.referencesInvalid') };
+      }
+    }
+    safeReferences = references as Prisma.InputJsonValue[];
+  }
+
   return {
     ok: true,
     value: {
@@ -102,8 +136,7 @@ export function validateDiaryInput(
       group: typeof group === 'string' && group.trim() ? group.trim() : null,
       date: dateCheck.value,
       scheduledAt: scheduledCheck.value,
-      // 用户原始 JSON 输入，经数组校验后按 Prisma Json 类型安全传递
-      references: Array.isArray(references) ? (references as Prisma.InputJsonValue[]) : [],
+      references: safeReferences,
     },
   };
 }
