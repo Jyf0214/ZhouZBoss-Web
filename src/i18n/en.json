@@ -392,6 +392,7 @@
     "noChangesToSave": "No changes to save",
     "syncFailed": "Sync failed",
     "remoteParseFailed": "Failed to parse remote config.yaml; save is blocked to prevent overwriting remote fields",
+    "remoteUnavailable": "Cannot fetch remote config.yaml baseline; save is blocked to prevent overwriting the entire site configuration",
     "remoteFetchError": {
       "title": "Failed to fetch remote config",
       "desc": "Cannot read config.yaml from GitHub. Please check repository permissions and token configuration.",
@@ -604,7 +605,8 @@
     },
     "avatarSync": {
       "configReadFailed": "Failed to read configuration",
-      "githubNotConfigured": "GitHub not configured, cannot sync avatar"
+      "githubNotConfigured": "GitHub not configured, cannot sync avatar",
+      "remoteUnavailable": "Cannot fetch remote configuration baseline; sync is blocked to prevent overwriting site configuration"
     },
     "twoFactor": {
       "title": "Two-Factor Authentication",

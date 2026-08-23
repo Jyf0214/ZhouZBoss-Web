@@ -392,6 +392,7 @@
     "noChangesToSave": "没有需要保存的变更",
     "syncFailed": "同步失败",
     "remoteParseFailed": "远程 config.yaml 解析失败，已阻止保存以防止覆盖远端字段",
+    "remoteUnavailable": "无法获取远程 config.yaml 基线，已阻止保存以防止覆盖全部站点配置",
     "remoteFetchError": {
       "title": "无法拉取远程配置文件",
       "desc": "无法从 GitHub 读取 config.yaml，请检查仓库权限和令牌配置",
@@ -604,7 +605,8 @@
     },
     "avatarSync": {
       "configReadFailed": "读取配置失败",
-      "githubNotConfigured": "GitHub 未配置，无法同步头像"
+      "githubNotConfigured": "GitHub 未配置，无法同步头像",
+      "remoteUnavailable": "无法获取远程配置基线，已阻止同步以防止覆盖站点配置"
     },
     "twoFactor": {
       "title": "双因素认证",

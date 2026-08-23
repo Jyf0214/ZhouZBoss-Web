@@ -284,6 +284,44 @@ async function handleDraftSave(
   return NextResponse.json({ success: true });
 }
 
+/** PATCH 元数据解析：DB 记录优先；缺失时回落文件系统文章（与 DELETE 同口径仅 admin/root） */
+async function resolvePatchArticleMeta(
+  metaStr: string | null,
+  id: string,
+  session: NonNullable<Awaited<ReturnType<typeof getSession>>>,
+): Promise<{ meta: Record<string, unknown> } | { error: NextResponse }> {
+  if (metaStr) {
+    return { meta: JSON.parse(metaStr) as Record<string, unknown> };
+  }
+  // 文件系统发布的文章（仓库 posts/ 目录，无 DB 记录）：GET 详情有文件系统回落，
+  // PATCH 也必须回落到同一来源，否则编辑-保存链路死锁；权限口径与 DELETE 一致仅 admin/root
+  if (session.role !== 'admin' && !isRootRole(session.role)) {
+    void logAudit('article_update_failed', 'posts', `更新文章失败：无权限（${id}）`, session.uid);
+    return { error: NextResponse.json({ error: getTranslate('api.common.unauthorized') }, { status: 403 }) };
+  }
+  const { getContentFile } = await import('@/lib/content');
+  const slug = id.startsWith('/') ? id : `/${id}`;
+  const file = getContentFile('posts', slug);
+  if (!file) {
+    logger.warn('PATCH', '文章不存在', { id });
+    void logAudit('article_update_failed', 'posts', `更新文章失败：文章不存在（${id}）`, session.uid);
+    return { error: NextResponse.json({ error: getTranslate('api.articles.notFound') }, { status: 404 }) };
+  }
+  // 为文件系统文章构造元数据（与 DELETE 分支同构），首次保存后转为 DB 记录承载
+  return {
+    meta: {
+      id,
+      slug,
+      title: file.meta.title,
+      authorId: session.uid,
+      authorName: file.meta.author ?? session.email,
+      status: 'published',
+      tags: file.meta.tags ?? [],
+      createdAt: file.meta.date ?? new Date().toISOString(),
+    },
+  };
+}
+
 export const PATCH = apiHandler('PATCH', { label: getTranslate('api.articles.updateArticle'), requireAuth: true }, async (req, context, session) => {
   const id = await getParam(context, 'id');
   // API 密钥认证的请求需 posts_write 权限
@@ -292,15 +330,9 @@ export const PATCH = apiHandler('PATCH', { label: getTranslate('api.articles.upd
   const body = await req.json() as Record<string, unknown>;
   logger.info('PATCH', '更新文章', { id });
   const db = getDb();
-  const metaStr = await db.get(`article:data:${id}`);
-
-  if (!metaStr) {
-    logger.warn('PATCH', '文章不存在', { id });
-    void logAudit('article_update_failed', 'posts', `更新文章失败：文章不存在（${id}）`, session!.uid);
-    return NextResponse.json({ error: getTranslate('api.articles.notFound') }, { status: 404 });
-  }
-
-  const meta = JSON.parse(metaStr) as Record<string, unknown>;
+  const resolved = await resolvePatchArticleMeta(await db.get(`article:data:${id}`), id, session!);
+  if ('error' in resolved) return resolved.error;
+  const meta = resolved.meta;
 
   if (!checkArticlePermission(meta, session!)) {
     void logAudit('article_update_failed', 'posts', `更新文章失败：无权限（${id}）`, session!.uid);

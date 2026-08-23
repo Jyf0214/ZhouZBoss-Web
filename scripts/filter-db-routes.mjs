@@ -5,9 +5,10 @@
  *
  * 支持两种过滤模式：
  *
- * 1. GitHub Pages 部署（GITHUB_PAGES=true）：
- *    移除所有 API 路由，因为 GitHub Pages 只支持静态 HTML 部署，
- *    无法运行动态 API 路由。
+ * 1. 静态导出部署（NEXT_STATIC_EXPORT=true 或 GITHUB_PAGES=true）：
+ *    移除所有 API 路由，因为静态导出只支持静态 HTML 部署，
+ *    无法运行动态 API 路由。判断源与 next.config.ts 的导出开关同源，
+ *    避免出现"导出开关已开、过滤分支未触发"的错位。
  *
  * 2. 无数据库部署（无 DATABASE_URL 等环境变量）：
  *    移除后台相关路由目录，只保留博客帖子路由。
@@ -93,6 +94,11 @@ const DB_ROUTE_PATHS = [
   'src/app/api/faces',
   'src/app/api/user',
   'src/app/api/users',
+  // ── API：依赖数据库的配置/检索类（无库时无法工作，且使用 cookies 无法静态导出） ──
+  'src/app/api/config',
+  'src/app/api/backlinks',
+  'src/app/api/wiki-link-map',
+  'src/app/api/env-status',
   'src/app/api/cleanup',
   'src/app/api/feedback',
   'src/app/api/github',
@@ -128,15 +134,18 @@ function hasDatabase() {
   return !!process.env.DATABASE_URL;
 }
 
-function isGitHubPages() {
-  return process.env.GITHUB_PAGES === 'true';
+// 全量移除分支的触发源与 next.config.ts 的静态导出开关同源。
+// 历史 bug：此处仅认 GITHUB_PAGES，而 Pages workflow 只设置 NEXT_STATIC_EXPORT，
+// 导致生产构建走错分支、使用 cookies 的路由残留进 export 构建而必败
+function isStaticExportMode() {
+  return process.env.NEXT_STATIC_EXPORT === 'true' || process.env.GITHUB_PAGES === 'true';
 }
 
 // 先加载 .env.local，确保本地数据库环境变量可用
 loadEnvLocal();
 
 // 决定过滤模式
-const isGH = isGitHubPages();
+const isGH = isStaticExportMode();
 const hasDB = hasDatabase();
 
 if (!isGH && hasDB) {
@@ -153,8 +162,8 @@ const manifest = [];
 let moved = 0;
 
 if (isGH) {
-  // GitHub Pages 部署：移除所有无法静态化的路由（output: export 不支持动态路由）
-  console.log('[filter-db-routes] 检测到 GitHub Pages 部署，移除动态路由目录...');
+  // 静态导出部署：移除所有无法静态化的路由（output: export 不支持动态路由）
+  console.log('[filter-db-routes] 检测到静态导出部署，移除动态路由目录...');
 
   for (const relPath of GITHUB_PAGES_REMOVE_PATHS) {
     const src = join(ROOT, relPath);

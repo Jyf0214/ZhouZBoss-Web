@@ -38,6 +38,14 @@ export async function syncAvatarChanges({
   if (!configRes.ok) throw new Error(getTranslate('settings.avatarSync.configReadFailed'));
   const configResData: RemoteConfigData = await configRes.json();
   const remoteRaw = configResData._remoteConfig ?? '';
+  // 远端拉取失败时 _remoteConfig 为空串：若继续提交，合并基线退化为空对象，
+  // 远程 config.yaml 会被仅含 avatar 的 YAML 整体覆盖、全部站点配置静默丢失，必须阻断
+  if (!remoteRaw) {
+    const detail = [configResData._remoteConfigError, configResData._remoteConfigStatus].find(Boolean) ?? '';
+    message.error(`${getTranslate('settings.avatarSync.remoteUnavailable')}${detail ? `: ${detail}` : ''}`);
+    setLoading(false);
+    return;
+  }
   setLoading(false);
   syncAvatar(
     { avatarUrl: originalAvatar },

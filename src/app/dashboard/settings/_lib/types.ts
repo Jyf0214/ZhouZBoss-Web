@@ -31,5 +31,7 @@ export interface UserCardData {
 export interface RemoteConfigData {
   githubConfigured?: boolean;
   _remoteConfig?: string;
+  _remoteConfigStatus?: string;
+  _remoteConfigError?: string;
   avatar?: { url?: string };
 }

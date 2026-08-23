@@ -65,17 +65,21 @@ export function useGitHubConfigSync({
     }
 
     const effectiveRemoteConfig = remoteConfigOverride ?? remoteConfig;
+    // 空远端基线无法安全合并：继续执行会以托管字段整体覆盖远程文件，
+    // 静默丢弃其余全部配置（与远端解析失败同级），必须阻断
+    if (!effectiveRemoteConfig) {
+      showError(t('config.remoteUnavailable'));
+      return;
+    }
 
     let remoteObj: Record<string, unknown> = {};
-    if (effectiveRemoteConfig) {
-      try {
-        remoteObj = (yaml.load(effectiveRemoteConfig) ?? {}) as Record<string, unknown>;
-      } catch (err) {
-        // 远端 config.yaml 解析失败必须阻断保存：
-        // 若降级为空对象继续合并，会把远端所有非托管字段静默抹掉
-        showError(`${t('config.remoteParseFailed')}: ${err instanceof Error ? err.message : String(err)}`);
-        return;
-      }
+    try {
+      remoteObj = (yaml.load(effectiveRemoteConfig) ?? {}) as Record<string, unknown>;
+    } catch (err) {
+      // 远端 config.yaml 解析失败必须阻断保存：
+      // 若降级为空对象继续合并，会把远端所有非托管字段静默抹掉
+      showError(`${t('config.remoteParseFailed')}: ${err instanceof Error ? err.message : String(err)}`);
+      return;
     }
 
     let merged: Record<string, unknown>;
