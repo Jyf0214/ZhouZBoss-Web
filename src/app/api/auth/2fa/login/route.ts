@@ -5,6 +5,7 @@ import { verifyTotp, matchRecoveryCode } from '@/lib/totp';
 import { getUserAvatarAsync } from '@/lib/config';
 import { createApiLogger } from '@/lib/api-logger';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { isLoginLocked, recordLoginFailure, clearLoginAttempts } from '@/lib/login-attempts';
 import { getTranslate } from '@/i18n/translate';
 
 const logger = createApiLogger('/api/auth/2fa/login');
@@ -128,12 +129,23 @@ export async function POST(req: NextRequest) {
     if (!userResult.ok) return userResult.error;
     const { user } = userResult;
 
+    // 账号维度锁定检查：IP 限流可被请求头轮换绕过，
+    // TOTP 穷举必须由账号级失败计数兜底（与密码登录同一套锁定机制）
+    if (await isLoginLocked(user.email)) {
+      logger.warn('POST', '2FA 验证账号已锁定', { uid: user.uid });
+      return NextResponse.json({ error: getTranslate('api.auth.accountLocked') }, { status: 423 });
+    }
+
     // 验证 TOTP 码；失败时尝试一次性恢复码（验证器丢失的恢复通道）
     const verifyResult = await verifyTokenOrRecovery(token, user);
-    if (!verifyResult.ok) return verifyResult.error;
+    if (!verifyResult.ok) {
+      await recordLoginFailure(user.email);
+      return verifyResult.error;
+    }
 
-    // 验证通过，清除临时令牌并创建正式 session
+    // 验证通过，清除临时令牌、失败计数并创建正式 session
     await clearTempToken();
+    await clearLoginAttempts(user.email);
 
     const avatar = await getUserAvatarAsync();
 

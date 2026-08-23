@@ -39,8 +39,14 @@ function cleanup(now: number): void {
  * - Vercel 部署（VERCEL=1）：边缘网络覆写这些头部，可信任
  * - 自建部署：仅当 TRUSTED_PROXY_COUNT 环境变量明确设置时才信任
  *   （值为反向代理层数，如 Nginx 单层代理设为 1）
- * - 未配置时：使用请求指纹（IP+UA+Accept 组合的哈希），不可伪造
+ * - 未配置时：使用请求指纹（UA+Accept 组合的哈希）作为弱标识。
+ *   注意：指纹成分全部是客户端可控请求头，攻击者每次轮换
+ *   User-Agent 即可获得全新身份，此回退仅能拦截最粗浅的滥用；
+ *   强防护依赖账号维度锁定（见 login-attempts.ts，计数持久化于 KV），
+ *   自建生产部署必须配置 TRUSTED_PROXY_COUNT 以获得可靠限流。
  */
+let hasWarnedFingerprintFallback = false;
+
 export function getClientIp(req: NextRequest): string {
   // Vercel 部署：边缘网络覆写头部，可信任
   const isVercel = process.env.VERCEL === '1';
@@ -59,8 +65,12 @@ export function getClientIp(req: NextRequest): string {
     if (realIp) return realIp;
   }
 
-  // 回退方案：使用请求指纹（不可伪造的多因素组合）
-  // 攻击者无法同时伪造 IP、User-Agent 和 Accept 头的哈希
+  if (!isVercel && !hasWarnedFingerprintFallback) {
+    hasWarnedFingerprintFallback = true;
+    console.warn('[rate-limit] 未配置 TRUSTED_PROXY_COUNT 且非 Vercel 部署：频率限制退化为可被请求头轮换绕过的弱指纹模式，自建生产部署请配置 TRUSTED_PROXY_COUNT（值为反向代理层数）。');
+  }
+
+  // 回退方案：请求指纹弱标识（可被轮换请求头伪造，仅拦截最粗浅滥用）
   const fp = [
     req.headers.get('user-agent') ?? '',
     req.headers.get('accept') ?? '',

@@ -1,11 +1,12 @@
 /**
  * 基于数据库 KV 的登录失败计数器与临时锁定机制
  *
- * 锁定状态持久化到 originiumKV 表，Serverless 冷启动后不丢失。
+ * 锁定状态与失败计数均持久化到 originiumKV 表，
+ * Serverless 冷启动、多实例部署下不丢失、全局共享。
  * 同一 email 连续 10 次失败后锁定 15 分钟。
  *
- * 注意：计数器本身仍为进程内 Map（冷启动后归零可接受），
- * 但锁定状态（lockedUntil）写入 KV，跨实例共享。
+ * 这是账号维度的爆破防线：即使攻击者轮换请求头伪造新 IP/指纹
+ * 绕过 rate-limit.ts 的客户端限流，同一账号的失败仍会被累计锁定。
  */
 
 import { getDb } from '@/lib/db';
@@ -19,30 +20,7 @@ const LOCK_TTL_SECONDS = Math.ceil(LOCK_DURATION_MS / 1000);
 const LOCK_PREFIX = 'login:locked:';
 const FAIL_PREFIX = 'login:fail:';
 
-// 进程内快速失败计数（冷启动后归零，但锁定状态在 KV 中持久化）
-// 每条记录携带时间戳，超时后清理，防止 Map 无限增长
-const failCounts = new Map<string, { count: number; ts: number }>();
-
-// 定期清理过期的进程内计数器，防止内存泄漏
-let lastCleanupTime = Date.now();
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 分钟清理一次
-
-function cleanupStaleCounts(): void {
-  const now = Date.now();
-  if (now - lastCleanupTime < CLEANUP_INTERVAL_MS) return;
-  lastCleanupTime = now;
-  // 清理所有超过锁定时长的条目（锁定状态在 KV 中持久化，进程内计数器可安全丢弃），
-  // 未达阈值的失败记录同样会过期，避免 Map 随尝试过的邮箱数无限增长
-  for (const [key, entry] of failCounts) {
-    if (now - entry.ts >= LOCK_DURATION_MS) {
-      failCounts.delete(key);
-    }
-  }
-}
-
-/**
- * 标准化 email 为小写，统一 key 格式
- */
+/** 标准化 email 为小写，统一 key 格式 */
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -57,25 +35,31 @@ function maskEmail(email: string): string {
 
 /**
  * 记录一次登录失败，达到阈值时写入 KV 锁定并告警
+ *
+ * 失败计数持久化于 KV（TTL 与锁定时长一致），读-改-写非原子：
+ * 极端并发下个别失败可能漏计（需更多请求才触发锁定），属可接受边界。
  */
 export async function recordLoginFailure(email: string): Promise<void> {
-  // 定期清理过期计数器，防止内存泄漏
-  cleanupStaleCounts();
-
   const key = normalizeEmail(email);
   const db = getDb();
 
-  // 先检查 KV 中是否已锁定
+  // 已锁定则不再累计
   const lockedUntilRaw = await db.get(`${LOCK_PREFIX}${key}`);
   if (lockedUntilRaw) {
     const lockedUntil = Number(lockedUntilRaw);
-    if (Date.now() < lockedUntil) return; // 已锁定，不增加计数
+    if (Date.now() < lockedUntil) return;
   }
 
-  // 递增进程内计数（保留首次失败时间戳，用于过期清理）
-  const prev = failCounts.get(key);
-  const current = (prev?.count ?? 0) + 1;
-  failCounts.set(key, { count: current, ts: prev?.ts ?? Date.now() });
+  // 读取 KV 中持久化的失败计数并递增
+  let current = 1;
+  const failRaw = await db.get(`${FAIL_PREFIX}${key}`);
+  if (failRaw) {
+    const parsed = Number(failRaw);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      current = parsed + 1;
+    }
+  }
+  await db.set(`${FAIL_PREFIX}${key}`, String(current), LOCK_TTL_SECONDS);
 
   // 达到阈值：写入 KV 锁定并告警
   if (current >= LOCK_THRESHOLD) {
@@ -109,7 +93,6 @@ export async function isLoginLocked(email: string): Promise<boolean> {
  */
 export async function clearLoginAttempts(email: string): Promise<void> {
   const key = normalizeEmail(email);
-  failCounts.delete(key);
   const db = getDb();
   await db.del(`${LOCK_PREFIX}${key}`);
   await db.del(`${FAIL_PREFIX}${key}`);
@@ -118,7 +101,10 @@ export async function clearLoginAttempts(email: string): Promise<void> {
 /**
  * 获取当前失败次数（仅用于日志/诊断）
  */
-export function getLoginAttempts(email: string): number {
+export async function getLoginAttempts(email: string): Promise<number> {
   const key = normalizeEmail(email);
-  return failCounts.get(key)?.count ?? 0;
+  const raw = await getDb().get(`${FAIL_PREFIX}${key}`);
+  if (!raw) return 0;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }

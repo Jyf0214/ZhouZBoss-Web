@@ -18,6 +18,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import yaml from 'js-yaml';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +33,53 @@ const LOG_PREFIX = '[generate-search-index]';
 
 /** 内容截取上限（字符数），用于运行时全文匹配 */
 const CONTENT_SNIPPET_MAX = 5000;
+
+/**
+ * 读取 config.yaml 中 access.posts 的 private/public 规则
+ *
+ * 搜索索引面向匿名访客，按 canAccess 的最严口径（isAuthenticated=false、
+ * hasDb=false）过滤：命中 private 规则的内容绝不进入公开索引，
+ * 未命中 public 规则的同样不可见。
+ * 匹配逻辑须与 src/lib/config.ts 的 matchPath 保持一致，改动需双向同步。
+ */
+function loadPostAccessRules() {
+  const defaults = { public: [], private: [] };
+  try {
+    const configFile = path.join(PROJECT_ROOT, 'config.yaml');
+    if (!fs.existsSync(configFile)) return defaults;
+    const parsed = yaml.load(fs.readFileSync(configFile, 'utf-8'));
+    const section = parsed?.access?.posts;
+    if (!section || typeof section !== 'object') return defaults;
+    return {
+      public: Array.isArray(section.public) ? section.public.map(String) : [],
+      private: Array.isArray(section.private) ? section.private.map(String) : [],
+    };
+  } catch (err) {
+    // 配置读取/解析失败必须显式暴露，不得静默当作无规则继续构建
+    console.error(`${LOG_PREFIX} 读取 config.yaml access.posts 失败: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
+}
+
+/**
+ * 判断 slug 是否匹配脱字符模式（与 src/lib/config.ts matchPath 保持一致）
+ */
+function matchPath(pattern, target) {
+  if (pattern === '*') return true;
+  if (pattern.startsWith('^')) {
+    const prefix = pattern.slice(1);
+    return target === prefix || target.startsWith(prefix + '/');
+  }
+  return target === pattern;
+}
+
+/**
+ * 匿名视角下该 slug 是否可访问（canAccess 匿名口径）
+ */
+function isAccessibleByAnonymous(slug, rules) {
+  if (rules.private.some((p) => matchPath(p, slug))) return false;
+  return rules.public.some((p) => matchPath(p, slug));
+}
 
 /**
  * 读取目录 index.md 的 public 标记（与 filterPublicFiles 的直接父目录检查一致）
@@ -53,9 +101,10 @@ function isDirPublic(dir) {
  * @param {string} dir 当前扫描目录
  * @param {string} baseDir posts 根目录，用于计算 slug
  * @param {boolean} parentPublic 父目录是否公开（private 目录整棵跳过）
+ * @param {{public: string[], private: string[]}} rules config.yaml access.posts 规则
  * @returns {Array<{slug: string, title: string, description: string, tags: string[], content: string}>}
  */
-function scanFiles(dir, baseDir, parentPublic) {
+function scanFiles(dir, baseDir, parentPublic, rules) {
   const results = [];
   if (!fs.existsSync(dir)) return results;
 
@@ -68,13 +117,17 @@ function scanFiles(dir, baseDir, parentPublic) {
       // 目录自身标记为私有（index.md public: false）时整棵跳过
       const dirPublic = parentPublic && isDirPublic(fullPath);
       if (!dirPublic) continue;
-      results.push(...scanFiles(fullPath, baseDir, true));
+      results.push(...scanFiles(fullPath, baseDir, true, rules));
     } else if (entry.isFile() && entry.name.endsWith('.md')) {
       // index.md 是目录索引而非文章，不进入搜索索引
       if (entry.name === 'index.md') continue;
 
       const relative = path.relative(baseDir, fullPath);
       const slug = '/' + relative.replace(/\.md$/, '').replace(/\\/g, '/');
+
+      // 权限过滤：config.yaml access.posts 规则命中的内容不入索引
+      // （与详情页 canAccess 匿名口径对齐——详情 404 的文章正文不得泄露进索引）
+      if (!isAccessibleByAnonymous(slug, rules)) continue;
 
       const raw = fs.readFileSync(fullPath, 'utf-8');
       const { data, content } = matter(raw);
@@ -106,7 +159,8 @@ function main() {
     process.exit(0);
   }
 
-  const index = scanFiles(POSTS_DIR, POSTS_DIR, true);
+  const rules = loadPostAccessRules();
+  const index = scanFiles(POSTS_DIR, POSTS_DIR, true, rules);
 
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(index, null, 2), 'utf-8');

@@ -43,10 +43,17 @@ function createPrismaClient(): PrismaClient | null {
   // 云数据库（Supabase/Neon 等）常使用自签名或自定义 CA 证书，
   // 构建环境（Vercel CI 等）的系统 CA 证书库可能不包含这些证书。
   // 用户显式配置的 sslmode（如 disable）必须被尊重，不得覆盖。
-  let finalUrl = url
-  if (url.startsWith('postgres') && !url.includes('sslmode=')) {
-    const separator = url.includes('?') ? '&' : '?'
-    finalUrl = `${url}${separator}sslmode=no-verify`
+  //
+  // 安全提示：no-verify 意味着不验证服务器身份，链路可被中间人截获。
+  // 此兼容行为必须显式可见：注入时输出警告日志；
+  // 生产环境如需完整证书校验，设置 DATABASE_SSL_STRICT=true
+  // 并在连接串中提供 sslmode=verify-full 与 CA 证书。
+  let finalUrl = url;
+  const sslStrict = process.env.DATABASE_SSL_STRICT === 'true';
+  if (url.startsWith('postgres') && !url.includes('sslmode=') && !sslStrict) {
+    const separator = url.includes('?') ? '&' : '?';
+    finalUrl = `${url}${separator}sslmode=no-verify`;
+    console.warn('[db] DATABASE_URL 未指定 sslmode，已自动追加 sslmode=no-verify（加密但跳过服务器证书验证，用于兼容云数据库自签名 CA）。如需完整校验请设置 DATABASE_SSL_STRICT=true 并在连接串中配置 verify-full。');
   }
 
   const adapter = new PrismaPg({

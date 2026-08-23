@@ -130,6 +130,8 @@ export const GET = apiHandler('GET', { label: getTranslate('api.articles.fetchAr
   if (error) return error;
   logger.info('GET', '读取文章详情', { id });
   const db = getDb();
+  const isAuthenticated = !!session;
+  const dbAvailable = hasDatabase();
 
   const metaStr = await db.get(`article:data:${id}`);
   if (metaStr) {
@@ -142,6 +144,15 @@ export const GET = apiHandler('GET', { label: getTranslate('api.articles.fetchAr
       }
       return handleDraftArticleResponse(id, meta);
     }
+    // DB 记录统一过 access ACL（与下方文件系统路径同口径）：
+    // 否则编辑器发布的文章可经 GitHub 直拉分支绕过 config.yaml 私有规则
+    if (typeof meta.slug === 'string' && meta.slug) {
+      const config = await loadConfig();
+      if (!(await canAccess('posts', meta.slug, isAuthenticated, dbAvailable, config))) {
+        logger.warn('GET', 'access 规则拒绝访问 DB 文章', { id, slug: meta.slug });
+        return NextResponse.json({ error: getTranslate('api.common.unauthorized') }, { status: 403 });
+      }
+    }
     const publishedResponse = await handlePublishedArticleResponse(meta);
     if (publishedResponse) {
       return publishedResponse;
@@ -153,9 +164,7 @@ export const GET = apiHandler('GET', { label: getTranslate('api.articles.fetchAr
     });
   }
 
-  const isAuthenticated = !!session;
   const config = await loadConfig();
-  const dbAvailable = hasDatabase();
   const fileResponse = await handleFileSystemLookup(id, isAuthenticated, dbAvailable, config);
   if (fileResponse) {
     return fileResponse;
