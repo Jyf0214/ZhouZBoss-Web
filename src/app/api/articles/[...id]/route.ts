@@ -121,6 +121,50 @@ async function handleFileSystemLookup(
   });
 }
 
+/**
+ * DB 记录路径的详情响应（metaStr 命中时）：
+ * 草稿校验作者权限、其余状态统一过 access ACL 后返回
+ */
+async function handleDbArticleLookup(
+  id: string,
+  metaStr: string,
+  session: Awaited<ReturnType<typeof getSession>>,
+  dbAvailable: boolean,
+  db: ReturnType<typeof getDb>,
+): Promise<NextResponse> {
+  const meta = JSON.parse(metaStr) as Record<string, unknown>;
+  // 兼容历史脏数据：曾从回收站恢复但 status 未被重置为 draft 的草稿，
+  // 以 articles:drafts 索引为权威判据一并按草稿处理
+  const isDraft = meta.status === 'draft' ||
+    (meta.status === 'pending_deletion' && !!(await db.hget('articles:drafts', id)));
+  if (isDraft) {
+    // session 来自 requireArticlePerm（未认证时为 null）
+    if (!session || (meta.authorId !== session.uid && session.role !== 'admin' && !isRootRole(session.role))) {
+      logger.warn('GET', '无权限查看草稿', { id, uid: session?.uid });
+      return NextResponse.json({ error: getTranslate('api.common.unauthorized') }, { status: 403 });
+    }
+    return handleDraftArticleResponse(id, meta);
+  }
+  // DB 记录统一过 access ACL（与文件系统路径同口径）：
+  // 否则编辑器发布的文章可经 GitHub 直拉分支绕过 config.yaml 私有规则
+  if (typeof meta.slug === 'string' && meta.slug) {
+    const config = await loadConfig();
+    if (!(await canAccess('posts', meta.slug, !!session, dbAvailable, config))) {
+      logger.warn('GET', 'access 规则拒绝访问 DB 文章', { id, slug: meta.slug });
+      return NextResponse.json({ error: getTranslate('api.common.unauthorized') }, { status: 403 });
+    }
+  }
+  const publishedResponse = await handlePublishedArticleResponse(meta);
+  if (publishedResponse) {
+    return publishedResponse;
+  }
+  // 剔除内部字段（authorId、content）后返回
+  const { authorId: _authorId, content: _content, ...safeMeta } = meta;
+  return NextResponse.json(safeMeta, {
+    headers: { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' },
+  });
+}
+
 export const GET = apiHandler('GET', { label: getTranslate('api.articles.fetchArticleDetail') }, async (req, context) => {
   const id = await getParam(context, 'id');
   logger.info('GET', '获取文章详情', { id });
@@ -135,33 +179,7 @@ export const GET = apiHandler('GET', { label: getTranslate('api.articles.fetchAr
 
   const metaStr = await db.get(`article:data:${id}`);
   if (metaStr) {
-    const meta = JSON.parse(metaStr) as Record<string, unknown>;
-    if (meta.status === 'draft') {
-      // session 来自 requireArticlePerm（未认证时为 null）
-      if (!session || (meta.authorId !== session.uid && session.role !== 'admin' && !isRootRole(session.role))) {
-        logger.warn('GET', '无权限查看草稿', { id, uid: session?.uid });
-        return NextResponse.json({ error: getTranslate('api.common.unauthorized') }, { status: 403 });
-      }
-      return handleDraftArticleResponse(id, meta);
-    }
-    // DB 记录统一过 access ACL（与下方文件系统路径同口径）：
-    // 否则编辑器发布的文章可经 GitHub 直拉分支绕过 config.yaml 私有规则
-    if (typeof meta.slug === 'string' && meta.slug) {
-      const config = await loadConfig();
-      if (!(await canAccess('posts', meta.slug, isAuthenticated, dbAvailable, config))) {
-        logger.warn('GET', 'access 规则拒绝访问 DB 文章', { id, slug: meta.slug });
-        return NextResponse.json({ error: getTranslate('api.common.unauthorized') }, { status: 403 });
-      }
-    }
-    const publishedResponse = await handlePublishedArticleResponse(meta);
-    if (publishedResponse) {
-      return publishedResponse;
-    }
-    // 剔除内部字段（authorId、content）后返回
-    const { authorId: _authorId, content: _content, ...safeMeta } = meta;
-    return NextResponse.json(safeMeta, {
-      headers: { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' },
-    });
+    return handleDbArticleLookup(id, metaStr, session, dbAvailable, db);
   }
 
   const config = await loadConfig();
@@ -241,6 +259,11 @@ async function handleDraftSave(
 ): Promise<NextResponse> {
   const updated: Record<string, unknown> = {
     ...meta,
+    // 走草稿保存分支即意味着最终状态是草稿：
+    // 普通草稿更新本就是 draft；从回收站恢复时必须把
+    // moveToRecycleBin 写入的 pending_deletion 重置回 draft，
+    // 否则 GET 详情会因非 draft 非 published 剔除正文导致编辑器永远空白
+    status: 'draft',
     content: body.content !== undefined ? body.content : meta.content,
     title: typeof body.title === 'string' ? body.title : meta.title,
     tags: Array.isArray(body.tags) ? body.tags : meta.tags,

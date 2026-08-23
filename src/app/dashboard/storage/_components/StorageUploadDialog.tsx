@@ -24,7 +24,7 @@ interface Props {
   emptyHint: string;
   rootLabel: string;
   onCancel: () => void;
-  onUpload: (files: File[]) => Promise<void> | void;
+  onUpload: (files: File[]) => Promise<{ success: number; failed: number }> | { success: number; failed: number };
   disabled?: boolean;
 }
 
@@ -82,8 +82,9 @@ export function StorageUploadDialog({
     }
     setUploading(true);
     try {
-      await onUpload(files);
-      setFiles([]);
+      const result = await onUpload(files);
+      // 仅全部上传成功才清空列表；存在失败时保留文件，用户可重试
+      if (result.failed === 0 && result.success > 0) setFiles([]);
     } catch {
       // 失败时保留文件列表，用户可重试
     } finally {

@@ -55,10 +55,10 @@ interface UseStorageState {
   /** 打开 / 关闭对话框 */
   openDialog: (kind: Exclude<DialogKind, null>, target?: DialogTarget) => void;
   closeDialog: () => void;
-  /** 上传文件(支持多个) */
-  uploadFiles: (files: File[]) => Promise<void>;
-  /** 创建文件夹 */
-  createFolder: (name: string) => Promise<void>;
+  /** 上传文件(支持多个)。返回成败计数，调用方据此决定是否清空待上传列表 */
+  uploadFiles: (files: File[]) => Promise<{ success: number; failed: number }>;
+  /** 创建文件夹。返回是否成功，失败时调用方应保留用户输入 */
+  createFolder: (name: string) => Promise<boolean>;
   /** 删除文件 */
   removeFile: (path: string) => Promise<void>;
   /** 删除文件夹 */
@@ -226,18 +226,18 @@ export function useStorageState(): UseStorageState {
     setPendingTarget(null);
   }, []);
 
-  /** 上传文件(支持多个,串行处理) */
+  /** 上传文件(支持多个,串行处理)。返回成败计数供调用方决定是否清空列表 */
   const uploadFiles = useCallback(
-    async (files: File[]) => {
-      if (!files.length) return;
+    async (files: File[]): Promise<{ success: number; failed: number }> => {
+      if (!files.length) return { success: 0, failed: 0 };
       if (!configured) {
         message.error(getTranslate('storage.uploadNotConfigured'));
-        return;
+        return { success: 0, failed: files.length };
       }
       const oversize = files.find((f) => f.size > MAX_FILE_SIZE);
       if (oversize) {
         message.error(getTranslate('storage.fileTooLargeName', { name: oversize.name }));
-        return;
+        return { success: 0, failed: files.length };
       }
       const errors: string[] = [];
       for (const file of files) {
@@ -248,7 +248,8 @@ export function useStorageState(): UseStorageState {
             if (err.isNotConfigured) {
               setConfigured(false);
               message.error(getTranslate('storage.uploadFailedNotConfigured'));
-              return;
+              const done = errors.length;
+              return { success: done, failed: files.length - done };
             }
             errors.push(err.message);
           } else {
@@ -272,20 +273,21 @@ export function useStorageState(): UseStorageState {
       } catch {
         // 忽略 — 后续操作会自然刷新
       }
+      return { success, failed: errors.length };
     },
     [configured, currentPath, loadEntries]
   );
 
   const createFolder = useCallback(
-    async (name: string) => {
+    async (name: string): Promise<boolean> => {
       const trimmed = name.trim();
       if (!trimmed) {
         message.error(getTranslate('storage.renameInvalidName'));
-        return;
+        return false;
       }
       if (!configured) {
         message.error(getTranslate('storage.createNotConfigured'));
-        return;
+        return false;
       }
       const fullPath = currentPath ? `${currentPath}/${trimmed}` : trimmed;
       try {
@@ -300,17 +302,19 @@ export function useStorageState(): UseStorageState {
         message.success(getTranslate('storage.createSuccess'));
         closeDialog();
         await loadEntries(currentPath);
+        return true;
       } catch (err) {
         if (err instanceof ApiError) {
           if (err.isNotConfigured) {
             setConfigured(false);
             message.error(getTranslate('storage.notConfiguredTitle'));
-            return;
+            return false;
           }
           message.error(err.message);
         } else {
           message.error(getTranslate('storage.createFailed'));
         }
+        return false;
       }
     },
     [configured, currentPath, loadEntries, closeDialog]

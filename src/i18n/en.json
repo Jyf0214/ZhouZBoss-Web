@@ -391,6 +391,7 @@
     "initialConfigNotLoaded": "Initial config not loaded",
     "noChangesToSave": "No changes to save",
     "syncFailed": "Sync failed",
+    "remoteParseFailed": "Failed to parse remote config.yaml; save is blocked to prevent overwriting remote fields",
     "remoteFetchError": {
       "title": "Failed to fetch remote config",
       "desc": "Cannot read config.yaml from GitHub. Please check repository permissions and token configuration.",

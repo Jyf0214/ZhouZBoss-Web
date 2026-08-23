@@ -86,7 +86,8 @@ async function loadDrafts(
     drafts = drafts.filter((d) => d.authorId === authorFilter);
   }
   for (const draft of drafts) {
-    if (draft.status === 'draft' && !draft.content) {
+    // pending_deletion 兼容：曾从回收站恢复但 status 未被正确重置的历史草稿同样补正文
+    if ((draft.status === 'draft' || draft.status === 'pending_deletion') && !draft.content) {
       draft.content = (await getDraft(draft.id)) ?? '';
     }
   }

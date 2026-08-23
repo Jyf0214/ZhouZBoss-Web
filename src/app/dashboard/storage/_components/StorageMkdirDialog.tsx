@@ -18,7 +18,7 @@ interface Props {
   cancelLabel: string;
   rootLabel: string;
   onCancel: () => void;
-  onCreate: (name: string) => void;
+  onCreate: (name: string) => Promise<boolean> | boolean;
   disabled?: boolean;
 }
 
@@ -44,8 +44,8 @@ export function StorageMkdirDialog({
     if (!name.trim()) return;
     setSubmitting(true);
     try {
-      await onCreate(name.trim());
-      setName('');
+      const ok = await onCreate(name.trim());
+      if (ok) setName('');
     } catch {
       // 失败时保留输入内容，用户可修改后重试
     } finally {

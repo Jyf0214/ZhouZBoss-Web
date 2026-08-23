@@ -70,8 +70,11 @@ export function useGitHubConfigSync({
     if (effectiveRemoteConfig) {
       try {
         remoteObj = (yaml.load(effectiveRemoteConfig) ?? {}) as Record<string, unknown>;
-      } catch {
-        remoteObj = {};
+      } catch (err) {
+        // 远端 config.yaml 解析失败必须阻断保存：
+        // 若降级为空对象继续合并，会把远端所有非托管字段静默抹掉
+        showError(`${t('config.remoteParseFailed')}: ${err instanceof Error ? err.message : String(err)}`);
+        return;
       }
     }
 
