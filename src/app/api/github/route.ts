@@ -4,7 +4,7 @@ import { Octokit } from 'octokit';
 import { createApiLogger } from '@/lib/api-logger';
 import { apiHandler } from '@/lib/api-handler';
 import { composeFileContent } from '@/lib/github';
-import { getSessionWithKeyId, requireApiKeyPermission } from '@/lib/auth';
+import { getSessionWithKeyId, requireApiKeyPermission, isRootRole } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { getTranslate } from '@/i18n/translate';
 
@@ -24,6 +24,23 @@ const ALLOWED_PREFIXES = ['posts/', 'faces/'];
 function isAllowedRepoPath(path: string): boolean {
   if (ALLOWED_EXACT_PATHS.includes(path)) return true;
   return ALLOWED_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
+/**
+ * 路径与权限守卫：白名单校验 + config.yaml 的 root-only 口径。
+ * config.yaml 属 root-only 配置（与 /api/config 的 requireRoot 同口径）：
+ * 否则 admin 可经 GitHub 写通道绕过配置管控与 sudo 提权审批链
+ */
+function guardRepoPath(path: unknown, role: string, uid: string): NextResponse | null {
+  if (typeof path !== 'string' || path.includes('..') || path.includes('\\') || path.startsWith('/') || !isAllowedRepoPath(path)) {
+    void logAudit('github_operation_failed', 'github', `GitHub 操作失败：路径非法（${String(path)}）`, uid);
+    return NextResponse.json({ error: getTranslate('api.storage.invalidFilePath') }, { status: 400 });
+  }
+  if (path === 'config.yaml' && !isRootRole(role)) {
+    void logAudit('github_operation_failed', 'github', 'GitHub 操作失败：config.yaml 需要 root 权限', uid);
+    return NextResponse.json({ error: getTranslate('api.common.unauthorized') }, { status: 403 });
+  }
+  return null;
 }
 
 /**
@@ -87,6 +104,10 @@ export const POST = apiHandler('POST', { label: getTranslate('api.github.operati
   const { action, path, content, message, frontMatter, body } = await req.json();
   logger.info('POST', '开始 GitHub 操作', { action, path });
 
+  // 路径守卫 + config.yaml root-only 校验
+  const pathDenied = guardRepoPath(path, session!.role, session!.uid);
+  if (pathDenied) return pathDenied;
+
   // API 密钥认证的请求需 posts_write 权限
   const denied = await requireGithubPerm('posts_write');
   if (denied) return denied;
@@ -95,13 +116,6 @@ export const POST = apiHandler('POST', { label: getTranslate('api.github.operati
     logger.warn('POST', '缺少必需参数');
     void logAudit('github_operation_failed', 'github', 'GitHub 操作失败：缺少必需参数', session!.uid);
     return NextResponse.json({ error: getTranslate('api.github.missingParams') }, { status: 400 });
-  }
-
-  // 路径守卫：非字符串直接拒绝（数组/对象的 includes 语义不同，可绕过检查）；
-  // 拒绝含 .. 或 \ 的路径；仅允许白名单目录（posts/ faces/ config.yaml）
-  if (typeof path !== 'string' || path.includes('..') || path.includes('\\') || path.startsWith('/') || !isAllowedRepoPath(path)) {
-    void logAudit('github_operation_failed', 'github', `GitHub 操作失败：路径非法（${String(path)}）`, session!.uid);
-    return NextResponse.json({ error: getTranslate('api.storage.invalidFilePath') }, { status: 400 });
   }
 
   const envResult = validateGithubEnv();
@@ -135,17 +149,16 @@ export const POST = apiHandler('POST', { label: getTranslate('api.github.operati
   return NextResponse.json({ success: true, sha: result.data.content?.sha });
 });
 
-export const GET = apiHandler('GET', { label: getTranslate('api.github.readFile'), requireAdmin: true }, async (req) => {
+export const GET = apiHandler('GET', { label: getTranslate('api.github.readFile'), requireAdmin: true }, async (req, _ctx, session) => {
   const path = new URL(req.url).searchParams.get('path');
   if (!path) {
     logger.warn('GET', '缺少路径参数');
     return NextResponse.json({ error: getTranslate('api.github.missingPath') }, { status: 400 });
   }
 
-  // 路径守卫：仅允许白名单目录（posts/ faces/ config.yaml）且不含穿越片段
-  if (typeof path !== 'string' || path.includes('..') || path.includes('\\') || path.startsWith('/') || !isAllowedRepoPath(path)) {
-    return NextResponse.json({ error: getTranslate('api.storage.invalidFilePath') }, { status: 400 });
-  }
+  // 路径守卫 + config.yaml root-only 校验
+  const pathDenied = guardRepoPath(path, session!.role, session!.uid);
+  if (pathDenied) return pathDenied;
 
   // API 密钥认证的请求需 posts_read 权限
   const denied = await requireGithubPerm('posts_read');

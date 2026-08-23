@@ -73,6 +73,26 @@ export async function POST(req: NextRequest) {
   }
 }
 
+/**
+ * 重置前吊销目标用户全部 API 密钥。
+ * 返回是否吊销失败——失败必须显式暴露（凭证吊销不完整属安全事件，禁止静默）
+ */
+async function revokeAllApiKeysWithAudit(
+  db: ReturnType<typeof getDb>,
+  uid: string,
+): Promise<boolean> {
+  if (!db.prisma) return false;
+  try {
+    await db.prisma.apiKey.deleteMany({ where: { uid } });
+    logger.info('PUT', '密码重置前已吊销全部 API 密钥', { uid });
+    return false;
+  } catch (err) {
+    logger.error('PUT', '吊销 API 密钥失败', { uid, error: err instanceof Error ? err.message : String(err) });
+    void logAudit('password_reset_revocation_failed', 'auth', `密码重置后 API 密钥吊销失败（uid: ${uid}），旧密钥可能仍有效`, uid);
+    return true;
+  }
+}
+
 export async function PUT(req: NextRequest) {
   try {
     // 频率限制：同一 IP 10 分钟内最多 10 次执行重置密码
@@ -131,6 +151,12 @@ export async function PUT(req: NextRequest) {
     }
 
     const user = JSON.parse(userStr);
+
+    // 先吊销全部 API 密钥再落库新密码：
+    // 若顺序相反且吊销部分失败，泄漏的旧密钥会在"密码已重置"的假象下继续有效；
+    // 反向最坏情况是密码未改但密钥被多吊销（可重新登录修复，失败方向安全）
+    const revocationFailed = await revokeAllApiKeysWithAudit(db, uid);
+
     user.password = await hashPassword(password);
 
     await db.set(`user:uid:${uid}`, JSON.stringify(user));
@@ -142,19 +168,16 @@ export async function PUT(req: NextRequest) {
 
     await db.del(`reset:${token}`);
 
-    // 密码重置后吊销所有 API 密钥，防止泄漏的密钥继续有效
-    if (db.prisma) {
-      try {
-        await db.prisma.apiKey.deleteMany({ where: { uid } });
-        logger.info('PUT', '密码重置后已吊销 API 密钥', { uid });
-      } catch {
-        logger.warn('PUT', '吊销 API 密钥失败（非致命）', { uid });
-      }
-    }
-
-    logger.info('PUT', '密码重置成功', { uid });
+    logger.info('PUT', '密码重置成功', { uid, revocationFailed });
     void logAudit('password_reset', 'auth', '密码已通过重置链接修改', uid);
-    return NextResponse.json({ success: true, message: getTranslate('api.auth.passwordResetSuccess') }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        message: getTranslate('api.auth.passwordResetSuccess'),
+        ...(revocationFailed ? { warning: getTranslate('api.auth.revocationIncomplete') } : {}),
+      },
+      { status: 201 },
+    );
   } catch (error: unknown) {
     logger.error('PUT', '密码重置错误', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: getTranslate('api.common.serverError') }, { status: 500 });

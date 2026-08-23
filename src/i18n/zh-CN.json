@@ -868,6 +868,7 @@
       "missingPassword": "缺少密码",
       "passwordDataCorrupted": "用户密码数据异常，请联系管理员",
       "passwordResetSuccess": "密码重置成功",
+      "revocationIncomplete": "密码已修改，但部分旧凭证的自动吊销失败，请手动检查 API 密钥列表",
       "queryFailed": "查询失败",
       "requestTooFrequent": "操作过于频繁，请 {seconds} 秒后重试",
       "requireCurrentAndNewPassword": "请输入当前密码和新密码",
@@ -1023,7 +1024,9 @@
       "readFile": "读取 GitHub 文件",
       "syncFailed": "同步失败",
       "syncSuccess": "config.yaml 同步成功",
-      "unsupportedSyncType": "不支持的同步类型"
+      "unsupportedSyncType": "不支持的同步类型",
+      "auditYamlParseFailed": "GitHub 同步失败：YAML 解析失败（{detail}）",
+      "auditSchemaFailed": "GitHub 同步失败：配置校验未通过（{detail}）"
     },
     "health": {
       "dbNotConfigured": "数据库未配置",

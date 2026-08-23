@@ -142,7 +142,9 @@ async function buildViewModel(
   meta: Record<string, unknown>,
 ) {
   const appConfig = await loadConfig();
-  // 文章加密：读取 frontmatter 中的 password 字段（SHA-256 哈希值）
+  // 文章加密标记：frontmatter 的 password 字段（SHA-256 哈希）仅用于服务端判定是否加密，
+  // 哈希值本身不下发到客户端——密码正确性由 AES-GCM 认证标签在解密时判定，
+  // 避免无盐快速哈希随页面泄露构成离线爆破旁路
   const passwordHash = typeof meta.password === 'string' ? meta.password : '';
   // 识别并解析密文参数（正文为 aes_gcm:v2: 前缀即密文）
   const encryptedPayload = parseEncryptedArticle(content);
@@ -213,7 +215,6 @@ async function buildViewModel(
     authorInfo,
     isEncrypted,
     isHidden,
-    passwordHash,
     encryptedPayload,
     // 多语言翻译映射（从 frontmatter translations 字段读取）
     translations: (meta.translations && typeof meta.translations === 'object')

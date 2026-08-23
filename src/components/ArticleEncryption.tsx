@@ -12,23 +12,7 @@ import { DURATION, EASE_STANDARD } from '@/components/ui/motion';
 import { useI18n } from '@/hooks/use-i18n';
 import { decryptArticle, type ArticleCryptoPayload } from '@/lib/article-crypto';
 
-/**
- * 将输入文本通过 Web Crypto API 进行 SHA-256 哈希
- * 返回小写十六进制字符串
- */
-async function sha256Hex(message: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = new Uint8Array(hashBuffer);
-  return Array.from(hashArray)
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 interface ArticleEncryptionProps {
-  /** 存储在 frontmatter 中的密码哈希值（仅用于密码正确性校验） */
-  passwordHash: string;
   /** 密文参数（构建时识别，仅下发密文不下发明文） */
   encryptedPayload: ArticleCryptoPayload | null;
   /** 验证并解密成功后调用，传入明文 Markdown 内容 */
@@ -39,13 +23,13 @@ interface ArticleEncryptionProps {
 /**
  * 文章加密密码验证组件
  * - 居中卡片布局，锁图标 + 密码输入框
- * - SHA-256 校验密码正确性后，PBKDF2 + AES-GCM 解密正文
+ * - PBKDF2 + AES-GCM 解密正文：密码正确性由 GCM 认证标签判定，
+ *   不再随页面下发独立的快速哈希（避免离线爆破旁路架空 PBKDF2 迭代成本）
  * - AnimatePresence 过渡动画
  * 注意：密码校验与解密完全在客户端进行，适用于静态站点场景；
  * 站点只下发密文，密钥由密码派生，无后门。
  */
 export function ArticleEncryption({
-  passwordHash,
   encryptedPayload,
   onDecrypted,
   className,
@@ -68,11 +52,8 @@ export function ArticleEncryption({
     setErrorKind(null);
 
     try {
-      const hash = await sha256Hex(inputValue.trim());
-      if (hash !== passwordHash) {
-        setErrorKind('wrong-password');
-        return;
-      }
+      // 直接尝试解密：AES-GCM 认证标签校验失败即密码错误，
+      // 错误尝试需承担完整 PBKDF2 迭代成本（这正是设计意图）
       const plain = await decryptArticle(inputValue.trim(), encryptedPayload);
       setStage('success');
       // 动画完成后回调
@@ -80,12 +61,12 @@ export function ArticleEncryption({
         onDecrypted(plain);
       }, 600);
     } catch {
-      // Web Crypto API 不可用或密文损坏时明确报错，不静默通过
+      // 密码错误、Web Crypto API 不可用或密文损坏时明确报错，不静默通过
       setErrorKind('wrong-password');
     } finally {
       setVerifying(false);
     }
-  }, [inputValue, passwordHash, encryptedPayload, onDecrypted]);
+  }, [inputValue, encryptedPayload, onDecrypted]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {

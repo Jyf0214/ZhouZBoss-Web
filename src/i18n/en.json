@@ -868,6 +868,7 @@
       "missingPassword": "Password is missing",
       "passwordDataCorrupted": "User password data is corrupted, please contact the administrator",
       "passwordResetSuccess": "Password reset successfully",
+      "revocationIncomplete": "Password changed, but automatic revocation of some old credentials failed. Please review your API key list manually",
       "queryFailed": "Query failed",
       "requestTooFrequent": "Too many requests, please retry in {seconds} seconds",
       "requireCurrentAndNewPassword": "Please enter the current password and new password",
@@ -1023,7 +1024,9 @@
       "readFile": "Read GitHub file",
       "syncFailed": "Sync failed",
       "syncSuccess": "config.yaml synced successfully",
-      "unsupportedSyncType": "Unsupported sync type"
+      "unsupportedSyncType": "Unsupported sync type",
+      "auditYamlParseFailed": "GitHub sync failed: YAML parse error ({detail})",
+      "auditSchemaFailed": "GitHub sync failed: config validation rejected ({detail})"
     },
     "health": {
       "dbNotConfigured": "Database not configured",

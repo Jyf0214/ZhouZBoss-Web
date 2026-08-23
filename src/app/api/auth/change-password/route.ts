@@ -13,10 +13,10 @@ const logger = createApiLogger('/api/auth/change-password');
 
 /**
  * 吊销用户除当前认证来源外的 API 密钥
- * 返回吊销数量；出错时静默返回 0（非致命）
+ * 返回 { revoked, failed }：吊销失败必须显式暴露（凭证吊销不完整属安全事件，禁止静默）
  */
-async function revokeOtherApiKeys(db: IDatabase, uid: string): Promise<number> {
-  if (!db.prisma) return 0;
+async function revokeOtherApiKeys(db: IDatabase, uid: string): Promise<{ revoked: number; failed: boolean }> {
+  if (!db.prisma) return { revoked: 0, failed: false };
   try {
     const hdrs = await headers();
     const authHeader = hdrs.get('authorization') ?? '';
@@ -29,15 +29,16 @@ async function revokeOtherApiKeys(db: IDatabase, uid: string): Promise<number> {
         const result = await db.prisma.apiKey.deleteMany({
           where: { uid, id: { not: currentKey.id } },
         });
-        return result.count;
+        return { revoked: result.count, failed: false };
       }
     }
     // Cookie 认证或 API 密钥未找到：吊销全部
     const result = await db.prisma.apiKey.deleteMany({ where: { uid } });
-    return result.count;
-  } catch {
-    logger.warn('POST', '吊销 API 密钥失败（非致命）', { uid });
-    return 0;
+    return { revoked: result.count, failed: false };
+  } catch (err) {
+    logger.error('POST', '吊销 API 密钥失败', { uid, error: err instanceof Error ? err.message : String(err) });
+    void logAudit('password_change_revocation_failed', 'auth', `密码修改后 API 密钥吊销失败（uid: ${uid}），旧密钥可能仍有效`, uid);
+    return { revoked: 0, failed: true };
   }
 }
 
@@ -99,6 +100,11 @@ export const POST = apiHandler(
       return NextResponse.json({ error: getTranslate('api.auth.samePassword') }, { status: 400 });
     }
 
+    // 先吊销其他 API 密钥再更新密码与会话版本：
+    // 若顺序相反且吊销失败，攻击者持有的旧密钥会在"密码已改"的假象下继续有效；
+    // 反向最坏情况是密码未改但密钥被多吊销（可重新登录修复，失败方向安全）
+    const revocation = await revokeOtherApiKeys(db, session.uid);
+
     user.password = await hashPassword(newPassword);
     await db.set(`user:uid:${session.uid}`, JSON.stringify(user));
 
@@ -115,17 +121,17 @@ export const POST = apiHandler(
       userGroup: session.userGroup,
     });
 
-    const revokedCount = await revokeOtherApiKeys(db, session.uid);
-    if (revokedCount > 0) {
-      logger.info('POST', '已吊销其他 API 密钥', { uid: session.uid, count: revokedCount });
+    if (revocation.revoked > 0) {
+      logger.info('POST', '已吊销其他 API 密钥', { uid: session.uid, count: revocation.revoked });
     }
 
-    logger.info('POST', '密码修改成功', { uid: session.uid, revokedKeys: revokedCount });
+    logger.info('POST', '密码修改成功', { uid: session.uid, revokedKeys: revocation.revoked, revocationFailed: revocation.failed });
     void logAudit('password_change', 'auth', getTranslate('api.auth.changePasswordSuccess'), session.uid);
     return NextResponse.json({
       success: true,
       message: getTranslate('api.auth.changePasswordSuccess'),
-      revokedSessions: revokedCount,
+      revokedSessions: revocation.revoked,
+      ...(revocation.failed ? { warning: getTranslate('api.auth.revocationIncomplete') } : {}),
     });
   },
 );

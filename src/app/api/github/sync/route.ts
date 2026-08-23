@@ -4,8 +4,42 @@ import { updateFileInGithub } from '@/lib/github';
 import { createApiLogger } from '@/lib/api-logger';
 import { logAudit } from '@/lib/audit';
 import { getTranslate } from '@/i18n/translate';
+import yaml from 'js-yaml';
+import { zAppConfig } from '@/lib/config-schema';
 
 const logger = createApiLogger('/api/github/sync');
+
+/**
+ * 推送前校验 config.yaml 内容：YAML 可解析且通过 zod 校验（与 /api/config 同轨道）。
+ * ① 拒绝畸形 YAML（否则下次构建 loadConfig 解析失败 → 站点级不可用）
+ * ② 拒绝含非法值的配置（前端内联消费轨道不经过运行时校验，schema 的防注入 refine 会失效）
+ */
+function validateSyncContent(content: string): { ok: true } | { ok: false; error: string; auditDetail: string } {
+  let parsedConfig: unknown;
+  try {
+    parsedConfig = yaml.load(content);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      error: `${getTranslate('api.config.validationFailed')}: ${detail}`,
+      auditDetail: getTranslate('api.github.auditYamlParseFailed', { detail }),
+    };
+  }
+  const validated = zAppConfig.partial().safeParse(parsedConfig);
+  if (!validated.success) {
+    const firstIssue = validated.error.issues[0];
+    const issueText = firstIssue
+      ? `${firstIssue.path.join('.') || '(root)'}: ${firstIssue.message}`
+      : '';
+    return {
+      ok: false,
+      error: `${getTranslate('api.config.validationFailed')}${issueText ? `: ${issueText}` : ''}`,
+      auditDetail: getTranslate('api.github.auditSchemaFailed', { detail: issueText }),
+    };
+  }
+  return { ok: true };
+}
 
 /**
  * 统一 GitHub 同步 API
@@ -15,16 +49,19 @@ const logger = createApiLogger('/api/github/sync');
 export async function POST(req: NextRequest) {
   const session = await getSession();
   const auditUser = session?.uid ?? 'unknown';
-  if (!session || (session.role !== 'admin' && !isRootRole(session.role))) {
+  // config.yaml 写入属 root-only（与 /api/config POST 的 requireRoot 同口径）：
+  // 否则 admin 或低权 API key 可绕过配置管控、zod 校验与 sudo 提权审批链，
+  // 经此通道整体覆写含注入面字段（customHead/customCSS/access 规则）的站点配置
+  if (!session || !isRootRole(session.role)) {
     logger.warn('POST', '无权限');
     void logAudit('github_sync_failed', 'github', 'GitHub 同步失败：无权限', auditUser);
     return NextResponse.json({ error: getTranslate('api.common.unauthorized') }, { status: 403 });
   }
 
-  // API 密钥认证的请求需 posts_write 权限
+  // API 密钥认证的请求需 settings_write 权限（与 /api/config 的写权限同口径）
   const authResult = await getSessionWithKeyId();
   if (authResult) {
-    const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'posts_write');
+    const permErr = await requireApiKeyPermission(authResult.session, authResult.currentKeyId, 'settings_write');
     if (permErr) return permErr;
   }
 
@@ -54,6 +91,12 @@ export async function POST(req: NextRequest) {
       logger.warn('POST', 'config-yaml 缺少 content 字段');
       void logAudit('github_sync_failed', 'github', 'GitHub 同步失败：config-yaml 缺少 content 字段', auditUser);
       return NextResponse.json({ error: getTranslate('api.github.missingYamlContent') }, { status: 400 });
+    }
+
+    const verdict = validateSyncContent(content);
+    if (!verdict.ok) {
+      void logAudit('github_sync_failed', 'github', verdict.auditDetail, auditUser);
+      return NextResponse.json({ error: verdict.error }, { status: 400 });
     }
 
     await updateFileInGithub({

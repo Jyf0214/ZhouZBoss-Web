@@ -69,7 +69,6 @@ export function PostDetailBody({
   authorInfo,
   isEncrypted,
   isHidden,
-  passwordHash,
   encryptedPayload,
   seriesInfo,
   htmlContent,
@@ -95,8 +94,6 @@ export function PostDetailBody({
   isEncrypted?: boolean;
   /** 文章是否隐藏（不在列表中显示，但可通过 URL 直接访问） */
   isHidden?: boolean;
-  /** 密码哈希值（SHA-256） */
-  passwordHash?: string;
   /** 加密文章的密文参数（构建时识别，仅下发密文） */
   encryptedPayload?: ArticleCryptoPayload | null;
   /** 系列文章导航信息 */
@@ -177,7 +174,6 @@ export function PostDetailBody({
           {/* 加密文章：显示密码验证界面；验证成功后解密并用 MarkdownRenderer 渲染 */}
           {isEncrypted && decrypted === null ? (
             <ArticleEncryption
-              passwordHash={passwordHash ?? ''}
               encryptedPayload={encryptedPayload ?? null}
               onDecrypted={setDecrypted}
             />
