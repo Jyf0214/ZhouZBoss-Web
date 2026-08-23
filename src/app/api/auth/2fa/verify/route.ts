@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { verifyTotp } from '@/lib/totp';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -16,7 +16,8 @@ const logger = createApiLogger('/api/auth/2fa/verify');
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireAdmin();
+    // 2FA 属本人数据操作，登录即可（与 setup 同口径）
+    const session = await requireAuth();
     if (session instanceof NextResponse) {
       return session;
     }

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useI18n } from '@/hooks/use-i18n';
 import { GlobalLoading } from '@/components/Loading';
@@ -10,7 +11,9 @@ import { showError } from '@/lib/error';
 import { buildConfigState, type ConfigState } from './config-builders';
 
 export default function ConfigPage() {
-  const { userRole } = useAuth();
+  const { isRoot } = useAuth();
+  const router = useRouter();
+  const redirectRef = useRef(false);
   const { t } = useI18n();
   const [config, setConfig] = useState<ConfigState>({
     site: {
@@ -88,10 +91,14 @@ export default function ConfigPage() {
   });
 
   useEffect(() => {
-    if (userRole !== 'admin' && userRole !== 'root') {
-      setLoading(false);
+    if (!isRoot && !redirectRef.current) {
+      // 与 env/stats 等其余 root 页面同口径：非 root 直接回 dashboard。
+      // /api/config 为 root-only，放行 admin 只会得到加载必败的半坏页面
+      redirectRef.current = true;
+      router.push('/dashboard');
       return;
     }
+    if (!isRoot) return;
     const controller = new AbortController();
     const fetchConfig = async () => {
       setLoading(true);
@@ -107,19 +114,20 @@ export default function ConfigPage() {
           setRemoteConfigStatus((data._remoteConfigStatus as string) ?? '');
           setRemoteConfigError((data._remoteConfigError as string) ?? '');
         } else {
-          showError(t('config.loadFailed'));
+          const body = await res.json().catch(() => null) as { error?: string } | null;
+          showError(body?.error ? `${t('config.loadFailed')}: ${body.error}` : t('config.loadFailed'));
         }
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
         console.error('获取配置失败:', error);
-        showError(t('config.loadFailed'));
+        showError(`${t('config.loadFailed')}: ${error instanceof Error ? error.message : String(error)}`);
       } finally {
         setLoading(false);
       }
     };
     void fetchConfig();
     return () => controller.abort();
-  }, [userRole, t]);
+  }, [isRoot, router, t]);
 
   const handleSave = () => {
     handleGitHubSave(initialConfigRef.current as unknown as Record<string, unknown>);

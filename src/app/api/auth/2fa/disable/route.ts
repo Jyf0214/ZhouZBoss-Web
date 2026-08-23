@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { verifyTotp } from '@/lib/totp';
 import { createApiLogger } from '@/lib/api-logger';
@@ -23,7 +23,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const session = await requireAdmin();
+    // 2FA 属本人数据操作，登录即可（与 setup/verify 同口径；
+    // 禁用需验证当前 TOTP 码，不因放宽角色引入风险）
+    const session = await requireAuth();
     if (session instanceof NextResponse) {
       return session;
     }

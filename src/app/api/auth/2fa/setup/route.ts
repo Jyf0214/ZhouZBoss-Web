@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { generateTotpSecret, generateTotpUri, generateRecoveryCodes, hashRecoveryCode } from '@/lib/totp';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -16,8 +16,10 @@ const logger = createApiLogger('/api/auth/2fa/setup');
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireAdmin();
-    // requireAdmin 返回 NextResponse 时表示未认证
+    // 2FA 属本人数据操作，登录即可（登录链路本就支持全体用户的 2FA，
+    // 原 requireAdmin 使普通用户可见可点但永远 403）
+    const session = await requireAuth();
+    // requireAuth 返回 NextResponse 时表示未认证
     if (session instanceof NextResponse) {
       return session;
     }

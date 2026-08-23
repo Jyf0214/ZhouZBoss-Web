@@ -38,15 +38,14 @@ async function loadArticleForm(articleId: string): Promise<ArticleFormData | nul
   };
 }
 
-/** 查询 GitHub 配置状态：返回是否已配置（GITHUB_REPO + GITHUB_TOKEN） */
+/** 查询 GitHub 配置状态：轻量端点仅返回布尔值。
+ *  不用 /api/env-status（root-only）：admin 会被 403 误判为"未配置"而无法发布，
+ *  而发布接口本身只需登录——探测接口权限必须 ≤ 发布接口权限 */
 async function checkGithubConfig(): Promise<boolean> {
-  const res = await fetch('/api/env-status');
-  if (!res.ok) throw new Error('env-status failed');
+  const res = await fetch('/api/github/status');
+  if (!res.ok) throw new Error('github status failed');
   const data = await res.json();
-  const githubVars = data.groups?.github?.variables ?? [];
-  const repoSet = githubVars.find((v: { name: string; isSet: boolean }) => v.name === 'GITHUB_REPO')?.isSet;
-  const tokenSet = githubVars.find((v: { name: string; isSet: boolean }) => v.name === 'GITHUB_TOKEN')?.isSet;
-  return !!(repoSet && tokenSet);
+  return !!data.configured;
 }
 
 function EditorContent() {
