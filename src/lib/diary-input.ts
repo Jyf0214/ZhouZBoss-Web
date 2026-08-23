@@ -69,6 +69,44 @@ function validateMaxLength(
   return { ok: true };
 }
 
+/** 单个 reference 项类型检查：仅允许基本 JSON 类型与不含函数的数组，其余项跳过 */
+function isReferenceItemTypeAllowed(item: unknown): boolean {
+  if (item === null) return true;
+  const t = typeof item;
+  if (t === 'string' || t === 'number' || t === 'boolean') return true;
+  if (Array.isArray(item)) return !item.some((v) => typeof v === 'function');
+  return t === 'object';
+}
+
+/**
+ * references 校验：必须为数组且每项为可序列化对象/字符串，
+ * 总量不超过 100 条，防止单项超大 JSON 注入
+ */
+function validateReferences(
+  references: unknown,
+): { ok: true; value: Prisma.InputJsonValue[] } | { ok: false; error: string } {
+  if (references === undefined || references === null) return { ok: true, value: [] };
+  if (!Array.isArray(references)) {
+    return { ok: false, error: getTranslate('api.diary.referencesInvalid') };
+  }
+  if (references.length > 100) {
+    return { ok: false, error: getTranslate('api.diary.referencesTooMany') };
+  }
+  for (const item of references) {
+    // 非法类型直接跳过而非报错，保持向后兼容，但记录过滤
+    if (!isReferenceItemTypeAllowed(item)) continue;
+    // 简单深度限制：对象序列化后超过 2000 字符则拒绝
+    try {
+      if (JSON.stringify(item).length > 2000) {
+        return { ok: false, error: getTranslate('api.diary.referencesTooLarge') };
+      }
+    } catch {
+      return { ok: false, error: getTranslate('api.diary.referencesInvalid') };
+    }
+  }
+  return { ok: true, value: references as Prisma.InputJsonValue[] };
+}
+
 export function validateDiaryInput(
   body: Record<string, unknown>,
 ): { ok: true; value: ValidatedDiaryInput } | { ok: false; error: string } {
@@ -93,39 +131,8 @@ export function validateDiaryInput(
   const scheduledCheck = parseDateField(scheduledAt, 'api.diary.scheduledAtInvalid');
   if (!scheduledCheck.ok) return scheduledCheck;
 
-  // references 校验：必须为数组且每项为可序列化对象/字符串，且总量不超过 100 条，防止恶意注入超大 JSON
-  let safeReferences: Prisma.InputJsonValue[] = [];
-  if (references !== undefined && references !== null) {
-    if (!Array.isArray(references)) {
-      return { ok: false, error: getTranslate('api.diary.referencesInvalid') };
-    }
-    if (references.length > 100) {
-      return { ok: false, error: getTranslate('api.diary.referencesTooMany') };
-    }
-    // 仅允许基本 JSON 类型，防止原型污染等异常结构
-    for (const item of references) {
-      if (
-        item !== null &&
-        typeof item !== 'string' &&
-        typeof item !== 'number' &&
-        typeof item !== 'boolean' &&
-        (typeof item !== 'object' || Array.isArray(item) && item.some(v => typeof v === 'function'))
-      ) {
-        // 非法类型直接跳过而非报错，保持向后兼容，但记录过滤
-        continue;
-      }
-      // 简单深度限制：对象层级超过 3 层或字符串超过 500 字符则拒绝
-      try {
-        const str = JSON.stringify(item);
-        if (str.length > 2000) {
-          return { ok: false, error: getTranslate('api.diary.referencesTooLarge') };
-        }
-      } catch {
-        return { ok: false, error: getTranslate('api.diary.referencesInvalid') };
-      }
-    }
-    safeReferences = references as Prisma.InputJsonValue[];
-  }
+  const referencesCheck = validateReferences(references);
+  if (!referencesCheck.ok) return referencesCheck;
 
   return {
     ok: true,
@@ -136,7 +143,7 @@ export function validateDiaryInput(
       group: typeof group === 'string' && group.trim() ? group.trim() : null,
       date: dateCheck.value,
       scheduledAt: scheduledCheck.value,
-      references: safeReferences,
+      references: referencesCheck.value,
     },
   };
 }
